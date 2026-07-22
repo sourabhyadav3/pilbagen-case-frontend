@@ -3960,6 +3960,7 @@ export default function App() {
   const { toasts, toast } = useToast();
   const routerNavigate = useNavigate();
   const location = useLocation();
+  const { language } = useLanguage();
 
   const refreshModalLookups = useCallback(async () => {
     if (!isLoggedIn || !user) return;

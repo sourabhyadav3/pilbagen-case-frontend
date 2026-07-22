@@ -9,9 +9,35 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- Hide all Google branding/banners (exact replica from other project) -->
+    <style>
+      .goog-te-banner-frame.skiptranslate,
+      .goog-te-banner-frame,
+      #goog-gt-tt,
+      .goog-te-gadget-icon,
+      .goog-logo-link,
+      iframe.skiptranslate {
+        display: none !important;
+      }
+      body {
+        top: 0px !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <div id="google_translate_master_container" style="position: absolute !important; left: -9999px !important; top: -9999px !important; width: 1px !important; height: 1px !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important;"></div>
+    <script type="text/javascript">
+      window.googleTranslateElementInit = function () {
+        new google.translate.TranslateElement({
+          pageLanguage: 'en',
+          includedLanguages: 'en,sv',
+          autoDisplay: false
+        }, 'google_translate_master_container');
+      };
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

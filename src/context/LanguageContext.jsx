@@ -1,12 +1,80 @@
-import { createContext, useState, useContext } from 'react';
-import { translations } from '../locales/translations';
+import { createContext, useState, useContext, useEffect } from 'react';
+import i18n from '../i18n';
 
 const LanguageContext = createContext();
 
+const setGoogTransCookie = (lang) => {
+  try {
+    // Clear any existing googtrans cookies on root, subdomains, and hostnames to prevent duplicate cookies
+    const domains = [
+      window.location.hostname,
+      '.' + window.location.hostname,
+      ''
+    ];
+    
+    domains.forEach(domain => {
+      const domainStr = domain ? `; domain=${domain}` : '';
+      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/${domainStr}`;
+    });
+
+    // Set the new cookie on path=/
+    if (lang !== 'en') {
+      document.cookie = `googtrans=/en/${lang}; path=/;`;
+    }
+  } catch (e) {
+    console.error('Error setting translation cookie:', e);
+  }
+};
+
+const changeGoogleTranslateLanguage = (lang) => {
+  try {
+    console.log('[Translation] Target language requested:', lang);
+    setGoogTransCookie(lang);
+    const selectEl = document.querySelector('#google_translate_master_container select.goog-te-combo');
+    if (selectEl && selectEl.options && selectEl.options.length > 1) {
+      console.log('[Translation] Found populated goog-te-combo dropdown inside master container');
+      
+      if (lang === 'en') {
+        selectEl.value = 'en';
+        if (selectEl.value !== 'en') {
+          selectEl.value = '';
+        }
+      } else {
+        selectEl.value = lang;
+      }
+      
+      console.log('[Translation] Set dropdown value to:', selectEl.value);
+      // Dispatch a single direct change event to prevent event collisions
+      const event = document.createEvent('HTMLEvents');
+      event.initEvent('change', true, true);
+      selectEl.dispatchEvent(event);
+      
+      console.log('[Translation] Dispatched change event');
+    } else {
+      console.log('[Translation] Master container combo dropdown not found/populated yet, retrying in 300ms...');
+      setTimeout(() => changeGoogleTranslateLanguage(lang), 300);
+    }
+  } catch (error) {
+    console.error('Error triggering Google Translate:', error);
+  }
+};
+
 export function LanguageProvider({ children }) {
   const [language, setLanguage] = useState(() => {
-    return localStorage.getItem('vktori_lang') || 'sv'; // default to Swedish as requested by client
+    const saved = localStorage.getItem('vktori_lang');
+    if (saved) return saved;
+    return i18n.language?.split('-')[0] || 'sv'; // default to Swedish as requested
   });
+
+  // Keep Google Translate widget synced on mount and language updates
+  useEffect(() => {
+    i18n.changeLanguage(language);
+    // Delay Google Translate to prevent rendering conflicts with React's DOM updates
+    const timer = setTimeout(() => {
+      changeGoogleTranslateLanguage(language);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [language]);
 
   const toggleLanguage = (lang) => {
     setLanguage(lang);
@@ -34,10 +102,11 @@ export function LanguageProvider({ children }) {
       })
       .join('');
 
-    const dict = translations[language] || {};
-    const fallbackDict = translations['sv'] || {}; // fallback to Swedish
-
-    return dict[camelKey] || dict[key] || fallbackDict[camelKey] || fallbackDict[key] || key;
+    // Check if i18n dictionary has the key or camelCase key, otherwise fallback to original key
+    if (i18n.exists(camelKey)) return i18n.t(camelKey);
+    if (i18n.exists(key)) return i18n.t(key);
+    
+    return key;
   };
 
   return (
