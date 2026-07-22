@@ -428,7 +428,7 @@ export function ConsultationForm() {
         email: fd.get('email'),
         phone: fd.get('phone'),
         preferred_date: fd.get('preferred_date'),
-        matter_type: fd.get('matter_type'),
+        matter_type: 'Conflict Control & Compliance',
         message: fd.get('message'),
       });
       toast('Consultation request transmitted. Our staff will contact you to confirm the time.', 'success');
@@ -473,33 +473,13 @@ export function ConsultationForm() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="block text-[12px] font-bold text-white/70 uppercase tracking-wider ml-1">Preferred Date <span className="text-[#D4AF37]">*</span></label>
-          <div className="relative group">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 group-focus-within:text-[#D4AF37] transition-all z-10 pointer-events-none">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-            </div>
-            <input name="preferred_date" type="date" required className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-[14px] outline-none focus:border-[#D4AF37]/60 focus:ring-2 focus:ring-[#D4AF37]/10 transition-all font-medium text-white shadow-sm cursor-pointer color-scheme-dark" style={{ colorScheme: 'dark' }} />
+      <div className="space-y-1.5">
+        <label className="block text-[12px] font-bold text-white/70 uppercase tracking-wider ml-1">Preferred Date <span className="text-[#D4AF37]">*</span></label>
+        <div className="relative group">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 group-focus-within:text-[#D4AF37] transition-all z-10 pointer-events-none">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
           </div>
-        </div>
-        <div className="space-y-1.5">
-          <label className="block text-[12px] font-bold text-white/70 uppercase tracking-wider ml-1">Module Interest <span className="text-[#D4AF37]">*</span></label>
-          <div className="relative group">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 group-focus-within:text-[#D4AF37] transition-all z-10 pointer-events-none">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg>
-            </div>
-            <select name="matter_type" required className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-10 py-3 text-[14px] outline-none focus:border-[#D4AF37]/60 focus:ring-2 focus:ring-[#D4AF37]/10 transition-all appearance-none text-white font-medium cursor-pointer">
-              <option value="Conflict Control & Compliance" className="bg-[#0A192F]">Conflict Control & Compliance</option>
-              <option value="Time Tracking & Invoicing" className="bg-[#0A192F]">Time Tracking & Invoicing</option>
-              <option value="Global Document Indexing" className="bg-[#0A192F]">Global Document Indexing</option>
-              <option value="Encrypted Communication & Chat" className="bg-[#0A192F]">Encrypted Communication & Chat</option>
-              <option value="Full Agency Setup" className="bg-[#0A192F]">Full Agency Setup</option>
-            </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-white/70 group-focus-within:text-[#D4AF37] transition-all">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-            </div>
-          </div>
+          <input name="preferred_date" type="date" required className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-[14px] outline-none focus:border-[#D4AF37]/60 focus:ring-2 focus:ring-[#D4AF37]/10 transition-all font-medium text-white shadow-sm cursor-pointer color-scheme-dark" style={{ colorScheme: 'dark' }} />
         </div>
       </div>
 
