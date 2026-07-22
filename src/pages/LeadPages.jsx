@@ -1,6 +1,7 @@
 import { useState, useEffect,useRef} from 'react';
 import { Badge, PageHeader, Card, Table, Tr, Td, Avatar, StatCard, Field, Input, Select, Textarea } from '../components/UI.jsx';
 import api from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 function leadInitials(name) {
   if (!name) return '?';
@@ -330,6 +331,7 @@ export function LeadDetailPage({ leadId, navigate, openModal, toast }) {
 //  CONFLICT CHECK PAGE
 // ─────────────────────────────────────────────────────────
 export function ConflictCheckPage({ navigate, openModal, toast }) {
+  const { t } = useLanguage();
   const [client, setClient] = useState('');
   const [opponent, setOpponent] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -380,25 +382,25 @@ export function ConflictCheckPage({ navigate, openModal, toast }) {
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-[120px] pointer-events-none" />
 
       <PageHeader 
-        title="Conflict Control & Verification (Jävkontroll)" 
-        subtitle="Automated ethical check against active clients, adverse parties, and agency matter databases" 
+        title={t('Conflict Control & Verification (Jävkontroll)') || 'Conflict Control & Verification (Jävkontroll)'} 
+        subtitle={t('conflictCheckDesc') || 'Automated ethical check against active clients, adverse parties, and agency matter databases'} 
       />
       
       <Card className="bg-[#0A192F]/80 border border-[#D4AF37]/20 p-8 shadow-2xl backdrop-blur-xl rounded-2xl relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-[#D4AF37]" />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <Field label="Prospective Client Name" required>
+          <Field label={t('Prospective Client Name') || 'Prospective Client Name'} required>
             <Input 
-              placeholder="e.g. Acme Legal Corp" 
+              placeholder={t('e.g. Acme Legal Corp') || 'e.g. Acme Legal Corp'} 
               value={client} 
               onChange={e => setClient(e.target.value)} 
               className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]"
             />
           </Field>
-          <Field label="Adverse / Opposing Party Name" required>
+          <Field label={t('Adverse / Opposing Party Name') || 'Adverse / Opposing Party Name'} required>
             <Input 
-              placeholder="e.g. Sven Johansson" 
+              placeholder={t('e.g. Sven Johansson') || 'e.g. Sven Johansson'} 
               value={opponent} 
               onChange={e => setOpponent(e.target.value)} 
               className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]"
@@ -414,12 +416,12 @@ export function ConflictCheckPage({ navigate, openModal, toast }) {
           {scanning ? (
             <>
               <div className="w-5 h-5 border-2 border-[#0A192F] border-t-transparent rounded-full animate-spin" />
-              Scanning Agency Databases...
+              {t('Scanning Agency Databases...') || 'Scanning Agency Databases...'}
             </>
           ) : (
             <>
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              Perform Automated Conflict Scan
+              {t('Perform Automated Conflict Scan') || 'Perform Automated Conflict Scan'}
             </>
           )}
         </button>
@@ -441,24 +443,24 @@ export function ConflictCheckPage({ navigate, openModal, toast }) {
 
             <div>
               <span className={`text-[10px] font-bold uppercase tracking-[0.25em] px-3 py-1 rounded-full border ${result.status === 'conflict_detected' ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-emerald-400/10 border-emerald-400/30 text-emerald-400'}`}>
-                {result.status === 'conflict_detected' ? 'Potential Conflict Flagged' : 'Conflict Scan Passed'}
+                {result.status === 'conflict_detected' ? (t('Potential Conflict Flagged') || 'Potential Conflict Flagged') : (t('Conflict Scan Passed') || 'Conflict Scan Passed')}
               </span>
               <h3 className="text-2xl font-bold font-display text-white mt-3 tracking-tight">
-                {result.status === 'conflict_detected' ? 'Ethical Review Required' : 'No Direct Conflict Identified'}
+                {result.status === 'conflict_detected' ? (t('Ethical Review Required') || 'Ethical Review Required') : (t('No Direct Conflict Identified') || 'No Direct Conflict Identified')}
               </h3>
               <p className="text-slate-300 text-xs mt-2 leading-relaxed">
                 {result.status === 'conflict_detected' 
-                  ? `Match found in agency database for adverse party "${opponent}". Manual partner verification required.`
-                  : `Automated scan completed at ${result.checkedAt}. No active matters or party records matched "${opponent}".`}
+                  ? `${t('Matched adverse party in database') || 'Match found in agency database for adverse party'} "${opponent}". ${t('Manual verification required') || 'Manual partner verification required.'}`
+                  : `${t('Automated scan completed at') || 'Automated scan completed at'} ${result.checkedAt}. ${t('No active matters or records matched') || 'No active matters or party records matched'} "${opponent}".`}
               </p>
             </div>
 
             {/* Matched Data Summary */}
             {result.matchedClients.length > 0 && (
               <div className="w-full text-left bg-white/5 p-4 rounded-xl border border-white/10 space-y-2">
-                <p className="text-[11px] font-bold text-[#D4AF37] uppercase tracking-wider">Matched Party Records ({result.matchedClients.length}):</p>
+                <p className="text-[11px] font-bold text-[#D4AF37] uppercase tracking-wider">{t('Matched Party Records') || 'Matched Party Records'} ({result.matchedClients.length}):</p>
                 {result.matchedClients.map(c => (
-                  <p key={c.id} className="text-xs text-white font-medium">• {c.full_name} ({c.party_role || 'Client'})</p>
+                  <p key={c.id} className="text-xs text-white font-medium">• {c.full_name} ({t(c.party_role || 'Client')})</p>
                 ))}
               </div>
             )}
@@ -468,7 +470,7 @@ export function ConflictCheckPage({ navigate, openModal, toast }) {
                 onClick={() => { setResult(null); setClient(''); setOpponent(''); }} 
                 className="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
               >
-                New Search
+                {t('New Search') || 'New Search'}
               </button>
             </div>
           </div>

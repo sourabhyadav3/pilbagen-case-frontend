@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import SignatureCanvas from 'react-signature-canvas';
 import { Badge, StatCard, PageHeader, Card, Table, Tr, Td, Tabs, Timeline, EmptyState, ProgressBar, FileIcon, Modal, Field, Input, Select, Textarea, Avatar, SearchInput, downloadFile } from '../components/UI.jsx';
 import api, { API_BASE_URL } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 function leadInitials(name) {
   if (!name) return '?';
@@ -240,6 +241,7 @@ const progressColors = ['bg-primary-500', 'bg-emerald-500', 'bg-amber-500', 'bg-
 //  ADMIN DASHBOARD
 // ─────────────────────────────────────────────────────────
 export function AdminDashboard({ navigate, toast, openModal }) {
+  const { t } = useLanguage();
   const [dash, setDash] = useState(null);
   const [loading, setLoading] = useState(true);
   const isFirstLoad = useRef(true);
@@ -291,19 +293,19 @@ export function AdminDashboard({ navigate, toast, openModal }) {
 
   const exportReport = () => {
     if (!dash) {
-      toast('Nothing to export yet.', 'info');
+      toast(t('nothingToExport'), 'info');
       return;
     }
-    const row = `Metric,Value\nTotal Clients,${dash.counts.totalClients}\nOpen Matters,${dash.counts.openMatters}\nUpcoming Deadlines,${dash.counts.upcomingDeadlineCount}\nRevenue (${dash.revenue.monthLabel}),${dash.revenue.totalFormatted}\n`;
+    const row = `Metric,Value\n${t('totalClients')},${dash.counts.totalClients}\n${t('openMatters')},${dash.counts.openMatters}\n${t('upcomingDeadlines')},${dash.counts.upcomingDeadlineCount}\n${t('billing')} (${dash.revenue.monthLabel}),${dash.revenue.totalFormatted}\n`;
     downloadFile(`firm_overview_${new Date().toISOString().slice(0, 10)}.csv`, row);
-    toast('Report exported!', 'success');
+    toast(t('reportExported'), 'success');
   };
 
   if (loading) {
     return (
       <div className="animate-fade-in flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="w-12 h-12 border-4 border-[#0057c7] border-t-transparent rounded-full animate-spin" />
-        <p className="text-[14px] text-[#8a94a6] font-bold uppercase tracking-widest">Initializing Dashboard...</p>
+        <p className="text-[14px] text-[#8a94a6] font-bold uppercase tracking-widest">{t('loadingDashboard')}</p>
       </div>
     );
   }
@@ -313,9 +315,9 @@ export function AdminDashboard({ navigate, toast, openModal }) {
       <div className="animate-fade-in py-12">
         <Card className="border-[#ef4444]/20 bg-[#ef4444]/5 text-center p-12">
           <div className="text-4xl mb-4">⚠️</div>
-          <p className="text-xl font-800 text-white mb-2">Sync Interrupted</p>
+          <p className="text-xl font-800 text-white mb-2">{t('syncInterrupted')}</p>
           <p className="text-[14px] text-[#8a94a6] mb-6 max-w-md mx-auto">{error}</p>
-          <button type="button" onClick={() => window.location.reload()} className="btn btn-primary px-8">Reconnect System</button>
+          <button type="button" onClick={() => window.location.reload()} className="btn btn-primary px-8">{t('reconnectSystem')}</button>
         </Card>
       </div>
     );
@@ -329,7 +331,7 @@ export function AdminDashboard({ navigate, toast, openModal }) {
       amount: item.amountFormatted,
       color: i === 0 ? 'bg-[#0057c7]' : i === 1 ? 'bg-[#22c55e]' : i === 2 ? 'bg-[#f59e0b]' : 'bg-[#38bdf8]',
     }))
-    : [{ label: 'No paid revenue this month', pct: 0, amount: '—', color: 'bg-white/10' }];
+    : [{ label: t('noPaidRevenueThisMonth'), pct: 0, amount: '—', color: 'bg-white/10' }];
 
   const deadlines = dash.upcomingDeadlines.length ? dash.upcomingDeadlines : [];
 
@@ -337,32 +339,32 @@ export function AdminDashboard({ navigate, toast, openModal }) {
     <div className="animate-fade-in space-y-6 pb-12">
       {/* SECTION A: PAGE HEADER */}
       <PageHeader 
-        title="Dashboard" 
-        subtitle={`Welcome back, Administrator. System health optimized · ${dash.revenue.monthLabel}`}
+        title="dashboard" 
+        subtitle={`${t('welcomeBackAdmin')} · ${dash.revenue.monthLabel}`}
       >
         <button onClick={exportReport} className="btn btn-secondary">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-          Export Report
+          {t('exportReport')}
         </button>
         <button onClick={() => openModal('conflict-check')} className="btn btn-secondary">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-          Conflict Check
+          {t('conflictCheckLabel')}
         </button>
         <button onClick={() => openModal('add-case')} className="btn btn-primary">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-          New Matter
+          {t('newMatter')}
         </button>
       </PageHeader>
 
       {/* SECTION B: KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Clients" value={String(c.totalClients)} 
+        <StatCard label="totalClients" value={String(c.totalClients)} 
           icon={<svg className="w-6 h-6 text-[#0057c7]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>} 
           iconBg="bg-[#0057c7]/10" gradient="#0057c7" />
-        <StatCard label="Open Matters" value={String(c.openMatters)} 
+        <StatCard label="openMatters" value={String(c.openMatters)} 
           icon={<svg className="w-6 h-6 text-[#22c55e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>} 
           iconBg="bg-[#22c55e]/10" gradient="#22c55e" />
-        <StatCard label="Upcoming Deadlines" value={String(c.upcomingDeadlineCount)} 
+        <StatCard label="upcomingDeadlines" value={String(c.upcomingDeadlineCount)} 
           icon={<svg className="w-6 h-6 text-[#f59e0b]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>} 
           iconBg="bg-[#f59e0b]/10" gradient="#f59e0b" />
         <StatCard label={`Revenue (${dash.revenue.monthLabel.split(' ')[0]})`} value={dash.revenue.totalFormatted} 
@@ -380,13 +382,13 @@ export function AdminDashboard({ navigate, toast, openModal }) {
                 <div className="w-10 h-10 rounded-xl bg-[#0057c7]/10 flex items-center justify-center text-white">
                   <svg className="w-6 h-6 text-[#0057c7]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
                 </div>
-                <h3 className="text-lg font-800 text-white tracking-tight">Recent Matters</h3>
+                <h3 className="text-lg font-800 text-white tracking-tight">{t('recentMatters')}</h3>
               </div>
-              <button onClick={() => navigate('/admin/matters')} className="text-[12px] text-[#38bdf8] font-700 uppercase tracking-widest hover:underline">Full Registry →</button>
+              <button onClick={() => navigate('/admin/matters')} className="text-[12px] text-[#38bdf8] font-700 uppercase tracking-widest hover:underline">{t('fullRegistry')}</button>
             </div>
             <div className="space-y-2">
               {dash.recentMatters.length === 0 ? (
-                <EmptyState icon="📂" title="No Recent Activity" desc="No legal matters have been registered recently." />
+                <EmptyState icon="📂" title="noRecentActivity" desc={t('noRecentMattersDesc')} />
               ) : (
                 dash.recentMatters.map((m) => (
                   <div key={m.id} onClick={() => navigate(`/admin/matters/${m.id}`)}
@@ -417,14 +419,14 @@ export function AdminDashboard({ navigate, toast, openModal }) {
           {/* Upcoming Deadlines */}
           <Card>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-[15px] font-800 text-white tracking-tight uppercase tracking-[0.1em]">Upcoming Deadlines</h3>
+              <h3 className="text-[15px] font-800 text-white tracking-tight uppercase tracking-[0.1em]">{t('upcomingDeadlines')}</h3>
               <button onClick={() => navigate('/admin/calendar')} className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-[#8a94a6] hover:text-white transition-all">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
               </button>
             </div>
             <div className="space-y-3">
               {deadlines.length === 0 ? (
-                <p className="text-[13px] text-[#8a94a6] py-4 text-center font-medium">Clear docket for today.</p>
+                <p className="text-[13px] text-[#8a94a6] py-4 text-center font-medium">{t('clearDocketToday')}</p>
               ) : (
                 deadlines.map((e, i) => (
                   <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] transition-all group">
@@ -434,7 +436,7 @@ export function AdminDashboard({ navigate, toast, openModal }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] font-700 text-white truncate">{e.title}</p>
-                      <p className="text-[11px] text-[#8a94a6] mt-0.5 font-semibold">{e.time || 'All Day'}</p>
+                      <p className="text-[11px] text-[#8a94a6] mt-0.5 font-semibold">{e.time || t('allDay')}</p>
                     </div>
                     <div className={`w-1.5 h-1.5 rounded-full ${e.color === 'red' ? 'bg-[#ef4444]' : e.color === 'amber' ? 'bg-[#f59e0b]' : 'bg-[#38bdf8]'}`} />
                   </div>
@@ -445,7 +447,7 @@ export function AdminDashboard({ navigate, toast, openModal }) {
 
           {/* Revenue Breakdown */}
           <Card>
-            <h3 className="text-[15px] font-800 text-white tracking-tight uppercase tracking-[0.1em] mb-6">Revenue Breakdown</h3>
+            <h3 className="text-[15px] font-800 text-white tracking-tight uppercase tracking-[0.1em] mb-6">{t('revenueBreakdown')}</h3>
             <div className="space-y-5">
               {revRows.map(item => (
                 <div key={item.label} className="group">
@@ -459,7 +461,7 @@ export function AdminDashboard({ navigate, toast, openModal }) {
             </div>
             <div className="mt-6 pt-5 border-t border-white/5">
               <div className="flex items-center justify-between">
-                <span className="text-[12px] font-700 text-[#8a94a6]">TOTAL REVENUE</span>
+                <span className="text-[12px] font-700 text-[#8a94a6]">{t('totalRevenue')}</span>
                 <span className="text-xl font-900 text-[#22c55e] tracking-tighter">{dash.revenue.totalFormatted}</span>
               </div>
             </div>
@@ -474,13 +476,13 @@ export function AdminDashboard({ navigate, toast, openModal }) {
              <div className="w-10 h-10 rounded-xl bg-[#f59e0b]/10 flex items-center justify-center text-white">
                 <svg className="w-6 h-6 text-[#f59e0b]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
              </div>
-             <h3 className="text-lg font-800 text-white tracking-tight">Recent Activity Feed</h3>
+             <h3 className="text-lg font-800 text-white tracking-tight">{t('recentActivityFeed')}</h3>
           </div>
-          <button className="text-[12px] text-[#8a94a6] font-800 uppercase tracking-widest hover:text-white transition-colors">Audit Log</button>
+          <button className="text-[12px] text-[#8a94a6] font-800 uppercase tracking-widest hover:text-white transition-colors">{t('auditLog')}</button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-1">
           {dash.activityFeed.length === 0 ? (
-            <p className="text-[13px] text-[#8a94a6] col-span-full py-8 text-center">No system events recorded yet.</p>
+            <p className="text-[13px] text-[#8a94a6] col-span-full py-8 text-center">{t('noSystemEventsRecorded')}</p>
           ) : (
             dash.activityFeed.map((item, i) => (
               <div key={i} className="flex items-center gap-4 py-3 px-2 rounded-xl hover:bg-white/[0.03] transition-all group">
@@ -503,6 +505,7 @@ export function AdminDashboard({ navigate, toast, openModal }) {
 //  CLIENTS PAGE
 // ─────────────────────────────────────────────────────────
 export function ClientsPage({ navigate, toast, openModal }) {
+  const { t } = useLanguage();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [clients, setClients] = useState([]);
@@ -557,7 +560,7 @@ export function ClientsPage({ navigate, toast, openModal }) {
     return (
       <div className="animate-fade-in flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="w-12 h-12 border-4 border-[#0057c7] border-t-transparent rounded-full animate-spin" />
-        <p className="text-[14px] text-[#8a94a6] font-bold uppercase tracking-widest">Compiling Registry...</p>
+        <p className="text-[14px] text-[#8a94a6] font-bold uppercase tracking-widest">{t('compilingRegistry')}</p>
       </div>
     );
   }
@@ -567,9 +570,9 @@ export function ClientsPage({ navigate, toast, openModal }) {
       <div className="animate-fade-in py-12">
         <Card className="border-[#ef4444]/20 bg-[#ef4444]/5 text-center p-12">
           <div className="text-4xl mb-4">⚠️</div>
-          <p className="text-xl font-800 text-white mb-2">Sync Error</p>
+          <p className="text-xl font-800 text-white mb-2">{t('syncError')}</p>
           <p className="text-[14px] text-[#8a94a6] mb-6 max-w-md mx-auto">{error}</p>
-          <button type="button" onClick={load} className="btn btn-primary px-8">Retry Connection</button>
+          <button type="button" onClick={load} className="btn btn-primary px-8">{t('retryConnection')}</button>
         </Card>
       </div>
     );
@@ -584,7 +587,7 @@ export function ClientsPage({ navigate, toast, openModal }) {
     if (activeMatters.length === 1) {
       const rolePrefix = role === 'lawyer' ? '/lawyer' : (role === 'paralegal' ? '/paralegal' : '/admin');
       navigate(`${rolePrefix}/matters/${activeMatters[0].id}`);
-      if (typeof toast === 'function') toast(`Opening active matter: ${activeMatters[0].matter_number || activeMatters[0].title}`, 'info');
+      if (typeof toast === 'function') toast(t('openingActiveMatter') + `: ${activeMatters[0].matter_number || activeMatters[0].title}`, 'info');
       return;
     }
 
@@ -613,25 +616,25 @@ export function ClientsPage({ navigate, toast, openModal }) {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <PageHeader title="Clients" subtitle={`${clients.length} total clients registered in system`}>
+      <PageHeader title="clients" subtitle={`${clients.length} ${t('totalClientsRegistered')}`}>
         <button onClick={() => openModal('add-client')} className="btn btn-primary">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-          Add New Client
+          {t('addClientBtn')}
         </button>
       </PageHeader>
 
       <Table headers={['Client Identity', 'Client Role', 'Opposing Party / Counsel', 'Contact Channel', 'Classification', 'Active Matters', 'Access Status', 'Date Enrolled', '']}
-        searchPlaceholder="Search clients by name or email..." onSearch={setSearch}
+        searchPlaceholder="searchPlaceholder" onSearch={setSearch}
         actions={
           <Select 
             value={statusFilter} 
             onChange={e => setStatusFilter(e.target.value)} 
             className="h-9 min-w-[140px] !py-0 !px-3 text-[12px] rounded-xl"
           >
-            <option value="All Status">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Pending">Pending</option>
-            <option value="Inactive">Inactive</option>
+            <option value="All Status">{t('allStatuses')}</option>
+            <option value="Active">{t('active')}</option>
+            <option value="Pending">{t('pending')}</option>
+            <option value="Inactive">{t('inactive')}</option>
           </Select>
         }>
         {filtered.map(c => (
@@ -645,25 +648,25 @@ export function ClientsPage({ navigate, toast, openModal }) {
                 </div>
               </div>
             </Td>
-            <Td className="whitespace-nowrap font-700 text-white">{c.party_role}</Td>
+            <Td className="whitespace-nowrap font-700 text-white">{t(c.party_role)}</Td>
             <Td>
               {c.opposing_party_name || c.opposing_law_firm || c.opposing_counsel_name ? (
                 <div className="flex flex-col text-[12px] leading-relaxed max-w-[220px]">
                   {c.opposing_party_name && (
                     <span className="truncate text-white" title={c.opposing_party_name}>
-                      <span className="text-[#8a94a6] text-[10px] font-700 uppercase tracking-wider mr-1.5 opacity-60">Opponent:</span>
+                      <span className="text-[#8a94a6] text-[10px] font-700 uppercase tracking-wider mr-1.5 opacity-60">{t('opponent')}:</span>
                       <span className="font-700">{c.opposing_party_name}</span>
                     </span>
                   )}
                   {c.opposing_law_firm && (
                     <span className="truncate text-[#8a94a6] mt-0.5" title={c.opposing_law_firm}>
-                      <span className="text-[#8a94a6] text-[10px] font-700 uppercase tracking-wider mr-1.5 opacity-40">Firm:</span>
+                      <span className="text-[#8a94a6] text-[10px] font-700 uppercase tracking-wider mr-1.5 opacity-40">{t('firm')}:</span>
                       <span className="font-600">{c.opposing_law_firm}</span>
                     </span>
                   )}
                   {c.opposing_counsel_name && (
                     <span className="truncate text-[#38bdf8] mt-0.5" title={c.opposing_counsel_name}>
-                      <span className="text-[#38bdf8] text-[10px] font-700 uppercase tracking-wider mr-1.5 opacity-60">Counsel:</span>
+                      <span className="text-[#38bdf8] text-[10px] font-700 uppercase tracking-wider mr-1.5 opacity-60">{t('counsel')}:</span>
                       <span className="font-700">{c.opposing_counsel_name}</span>
                     </span>
                   )}
@@ -680,13 +683,13 @@ export function ClientsPage({ navigate, toast, openModal }) {
             </Td>
             <Td>
               <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-900 uppercase tracking-widest ${c.type === 'Portal' ? 'bg-[#0057c7]/10 text-[#38bdf8] border border-[#0057c7]/20' : 'bg-white/5 text-[#8a94a6] border border-white/10'}`}>
-                {c.type}
+                {t(c.type)}
               </span>
             </Td>
             <Td>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white font-900 text-[13px] border border-white/5">{c.cases}</div>
-                <span className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest">Matters</span>
+                <span className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest">{t('matters')}</span>
               </div>
             </Td>
             <Td><Badge status={c.status} /></Td>
@@ -695,12 +698,12 @@ export function ClientsPage({ navigate, toast, openModal }) {
               <div className="flex gap-2 justify-end pr-2">
                 <button onClick={e => { e.stopPropagation(); navigate(`/admin/clients/${c.id}`); }} 
                   className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-[#8a94a6] hover:bg-[#0057c7] hover:text-white transition-all group/btn shadow-lg" 
-                  title="View Client">
+                  title={t('viewProfile')}>
                   <svg className="w-4 h-4 transition-transform group-hover/btn:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                 </button>
                 <button onClick={e => { e.stopPropagation(); openModal('edit-client', c.raw); }} 
                   className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-[#8a94a6] hover:bg-[#f59e0b] hover:text-white transition-all group/btn shadow-lg" 
-                  title="Edit Client">
+                  title={t('editClient')}>
                   <svg className="w-4 h-4 transition-transform group-hover/btn:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 00 2 2h14a2 2 0 00 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                 </button>
               </div>
@@ -709,7 +712,7 @@ export function ClientsPage({ navigate, toast, openModal }) {
         ))}
       </Table>
       <div className="flex items-center justify-between px-2">
-        <span className="text-[12px] text-[#8a94a6] font-bold uppercase tracking-widest">Displaying {filtered.length} of {clients.length} Professional Records</span>
+        <span className="text-[12px] text-[#8a94a6] font-bold uppercase tracking-widest">{t('displaying')} {filtered.length} {t('of')} {clients.length} {t('professionalRecords')}</span>
       </div>
     </div>
   );
@@ -719,6 +722,7 @@ export function ClientsPage({ navigate, toast, openModal }) {
 //  CLIENT DETAIL PAGE
 // ─────────────────────────────────────────────────────────
 export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 'admin' }) {
+  const { t } = useLanguage();
   const [tab, setTab] = useState('Overview');
   const [client, setClient] = useState(null);
   const [invoices, setInvoices] = useState([]);
@@ -780,9 +784,9 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
   const saveNotes = async () => {
     try {
       await api.clients.update(clientId, { notes });
-      toast('Notes saved!', 'success');
+      toast(t('notesSaved'), 'success');
     } catch (e) {
-      toast(e.message || 'Save failed', 'error');
+      toast(e.message || t('saveFailed'), 'error');
     }
   };
 
@@ -803,7 +807,7 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
     return (
       <div className="animate-fade-in flex flex-col items-center justify-center min-h-[40vh] gap-3">
         <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-[13px] text-slate-500">Loading client…</p>
+        <p className="text-[13px] text-slate-500">{t('loadingClient')}</p>
       </div>
     );
   }
@@ -811,9 +815,9 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
   if (error || !client) {
     return (
       <div className="animate-fade-in space-y-4">
-        <button onClick={() => navigate(role === 'lawyer' ? '/lawyer/clients' : '/admin/clients')} className="btn btn-secondary btn-xs">Back to Clients</button>
+        <button onClick={() => navigate(role === 'lawyer' ? '/lawyer/clients' : '/admin/clients')} className="btn btn-secondary btn-xs">{t('backToClients')}</button>
         <Card className="border-red-200 bg-red-50/50">
-          <p className="text-[13px] text-red-800 font-600">{error || 'Client not found'}</p>
+          <p className="text-[13px] text-red-800 font-600">{error || t('clientNotFound')}</p>
         </Card>
       </div>
     );
@@ -842,7 +846,7 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
       <div className="flex items-center justify-between">
         <button onClick={() => navigate(role === 'lawyer' ? '/lawyer/clients' : '/admin/clients')} className="btn btn-secondary h-9 px-3 flex items-center gap-2 group transition-all">
           <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M15 18l-6-6 6-6" /></svg>
-          <span className="text-[12px] font-700 uppercase tracking-widest">Back to Registry</span>
+          <span className="text-[12px] font-700 uppercase tracking-widest">{t('backToRegistry')}</span>
         </button>
       </div>
 
@@ -857,7 +861,7 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
               <h2 className="text-2xl font-800 text-white font-display tracking-tight">{view.name}</h2>
               <div className="flex gap-2">
                 <Badge status={view.status} />
-                <span className="text-[11px] bg-[#0057c7]/10 text-[#38bdf8] border border-[#0057c7]/20 px-2.5 py-0.5 rounded-full font-800 uppercase tracking-widest">{view.type}</span>
+                <span className="text-[11px] bg-[#0057c7]/10 text-[#38bdf8] border border-[#0057c7]/20 px-2.5 py-0.5 rounded-full font-800 uppercase tracking-widest">{t(view.type)}</span>
               </div>
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-[13px] font-medium text-[#8a94a6]">
@@ -867,7 +871,7 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
               </span>
               <span className="flex items-center gap-1.5">
                 <svg className="w-4 h-4 text-[#0057c7]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                Enrolled {view.joined}
+                {t('enrolled')} {view.joined}
               </span>
               <span className="flex items-center gap-1.5">
                 <svg className="w-4 h-4 text-[#0057c7]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
@@ -882,11 +886,11 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
           <div className="flex gap-2.5 flex-wrap">
             <button onClick={() => openModal('compose-email', firstMatterId ? { matterId: firstMatterId } : {})} className="btn btn-secondary h-10 px-4">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-              Send Email
+              {t('sendEmail')}
             </button>
             <button onClick={() => openModal('edit-client', client)} className="btn btn-primary h-10 px-6">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 00 2 2h11a2 2 0 00 2-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-              Edit Client
+              {t('editClient')}
             </button>
           </div>
         </div>
@@ -914,7 +918,7 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
                 {s.icon}
               </div>
               <p className="text-3xl font-800 text-white font-display mb-1">{s.value}</p>
-              <p className="text-[11px] text-[#8a94a6] font-800 uppercase tracking-[0.15em]">{s.label}</p>
+              <p className="text-[11px] text-[#8a94a6] font-800 uppercase tracking-[0.15em]">{t(s.label)}</p>
             </div>
           ))}
         </div>
@@ -927,7 +931,7 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
           <Card>
             <h3 className="text-[14px] font-800 text-white uppercase tracking-[0.15em] mb-6 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#0057c7]"></span>
-              Client Identity
+              {t('clientIdentity')}
             </h3>
             <div className="space-y-1">
               {[
@@ -946,8 +950,8 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
                 ['Enrollment Date', view.joined],
               ].filter(Boolean).map(([k, v]) => (
                 <div key={k} className="flex justify-between items-center py-3.5 border-b border-white/5 last:border-0 group">
-                  <span className="text-[13px] font-700 text-[#b8c2d1] uppercase tracking-wider">{k}</span>
-                  <span className="text-[14px] font-600 text-white group-hover:text-[#38bdf8] transition-colors text-right">{v}</span>
+                  <span className="text-[13px] font-700 text-[#b8c2d1] uppercase tracking-wider">{t(k)}</span>
+                  <span className="text-[14px] font-600 text-white group-hover:text-[#38bdf8] transition-colors text-right">{t(v)}</span>
                 </div>
               ))}
             </div>
@@ -955,19 +959,19 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
           <Card className="flex flex-col">
             <h3 className="text-[14px] font-800 text-white uppercase tracking-[0.15em] mb-6 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]"></span>
-              Internal Case Notes
+              {t('internalCaseNotes')}
             </h3>
             <div className="flex-1 min-h-[180px]">
               <Textarea 
                 className="h-full min-h-[180px] text-[14px] leading-relaxed" 
                 value={notes} 
                 onChange={(e) => setNotes(e.target.value)} 
-                placeholder="Enter confidential client notes here..."
+                placeholder="enterConfidentialNotesPlaceholder"
               />
             </div>
             <button type="button" onClick={saveNotes} className="btn btn-primary mt-5 w-full justify-center h-11">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M5 13l4 4L19 7" /></svg>
-              Save Notes
+              {t('saveNotes')}
             </button>
           </Card>
         </div>
@@ -979,13 +983,13 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
               <Tr key={c.id} onClick={() => navigate(`/admin/matters/${c.id}`)}>
                 <Td><span className="font-mono text-[12px] text-[#38bdf8] font-900 tracking-wider uppercase">{c.matter_number}</span></Td>
                 <Td className="font-700 text-white group-hover:text-[#38bdf8] transition-colors">{c.title}</Td>
-                <Td><span className="text-[11px] font-800 uppercase tracking-widest bg-white/5 text-[#8a94a6] px-2.5 py-1 rounded-xl border border-white/5">{c.matter_type || c.practice_area}</span></Td>
+                <Td><span className="text-[11px] font-800 uppercase tracking-widest bg-white/5 text-[#8a94a6] px-2.5 py-1 rounded-xl border border-white/5">{t(c.matter_type || c.practice_area)}</span></Td>
                 <Td><Badge status={matterStatusForBadge(c.status)} /></Td>
                 <Td className="text-[#8a94a6] font-800 text-[11px] uppercase tracking-wider">{c.next_hearing ? new Date(c.next_hearing).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</Td>
               </Tr>
             ))}
           </Table>
-        ) : <EmptyState icon={<svg className="w-12 h-12 text-[#8a94a6] opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>} title="No matters found" desc="No matters assigned to this client yet." />
+        ) : <EmptyState icon={<svg className="w-12 h-12 text-[#8a94a6] opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>} title="noMattersFound" desc={t('noMattersAssignedClientDesc')} />
       )}
       {tab === 'Documents' && (
         documents.length > 0 ? (
@@ -1003,33 +1007,33 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
                         try {
                           await previewDocumentBlob(d.id, openModal, d.original_name);
                         } catch (err) {
-                          toast(err.message || 'Preview failed', 'error');
+                          toast(err.message || t('previewFailed'), 'error');
                         }
                       }}
                       className="btn btn-secondary justify-center text-[10px] font-900 uppercase tracking-widest py-1 h-8"
                     >
-                      Preview
+                      {t('preview')}
                     </button>
                     <button
                       type="button"
                       onClick={async () => {
                         try {
                           await downloadDocumentBlob(d.id, d.original_name);
-                          toast(`${d.original_name} download started`, 'success');
+                          toast(`${d.original_name} ` + t('downloadStarted'), 'success');
                         } catch (e) {
-                          toast(e.message || 'Download failed', 'error');
+                          toast(e.message || t('previewFailed'), 'error');
                         }
                       }}
                       className="btn btn-secondary justify-center text-[10px] font-900 uppercase tracking-widest py-1 h-8"
                     >
-                      Download
+                      {t('download')}
                     </button>
                   </div>
                 </div>
               </Card>
             ))}
           </div>
-        ) : <EmptyState icon={<svg className="w-12 h-12 text-[#8a94a6] opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>} title="No documents" desc="Documents will appear here when uploaded." />
+        ) : <EmptyState icon={<svg className="w-12 h-12 text-[#8a94a6] opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>} title="noDocuments" desc={t('documentsWillAppearHere')} />
       )}
       {tab === 'Billing' && (
         invoices.length > 0 ? (
@@ -1044,17 +1048,17 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
               </Tr>
             ))}
           </Table>
-        ) : <EmptyState icon={<svg className="w-12 h-12 text-[#8a94a6] opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>} title="No invoices" desc="Invoices linked to this client’s matters will appear here." />
+        ) : <EmptyState icon={<svg className="w-12 h-12 text-[#8a94a6] opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>} title="noInvoices" desc={t('invoicesLinkedWillAppear')} />
       )}
       {tab === 'Notes' && (
         <Card>
           <h3 className="text-[15px] font-800 text-white uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-[#0057c7]" />
-            Client Activity Journal
+            {t('clientActivityJournal')}
           </h3>
-          <p className="text-[12px] text-[#8a94a6] mb-4 font-600 italic">Use the Overview tab to edit and save firm notes for this client.</p>
+          <p className="text-[12px] text-[#8a94a6] mb-4 font-600 italic">{t('useOverviewToEditNotes')}</p>
           <Textarea rows={5} value={notes} onChange={(e) => setNotes(e.target.value)} />
-          <button type="button" onClick={saveNotes} className="btn btn-primary mt-2">Save Notes</button>
+          <button type="button" onClick={saveNotes} className="btn btn-primary mt-2">{t('saveNotes')}</button>
         </Card>
       )}
     </div>
@@ -1064,7 +1068,7 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
 // ─────────────────────────────────────────────────────────
 //  CASES PAGE
 // ─────────────────────────────────────────────────────────
-export function CasesPage({ navigate, toast, openModal, role = 'admin' }) {
+export function CasesPage({ navigate, toast, openModal }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [matters, setMatters] = useState([]);
@@ -1120,7 +1124,7 @@ export function CasesPage({ navigate, toast, openModal, role = 'admin' }) {
     return (
       <div className="animate-fade-in flex flex-col items-center justify-center min-h-[40vh] gap-3">
         <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-[13px] text-slate-500">Loading matters…</p>
+        <p className="text-[13px] text-slate-500">{t('loadingMatters')}</p>
       </div>
     );
   }
@@ -1130,7 +1134,7 @@ export function CasesPage({ navigate, toast, openModal, role = 'admin' }) {
       <div className="animate-fade-in space-y-4">
         <Card className="border-red-200 bg-red-50/50">
           <p className="text-[13px] text-red-800 font-600">{error}</p>
-          <button type="button" onClick={load} className="btn btn-secondary btn-sm mt-3">Retry</button>
+          <button type="button" onClick={load} className="btn btn-secondary btn-sm mt-3">{t('retry')}</button>
         </Card>
       </div>
     );
@@ -1138,24 +1142,24 @@ export function CasesPage({ navigate, toast, openModal, role = 'admin' }) {
 
   return (
     <div className="animate-fade-in space-y-4">
-      <PageHeader title="Matters" subtitle={`${matters.length} total matters`}>
+      <PageHeader title="mattersCases" subtitle={`${matters.length} ${t('totalMatters')}`}>
         <button onClick={() => openModal('add-case')} className="btn btn-primary">
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-          New Matter
+          {t('newMatter')}
         </button>
       </PageHeader>
-      <Table headers={['Matter ID', 'Title', 'Client', 'Lawyer', 'Type', 'Status', 'Next Hearing', 'Priority', '']}
-        searchPlaceholder="Search matters..." onSearch={setSearch}
+      <Table headers={[t('matterIdHeader'), t('titleHeader'), t('clientHeader'), t('assignedLawyer'), t('typeCol'), t('status'), t('nextHearingCol'), t('priority'), '']}
+        searchPlaceholder="searchPlaceholder" onSearch={setSearch}
         actions={
           <Select 
             value={statusFilter} 
             onChange={e => setStatusFilter(e.target.value)} 
             className="h-9 min-w-[140px] !py-0 !px-3 text-[12px] rounded-xl"
           >
-            <option value="All Status">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Pending">Pending</option>
-            <option value="Closed">Closed</option>
+            <option value="All Status">{t('allStatuses')}</option>
+            <option value="Active">{t('active')}</option>
+            <option value="Pending">{t('pending')}</option>
+            <option value="Closed">{t('closed')}</option>
           </Select>
         }>
         {filtered.map(c => (
@@ -1173,7 +1177,7 @@ export function CasesPage({ navigate, toast, openModal, role = 'admin' }) {
               <span className="text-[12px] font-medium text-[#8a94a6]">{c.lawyer}</span>
             </Td>
             <Td className="whitespace-nowrap">
-              <span className="text-[11px] bg-[#0057c7]/10 text-[#38bdf8] border border-[#0057c7]/20 px-2 py-0.5 rounded-full font-800 uppercase tracking-widest">{c.type}</span>
+              <span className="text-[11px] bg-[#0057c7]/10 text-[#38bdf8] border border-[#0057c7]/20 px-2 py-0.5 rounded-full font-800 uppercase tracking-widest">{t(c.type)}</span>
             </Td>
             <Td className="whitespace-nowrap"><Badge status={c.status} /></Td>
             <Td className="whitespace-nowrap">
@@ -1185,7 +1189,7 @@ export function CasesPage({ navigate, toast, openModal, role = 'admin' }) {
                 <button 
                   onClick={e => { e.stopPropagation(); navigate(`${basePath}/matters/${c.id}`); }} 
                   className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 border border-white/5 text-[#8a94a6] hover:bg-[#0057c7] hover:text-white transition-all group/btn" 
-                  title="View Matter">
+                  title={t('viewDetails')}>
                   <svg className="w-4 h-4 transition-transform group-hover/btn:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                 </button>
               </div>
@@ -1201,6 +1205,7 @@ export function CasesPage({ navigate, toast, openModal, role = 'admin' }) {
 //  MATTER DETAIL
 // ─────────────────────────────────────────────────────────
 export function CaseDetailPage({ caseId, navigate, toast, openModal, role: originalRole = 'admin' }) {
+  const { t } = useLanguage();
   const role = originalRole.toLowerCase();
   const isAdmin = role === 'admin';
   const isStaff = role === 'admin' || role === 'lawyer';
@@ -1242,7 +1247,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
       await api.request(`/communications/${commId}`, {
         method: 'DELETE'
       });
-      toast('Communication deleted successfully', 'success');
+      toast(t('communicationDeletedSuccessfully'), 'success');
       setShowConfirmDelete(null);
       
       // Refresh case details data
@@ -1253,7 +1258,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
       window.dispatchEvent(new CustomEvent('vktori:entities-changed'));
     } catch (err) {
       console.error(err);
-      toast('Failed to delete communication: ' + (err.response?.data?.message || err.message), 'error');
+      toast(t('failedDeleteComm') + ': ' + (err.response?.data?.message || err.message), 'error');
     }
   };
 
@@ -1277,11 +1282,11 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
         date: new Date(h.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
         from: h.old_status === 'completed' ? 'closed' : h.old_status,
         to: h.new_status === 'completed' ? 'closed' : h.new_status,
-        by: 'Firm',
+        by: t('firm'),
       }));
       setStatusHistory(hist);
     } catch (e) {
-      setMatterError(e.message || 'Failed to load matter');
+      setMatterError(e.message || t('failedLoadMatter'));
     } finally {
       setMatterLoading(false);
     }
@@ -1385,12 +1390,12 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
       });
       setReplyText('');
       setReplyingTo(null);
-      toast('Reply sent successfully', 'success');
+      toast(t('replySentSuccessfully'), 'success');
       // Refresh data
       fetchData();
       window.dispatchEvent(new Event('vktori:entities-changed'));
     } catch (e) {
-      toast(e.message || 'Failed to send reply', 'error');
+      toast(e.message || t('failedSendReply'), 'error');
     } finally {
       setIsSubmittingReply(false);
     }
@@ -1407,7 +1412,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
       const res = await api.communications.getThread(id);
       setExpandedThreadData(res.data);
     } catch (e) {
-      toast('Failed to load thread replies', 'error');
+      toast(t('failedLoadThreadReplies'), 'error');
     }
   };
 
@@ -1422,10 +1427,10 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
     try {
       const res = await api.timers.start(caseId);
       setActiveTimer(res.data);
-      toast('Timer started', 'success');
+      toast(t('timerStarted'), 'success');
       window.dispatchEvent(new Event('vktori:entities-changed'));
     } catch (e) {
-      toast(e.message || 'Failed to start timer', 'error');
+      toast(e.message || t('failedStartTimer'), 'error');
     }
   };
 
@@ -1438,12 +1443,12 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
       await api.timers.stop(timerId);
       setActiveTimer(null);
       setTimerSeconds(0);
-      toast('Timer stopped and session saved', 'success');
+      toast(t('timerStoppedSaved'), 'success');
       window.dispatchEvent(new Event('vktori:entities-changed'));
     } catch (e) {
       // Only toast error if it's not a "already stopped" message which we are trying to avoid anyway
       if (!e.message?.includes('already stopped')) {
-        toast(e.message || 'Failed to stop timer', 'error');
+        toast(e.message || t('failedStopTimer'), 'error');
       }
     } finally {
       stoppingRef.current = false;
@@ -1479,9 +1484,9 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
       const res = await api.matters.get(caseId);
       setApiMatter(res.data);
       setCurrentCase(mapMatterToCaseView(res.data));
-      toast(`Matter status updated to ${newStatus}`, 'success');
+      toast(t('statusUpdatedTo') + ` ${newStatus}`, 'success');
     } catch (e) {
-      toast(e.message || 'Update failed', 'error');
+      toast(e.message || t('updateFailed'), 'error');
     }
   };
 
@@ -1552,10 +1557,10 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
     e?.stopPropagation();
     try {
       await api.tasks.complete(taskId);
-      toast('Task marked as complete', 'success');
+      toast(t('taskCompleted'), 'success');
       window.dispatchEvent(new Event('vktori:entities-changed'));
     } catch (err) {
-      toast(err.message || 'Failed to complete task', 'error');
+      toast(err.message || t('failedCompleteTask'), 'error');
     }
   };
 
@@ -1563,10 +1568,10 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
     e?.stopPropagation();
     try {
       await api.tasks.reopen(taskId);
-      toast('Task reopened', 'success');
+      toast(t('taskReopened'), 'success');
       window.dispatchEvent(new Event('vktori:entities-changed'));
     } catch (err) {
-      toast(err.message || 'Failed to reopen task', 'error');
+      toast(err.message || t('failedReopenTask'), 'error');
     }
   };
 
@@ -1574,10 +1579,10 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
     e?.stopPropagation();
     try {
       await api.tasks.update(taskId, { status: 'in_progress' });
-      toast('Task in progress', 'success');
+      toast(t('taskInProgress'), 'success');
       window.dispatchEvent(new Event('vktori:entities-changed'));
     } catch (err) {
-      toast(err.message || 'Failed to start task', 'error');
+      toast(err.message || t('failedStartTask'), 'error');
     }
   };
 
@@ -1649,18 +1654,18 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
   const handleDeleteCase = async () => {
     try {
       await api.matters.remove(caseId);
-      toast('Matter deleted successfully.', 'success');
+      toast(t('matterDeletedSuccessfully'), 'success');
       window.dispatchEvent(new CustomEvent('vktori:entities-changed'));
       navigate('/admin/matters');
     } catch (e) {
-      toast(e.message || 'Failed to delete matter', 'error');
+      toast(e.message || t('failedDeleteMatter'), 'error');
       setIsDeleteConfirmOpen(false);
     }
   };
 
   const sendTemplateForSignature = async (id) => {
     if (!/^\d+$/.test(String(id))) {
-      toast('Draft is not linked to database.', 'info');
+      toast(t('draftNotLinked'), 'info');
       return;
     }
     const email = window.prompt("Enter recipient's email address:");
@@ -1669,9 +1674,9 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
       await api.drafts.sendForSignature(id, { recipient_email: email });
       const res = await api.matters.get(caseId);
       setApiMatter(res.data);
-      toast('Draft sent for signature.', 'success');
+      toast(t('draftSentForSignature'), 'success');
     } catch (e) {
-      toast(e.message || 'Update failed', 'error');
+      toast(e.message || t('updateFailed'), 'error');
     }
   };
   const downloadDraftPdf = async (id) => {
@@ -1686,7 +1691,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e) {
-      toast(e.message || 'Download failed', 'error');
+      toast(e.message || t('downloadFailed'), 'error');
     }
   };
   const openDraftPreview = async (item) => {
@@ -1695,7 +1700,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
       const { blob } = await api.drafts.downloadPdf(item.id);
       setPreviewPdfUrl(URL.createObjectURL(blob));
     } catch (e) {
-      toast('Failed to load PDF preview.', 'error');
+      toast(t('failedLoadPdfPreview'), 'error');
     }
   };
   const closeDraftPreview = () => {
@@ -1721,27 +1726,27 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
   const handleTemplateChange = (templateId) => {
     setSelectedTemplateId(templateId);
     if (!templateId) return;
-    const t = globalTemplates.find(x => x.id === parseInt(templateId, 10));
-    if (t) {
+    const tItem = globalTemplates.find(x => x.id === parseInt(templateId, 10));
+    if (tItem) {
       setNewDraftForm(prev => ({
         ...prev,
-        title: prev.title || t.title,
-        category: t.category || '',
-        notes: t.content || ''
+        title: prev.title || tItem.title,
+        category: tItem.category || '',
+        notes: tItem.content || ''
       }));
     }
   };
   const saveNewDraft = async () => {
     if (creationType === 'template' && !selectedTemplateId) {
-      toast('Please select a template.', 'warning');
+      toast(t('selectTemplateWarning'), 'warning');
       return;
     }
     if (!newDraftForm.title.trim()) {
-      toast('Draft Title is required.', 'warning');
+      toast(t('titleRequiredWarning'), 'warning');
       return;
     }
     if (!newDraftForm.category.trim()) {
-      toast('Category is required.', 'warning');
+      toast(t('categoryRequiredWarning'), 'warning');
       return;
     }
     try {
@@ -1750,7 +1755,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
         u = JSON.parse(localStorage.getItem('vktori_user') || 'null');
       } catch { /* ignore */ }
       if (!u?.id) {
-        toast('Missing user session.', 'error');
+        toast(t('missingUserSession'), 'error');
         return;
       }
       await api.drafts.create({
@@ -1764,9 +1769,9 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
       const res = await api.matters.get(caseId);
       setApiMatter(res.data);
       setIsCreateDraftOpen(false);
-      toast('New draft created successfully.', 'success');
+      toast(t('draftCreatedSuccessfully'), 'success');
     } catch (e) {
-      toast(e.message || 'Create failed', 'error');
+      toast(e.message || t('updateFailed'), 'error');
     }
   };
   const clientStatus = (status) => status === 'Sent for Signature' ? 'Pending Signature' : status;
@@ -1780,12 +1785,12 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
     if (!reviewConfirmed || !reviewDraft || !hasDrawnSignature) return;
     try {
       if (!/^\d+$/.test(String(reviewDraft.id))) {
-        toast('Draft is not linked to a database record.', 'info');
+        toast(t('draftNotLinkedDb'), 'info');
         return;
       }
       const signature_data = signaturePadRef.current?.toDataURL() || null;
       if (!signature_data) {
-        toast('Failed to capture signature image.', 'error');
+        toast(t('failedCaptureSignature'), 'error');
         return;
       }
       await api.drafts.sign(Number(reviewDraft.id), {
@@ -1799,9 +1804,9 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
       setReviewConfirmed(false);
       setHasDrawnSignature(false);
       signaturePadRef.current?.clear();
-      toast('Document signed successfully.', 'success');
+      toast(t('docSignedSuccessfully'), 'success');
     } catch (e) {
-      toast(e.message || 'Sign failed', 'error');
+      toast(e.message || t('updateFailed'), 'error');
     }
   };
 
@@ -1910,7 +1915,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
   const payAllOutstanding = async () => {
     const payable = matterInvoices.filter((inv) => inv.status !== 'paid' && inv.status !== 'void' && inv.dbId != null);
     if (!payable.length) {
-      toast('No payable invoices found.', 'info');
+      toast(t('noPayableInvoices'), 'info');
       return;
     }
     try {
@@ -1922,15 +1927,15 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
       }
       const res = await api.matters.get(caseId);
       setApiMatter(res.data);
-      toast('Manual payments recorded.', 'success');
+      toast(t('manualPaymentsRecorded'), 'success');
     } catch (e) {
-      toast(e.message || 'Payment failed', 'error');
+      toast(e.message || t('updateFailed'), 'error');
     }
   };
 
   const payInvoiceRow = async (invoice) => {
     if (!invoice?.dbId) {
-      toast('This invoice is not linked to a database record.', 'info');
+      toast(t('invoiceNotLinkedDb'), 'info');
       return;
     }
     if (invoice.status === 'paid' || invoice.status === 'void') return;
@@ -1942,9 +1947,9 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
       });
       const res = await api.matters.get(caseId);
       setApiMatter(res.data);
-      toast('Payment marked as paid.', 'success');
+      toast(t('paymentMarkedPaid'), 'success');
     } catch (e) {
-      toast(e.message || 'Payment failed', 'error');
+      toast(e.message || t('updateFailed'), 'error');
     } finally {
       setPayingInvoiceDbId(null);
     }
@@ -2030,7 +2035,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
 
     const benchmarks = [
       {
-        title: 'Next invoice due',
+        title: t('nextInvoiceDue') || 'Next invoice due',
         date: nextInv?.due_date ? new Date(nextInv.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—',
         status: nextInv && new Date(nextInv.due_date) < new Date() ? 'Overdue' : 'Scheduled',
       },
@@ -2039,8 +2044,8 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
         date: new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         status: 'Upcoming'
       })),
-      { title: 'Matter opened', date: currentCase.filed, status: 'Recorded' },
-      { title: 'Last updated', date: currentCase.lastUpdated, status: 'Synced' },
+      { title: t('matterOpened') || 'Matter opened', date: currentCase.filed, status: 'Recorded' },
+      { title: t('lastUpdated') || 'Last updated', date: currentCase.lastUpdated, status: 'Synced' },
     ];
     return benchmarks;
   })();
@@ -2049,7 +2054,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
     return (
       <div className="animate-fade-in flex flex-col items-center justify-center min-h-[40vh] gap-3">
         <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-[13px] text-slate-500">Loading matter…</p>
+        <p className="text-[13px] text-slate-500">{t('loadingMatters')}</p>
       </div>
     );
   }
@@ -2057,7 +2062,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
   if (hasApiMatter && matterError) {
     return (
       <div className="animate-fade-in space-y-4">
-        <button type="button" onClick={() => navigate(isClient ? '/client/matters' : role === 'lawyer' ? '/lawyer/matters' : '/admin/matters')} className="btn btn-secondary btn-xs">Back to Matters</button>
+        <button type="button" onClick={() => navigate(isClient ? '/client/matters' : role === 'lawyer' ? '/lawyer/matters' : '/admin/matters')} className="btn btn-secondary btn-xs">{t('backToMatters') || 'Back to Matters'}</button>
         <Card className="border-red-200 bg-red-50/50">
           <p className="text-[13px] text-red-800 font-600">{matterError}</p>
         </Card>
@@ -2089,17 +2094,17 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
         }} 
           className="btn btn-secondary h-9 px-3 flex items-center gap-2 group transition-all">
           <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M15 18l-6-6 6-6" /></svg>
-          <span className="text-[12px] font-700 uppercase tracking-widest">Back to Matters</span>
+          <span className="text-[12px] font-700 uppercase tracking-widest">{t('backToMatters') || 'Back to Matters'}</span>
         </button>
         {!isClient && (
           <div className="flex gap-2.5 flex-wrap w-full sm:w-auto">
             <button onClick={() => openModal('add-document', { ...matterModalContext, ...(documentsFolderFilter && { docCategory: documentsFolderFilter }) })} className="btn btn-secondary h-9 px-4 text-[12px] font-700 uppercase tracking-wider">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-              Upload File
+              {t('upload')}
             </button>
             <button onClick={() => openModal('add-note', matterModalContext)} className="btn btn-primary h-9 px-4 text-[12px] font-700 uppercase tracking-wider">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 4v16m8-8H4" /></svg>
-              New Note
+              {t('newNote')}
             </button>
           </div>
         )}
@@ -2120,7 +2125,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
               {activeTimer && activeTimer.matter_id === Number(caseId) && (
                 <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-red-500/10 border border-red-500/20 animate-pulse">
                   <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-                  <span className="text-[10px] font-900 text-red-500 uppercase tracking-[0.15em]">Live Session</span>
+                  <span className="text-[10px] font-900 text-red-500 uppercase tracking-[0.15em]">{t('liveSession')}</span>
                 </div>
               )}
             </div>
@@ -2136,7 +2141,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                 <span className="text-[#0057c7]">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
                 </span>
-                <span className="text-white">{currentCase.type}</span>
+                <span className="text-white">{t(currentCase.type)}</span>
               </span>
               <span className="flex items-center gap-2">
                 <span className="text-[#0057c7]">
@@ -2148,7 +2153,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                 <span className="text-[#0057c7]">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 00-2 2z" /></svg>
                 </span>
-                <span className="text-white">Opened {currentCase.filed}</span>
+                <span className="text-white">{t('openedAt')} {currentCase.filed}</span>
               </span>
             </div>
           </div>
@@ -2156,7 +2161,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
             <div className="flex flex-col items-start sm:items-end gap-4 text-left sm:text-right w-full sm:w-auto bg-white/[0.02] p-5 rounded-2xl border border-white/5 shadow-inner">
               <div className="w-full sm:w-auto">
                 <p className="text-[10px] text-[#8a94a6] font-800 uppercase tracking-[0.2em] mb-2">
-                  {activeTimer && activeTimer.matter_id !== Number(caseId) ? 'System Occupied' : 'Session Duration'}
+                  {activeTimer && activeTimer.matter_id !== Number(caseId) ? t('syncInterrupted') : t('sessionDuration') || 'Session Duration'}
                 </p>
                 <div className="flex items-center gap-4">
                   <p className="text-3xl font-mono font-900 text-[#38bdf8] tabular-nums tracking-tight">
@@ -2171,14 +2176,14 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                       onClick={startTimer}
                       disabled={activeTimer && activeTimer.matter_id !== Number(caseId)}
                       className={`w-10 h-10 flex items-center justify-center rounded-full border transition-all shadow-lg ${activeTimer && activeTimer.matter_id !== Number(caseId) ? 'bg-white/5 border-white/5 text-[#8a94a6] cursor-not-allowed opacity-50' : 'bg-[#0057c7]/10 border-[#0057c7]/20 text-[#38bdf8] hover:bg-[#0057c7] hover:text-white hover:border-transparent shadow-[#0057c7]/10'}`}
-                      title={activeTimer && activeTimer.matter_id !== Number(caseId) ? 'Active timer on another matter' : 'Start Session'}
+                      title={activeTimer && activeTimer.matter_id !== Number(caseId) ? t('activeTimerAnotherMatter') : t('startSession')}
                     >
                       <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                     </button>
                   )}
                 </div>
               </div>
-              <button onClick={handleEdit} className="btn btn-secondary h-8 px-4 font-800 text-[10px] uppercase tracking-widest border-white/5 w-full sm:w-auto">Edit Matter Details</button>
+              <button onClick={handleEdit} className="btn btn-secondary h-8 px-4 font-800 text-[10px] uppercase tracking-widest border-white/5 w-full sm:w-auto">{t('editMatter')}</button>
             </div>
           )}
         </div>
@@ -2198,7 +2203,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-inner transition-transform group-hover:scale-110 ${stat.color}`}>{stat.icon}</div>
               <div>
                 <p className="text-[20px] font-900 text-white leading-none tabular-nums">{stat.value}</p>
-                <p className="text-[10px] text-[#8a94a6] mt-2 font-800 uppercase tracking-[0.15em]">{stat.label}</p>
+                <p className="text-[10px] text-[#8a94a6] mt-2 font-800 uppercase tracking-[0.15em]">{t(stat.label)}</p>
               </div>
             </div>
           )
@@ -2227,10 +2232,10 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="px-4 py-1.5 rounded-full bg-[#0057c7] text-white text-[11px] font-900 uppercase tracking-[0.2em] shadow-lg shadow-[#0057c7]/30">
-                      System Status
+                      {t('systemStatus') || 'System Status'}
                     </div>
                     <div className="h-px w-12 bg-white/10" />
-                    <span className="text-[12px] font-800 text-[#38bdf8] uppercase tracking-widest animate-pulse">Live Tracking Active</span>
+                    <span className="text-[12px] font-800 text-[#38bdf8] uppercase tracking-widest animate-pulse">{t('liveTrackingActive') || 'Live Tracking Active'}</span>
                   </div>
                   
                   <div className="flex items-start gap-6">
@@ -2239,19 +2244,19 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                     </div>
                     <div>
                       <h3 className="text-2xl font-900 text-white font-display tracking-tight mb-2">
-                        Case Status: <span className="text-[#38bdf8] uppercase">{currentCase.status}</span>
+                        {t('statusCol')}: <span className="text-[#38bdf8] uppercase">{t(currentCase.status)}</span>
                       </h3>
                       <p className="text-[14px] text-[#8a94a6] font-600 leading-relaxed max-w-xl">
-                        {currentCase.status === 'active' ? "Your legal matter is in active progression. Our specialized counsel is executing the current phase of operations." :
-                          currentCase.status === 'pending' ? "The registry is currently awaiting critical updates or synchronized documentation from your end." :
-                            "Mission complete. Your legal matter has been successfully finalized and archived in the secure registry."}
+                        {currentCase.status === 'active' ? t('caseActiveDesc') || "Your legal matter is in active progression. Our specialized counsel is executing the current phase of operations." :
+                          currentCase.status === 'pending' ? t('casePendingDesc') || "The registry is currently awaiting critical updates or synchronized documentation from your end." :
+                            t('caseClosedDesc') || "Mission complete. Your legal matter has been successfully finalized and archived in the secure registry."}
                       </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex flex-col items-center md:items-end gap-4">
-                  <p className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.2em]">Legal Task Force</p>
+                  <p className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.2em]">{t('legalTaskForce') || 'Legal Task Force'}</p>
                   <div className="flex -space-x-3">
                     <Avatar initials="AP" size="md" color="#0057c7" className="ring-4 ring-[#1a2233]" />
                     <Avatar initials="JD" size="md" color="#1e293b" className="ring-4 ring-[#1a2233]" />
@@ -2259,14 +2264,12 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                     <div className="w-10 h-10 rounded-2xl bg-white/5 backdrop-blur-md flex items-center justify-center text-[11px] font-900 text-white ring-4 ring-[#1a2233] border border-white/10">+2</div>
                   </div>
                   <button onClick={() => setTab('Communication')} className="mt-2 text-[11px] font-900 text-white bg-white/5 hover:bg-[#0057c7] px-6 py-2.5 rounded-xl border border-white/10 transition-all uppercase tracking-widest shadow-lg">
-                    Message Counsel
+                    {t('messageCounsel')}
                   </button>
                 </div>
               </div>
             </div>
           )}
-
-
 
           {tab === 'Overview' && (
             <div className="animate-fade-in space-y-6">
@@ -2274,12 +2277,12 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-[16px] font-800 text-white flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#38bdf8]" />
-                    Matter Executive Summary
+                    {t('matterExecutiveSummary')}
                   </h3>
                 </div>
                 <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 mb-8">
                   <p className="text-[14px] leading-relaxed text-[#b8c2d1] italic">
-                    "{currentCase.description || 'No formal description recorded for this matter.'}"
+                    "{currentCase.description || t('noFormalDescriptionRecorded')}"
                   </p>
                 </div>
 
@@ -2287,7 +2290,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   <div className="space-y-6">
                     <h4 className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.2em] flex items-center gap-2">
                       <span className="w-4 h-[1px] bg-[#8a94a6]/30" />
-                      Legal Infrastructure
+                      {t('legalInfrastructure')}
                     </h4>
                     <div className="space-y-4">
                       {[
@@ -2306,7 +2309,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                         <div key={k} className="flex justify-between items-center text-[13px] group border-b border-white/[0.03] pb-3 last:border-0">
                           <span className="text-[#8a94a6] flex items-center gap-2">
                             <span className="opacity-50 grayscale group-hover:grayscale-0 transition-all">{icon}</span>
-                            {k}
+                            {t(k)}
                           </span>
                           <span className="font-700 text-white">{v}</span>
                         </div>
@@ -2316,7 +2319,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   <div className="space-y-6">
                     <h4 className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.2em] flex items-center gap-2">
                       <span className="w-4 h-[1px] bg-[#8a94a6]/30" />
-                      Critical Benchmarks
+                      {t('criticalBenchmarks')}
                     </h4>
                     <div className="space-y-3">
                       {overviewBenchmarks.map(b => (
@@ -2328,7 +2331,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                               <p className="text-[11px] text-[#8a94a6] mt-0.5">{b.date}</p>
                             </div>
                           </div>
-                          <span className={`text-[9px] font-900 px-2.5 py-1 rounded-lg uppercase tracking-widest border ${b.status === 'Imminent' || b.status === 'Overdue' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-[#0057c7]/10 text-[#38bdf8] border-[#0057c7]/20'}`}>{b.status}</span>
+                          <span className={`text-[9px] font-900 px-2.5 py-1 rounded-lg uppercase tracking-widest border ${b.status === 'Imminent' || b.status === 'Overdue' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-[#0057c7]/10 text-[#38bdf8] border-[#0057c7]/20'}`}>{t(b.status.toLowerCase()) || b.status}</span>
                         </div>
                       ))}
                     </div>
@@ -2344,25 +2347,25 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   </div>
                   <h3 className="text-[12px] font-900 uppercase tracking-[0.2em] text-[#38bdf8] mb-4 flex items-center gap-2">
                     <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                    High-Level Internal Strategy
+                    {t('highLevelInternalStrategy')}
                   </h3>
                   <p className="text-[15px] leading-relaxed text-white font-500 italic opacity-95">
                     {isAdmin && apiMatter
                       ? (apiMatter.description
                         ? `"${apiMatter.description}"`
-                        : 'No classified strategy brief recorded for this matter.')
+                        : t('noClassifiedStrategyRecorded'))
                       : '"Phase 2 discovery initiated. Focus remains on insurance indemnification clauses and expert witness preparation. Next mediation scheduled for month-end."'}
                   </p>
                 </Card>
               ) : (
                 <Card className="bg-[#0057c7]/10 border-[#0057c7]/20">
-                  <h3 className="text-[12px] font-900 uppercase tracking-[0.2em] text-[#38bdf8] mb-4">Case Progression Brief</h3>
+                  <h3 className="text-[12px] font-900 uppercase tracking-[0.2em] text-[#38bdf8] mb-4">{t('caseProgressionBrief')}</h3>
                   <p className="text-[15px] leading-relaxed text-white font-500">
-                    We are currently in the mid-litigation phase. Our team has finalized the initial filings and is now performing a deep-dive into the evidence provided. You will receive an update as soon as the court confirms the next session date.
+                    {t('caseProgressionBriefDesc')}
                     <br /><br />
                     <span className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-800 uppercase tracking-widest mt-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      Next Action: witness affidavit review
+                      {t('nextActionAffidavitReview')}
                     </span>
                   </p>
                 </Card>
@@ -2372,36 +2375,36 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                 <div className="mt-4">
                   <h3 className="text-[15px] font-800 text-white flex items-center gap-2 mb-6">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#38bdf8]" />
-                    Time Tracking History
+                    {t('timeTrackingHistory')}
                   </h3>
                   {timerHistory.length === 0 ? (
                     <div className="bg-white/[0.02] rounded-2xl p-8 text-center border border-dashed border-white/10">
-                      <p className="text-[12px] text-[#8a94a6] italic">No active or historical time entries recorded for this matter.</p>
+                      <p className="text-[12px] text-[#8a94a6] italic">{t('noActiveOrHistoricalEntries')}</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {timerHistory.map((t) => (
-                        <div key={t.id} className="bg-white/[0.03] border border-white/5 rounded-2xl p-4 flex items-center justify-between hover:bg-white/[0.05] transition-all shadow-xl relative overflow-hidden group">
-                          {t.is_running && <div className="absolute top-0 left-0 w-1.5 h-full bg-[#38bdf8] shadow-[0_0_10px_rgba(56,189,248,0.5)]" />}
+                      {timerHistory.map((tItem) => (
+                        <div key={tItem.id} className="bg-white/[0.03] border border-white/5 rounded-2xl p-4 flex items-center justify-between hover:bg-white/[0.05] transition-all shadow-xl relative overflow-hidden group">
+                          {tItem.is_running && <div className="absolute top-0 left-0 w-1.5 h-full bg-[#38bdf8] shadow-[0_0_10px_rgba(56,189,248,0.5)]" />}
                           <div className="flex items-center gap-4">
-                            <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl shadow-inner ${t.is_running ? 'bg-[#38bdf8]/10 text-[#38bdf8]' : 'bg-white/[0.03] text-[#8a94a6]'}`}>
-                              {t.is_running ? <svg className="w-5 h-5 animate-spin-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> : <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
+                            <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl shadow-inner ${tItem.is_running ? 'bg-[#38bdf8]/10 text-[#38bdf8]' : 'bg-white/[0.03] text-[#8a94a6]'}`}>
+                              {tItem.is_running ? <svg className="w-5 h-5 animate-spin-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> : <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
                             </div>
                             <div className="min-w-0">
-                              <p className="text-[13px] font-800 text-white truncate tracking-tight">{t.user?.full_name || 'Legal Staff'}</p>
+                              <p className="text-[13px] font-800 text-white truncate tracking-tight">{tItem.user?.full_name || t('legalStaff')}</p>
                               <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[11px] text-[#8a94a6] font-600 uppercase tracking-widest">{new Date(t.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                <span className="text-[11px] text-[#8a94a6] font-600 uppercase tracking-widest">{new Date(tItem.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                 <span className="text-white/20">→</span>
-                                <span className="text-[11px] text-[#8a94a6] font-600 uppercase tracking-widest">{t.end_time ? new Date(t.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Live'}</span>
+                                <span className="text-[11px] text-[#8a94a6] font-600 uppercase tracking-widest">{tItem.end_time ? new Date(tItem.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : t('live')}</span>
                               </div>
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className={`text-[15px] font-900 tabular-nums ${t.is_running ? 'text-[#38bdf8] animate-pulse' : 'text-white'}`}>
-                              {t.duration_minutes ? (t.duration_minutes < 60 ? `${t.duration_minutes}m` : `${Math.floor(t.duration_minutes / 60)}h ${t.duration_minutes % 60}m`) : 'Active'}
+                            <p className={`text-[15px] font-900 tabular-nums ${tItem.is_running ? 'text-[#38bdf8] animate-pulse' : 'text-white'}`}>
+                              {tItem.duration_minutes ? (tItem.duration_minutes < 60 ? `${tItem.duration_minutes}m` : `${Math.floor(tItem.duration_minutes / 60)}h ${tItem.duration_minutes % 60}m`) : t('active')}
                             </p>
                             <p className="text-[9px] text-[#8a94a6] font-900 uppercase tracking-[0.2em] mt-1">
-                              {new Date(t.start_time).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                              {new Date(tItem.start_time).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                             </p>
                           </div>
                         </div>
@@ -2445,8 +2448,8 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                          {docs.filter((d) => documentFolderBucket(d.category) === folder || (d.folder_path && (d.folder_path === folder || d.folder_path.startsWith(folder + '/')))).length}
                       </div>
                     </div>
-                    <p className={`text-[14px] font-800 leading-tight ${documentsFolderFilter === folder ? 'text-[#38bdf8]' : 'text-white'}`}>{folder}</p>
-                    <p className="text-[10px] text-[#8a94a6] mt-2 font-900 uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">Legal Repository</p>
+                    <p className={`text-[14px] font-800 leading-tight ${documentsFolderFilter === folder ? 'text-[#38bdf8]' : 'text-white'}`}>{t(folder) || folder}</p>
+                    <p className="text-[10px] text-[#8a94a6] mt-2 font-900 uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">{t('legalRepository')}</p>
                   </div>
                 ))}
               </div>
@@ -2455,20 +2458,20 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   <div>
                     <h3 className="text-[16px] font-800 text-white flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#38bdf8]" />
-                      Discovery Documents
+                      {t('discoveryDocuments')}
                     </h3>
                     {documentsFolderFilter && (
-                      <p className="text-[11px] text-[#38bdf8] mt-1 font-800 uppercase tracking-widest">Active Filter: {documentsFolderFilter} · click folder to reset</p>
+                      <p className="text-[11px] text-[#38bdf8] mt-1 font-800 uppercase tracking-widest">{t('activeFilter')}: {t(documentsFolderFilter) || documentsFolderFilter} · {t('clickFolderToReset')}</p>
                     )}
                   </div>
                   <div className="flex gap-3 flex-wrap items-center">
-                    {isClient && <button onClick={() => openModal('add-document', { ...matterModalContext, ...(documentsFolderFilter && { docCategory: documentsFolderFilter }) })} className="btn btn-primary h-8 px-4 text-[11px] font-800 uppercase tracking-wider">Upload Object</button>}
+                    {isClient && <button onClick={() => openModal('add-document', { ...matterModalContext, ...(documentsFolderFilter && { docCategory: documentsFolderFilter }) })} className="btn btn-primary h-8 px-4 text-[11px] font-800 uppercase tracking-wider">{t('upload')}</button>}
                     <select className="text-[13px] bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2 outline-none focus:border-[#38bdf8] text-white transition-all" value={docCategoryFilter} onChange={e => setDocCategoryFilter(e.target.value)}>
-                      <option value="">All Categories</option>
-                      {[...new Set(docs.map(d => d.category))].map(c => <option key={c} value={c}>{c}</option>)}
+                      <option value="">{t('allCategories')}</option>
+                      {[...new Set(docs.map(d => d.category))].map(c => <option key={c} value={c}>{t(c) || c}</option>)}
                     </select>
                     <div className="relative">
-                      <input className="text-[13px] bg-white/[0.03] border border-white/10 rounded-xl pl-9 pr-4 py-2 w-full sm:w-64 outline-none focus:border-[#38bdf8] text-white transition-all" placeholder="Search objects..." value={docSearchTerm} onChange={e => setDocSearchTerm(e.target.value)} />
+                      <input className="text-[13px] bg-white/[0.03] border border-white/10 rounded-xl pl-9 pr-4 py-2 w-full sm:w-64 outline-none focus:border-[#38bdf8] text-white transition-all" placeholder={t('searchObjects')} value={docSearchTerm} onChange={e => setDocSearchTerm(e.target.value)} />
                       <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8a94a6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                     </div>
                   </div>
@@ -2483,7 +2486,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                         setMatterSubfolderPath([]);
                       }}
                     >
-                      📁 {documentsFolderFilter}
+                      📁 {t(documentsFolderFilter) || documentsFolderFilter}
                     </span>
                     {matterSubfolderPath.map((segment, idx) => (
                       <React.Fragment key={idx}>
@@ -2515,14 +2518,14 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                         </span>
                         <div className="min-w-0 flex-1">
                           <p className="text-[13px] font-800 text-white truncate leading-tight">{sub.name}</p>
-                          <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest mt-1">{sub.count} items</p>
+                          <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest mt-1">{sub.count} {t('items')}</p>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
 
-                <Table headers={['Document Identity', 'Category', 'Origin / Author', 'Date Logged', '']}>
+                <Table headers={[t('documentIdentity') || 'Document Identity', t('category') || 'Category', t('originAuthor') || 'Origin / Author', t('dateLogged') || 'Date Logged', '']}>
                   {docsInFolder.map(d => (
                     <Tr key={d.id}>
                       <Td>
@@ -2587,20 +2590,20 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   <div>
                     <h3 className="text-[16px] font-800 text-white flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
-                      Templates & Litigation Drafts
+                      {t('templatesLitigationDrafts')}
                     </h3>
-                    <p className="text-[12px] text-[#8a94a6] mt-1 font-600">Automated legal document generation and signing pipeline.</p>
+                    <p className="text-[12px] text-[#8a94a6] mt-1 font-600">{t('templatesLitigationDraftsDesc')}</p>
                   </div>
                   {!isClient && (
                     <div className="flex gap-2">
                       <button onClick={() => openModal('browse-templates', { targetMatterId: caseId })} className="btn btn-secondary h-9 px-4 text-[12px] font-700 uppercase tracking-wider">
-                        Browse Library
+                        {t('browseLibrary')}
                       </button>
                       <button onClick={() => openCreateDraftModal('letter')} className="btn btn-secondary h-9 px-4 text-[12px] font-700 uppercase tracking-wider">
-                        + Draft Letter
+                        {t('draftLetterBtn')}
                       </button>
                       <button onClick={() => openCreateDraftModal()} className="btn btn-primary h-9 px-4 text-[12px] font-700 uppercase tracking-wider">
-                        Initialize Draft
+                        {t('initializeDraftBtn')}
                       </button>
                     </div>
                   )}
@@ -2619,8 +2622,8 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                               <div className="min-w-0">
                                 <p className="text-[16px] font-900 text-white tracking-tight group-hover:text-[#38bdf8] transition-colors">{item.title}</p>
                                 <div className="flex items-center gap-3 mt-2 text-[11px] text-[#8a94a6] flex-wrap">
-                                  <span className="px-2.5 py-0.5 rounded-lg bg-white/[0.05] text-[#38bdf8] border border-white/5 font-900 uppercase tracking-widest">{item.category}</span>
-                                  <span className="font-800 uppercase tracking-[0.1em] opacity-60">Modified {item.updated}</span>
+                                  <span className="px-2.5 py-0.5 rounded-lg bg-white/[0.05] text-[#38bdf8] border border-white/5 font-900 uppercase tracking-widest">{t(item.category) || item.category}</span>
+                                  <span className="font-800 uppercase tracking-[0.1em] opacity-60">{t('modified')} {item.updated}</span>
                                 </div>
                               </div>
                               <span className={`text-[10px] font-900 px-3 py-1 rounded-lg uppercase tracking-[0.2em] border shadow-lg ${displayStatus === 'Draft'
@@ -2631,17 +2634,17 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                                       ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20 shadow-indigo-500/10'
                                       : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-emerald-500/10'
                                 }`}>
-                                {displayStatus}
+                                {t(displayStatus) || displayStatus}
                               </span>
                             </div>
                             <div className="mt-6 flex gap-3 flex-wrap relative z-10">
-                              <button onClick={() => openDraftPreview(item)} className="btn btn-secondary h-8 px-5 text-[11px] font-800 uppercase tracking-widest">Preview</button>
-                              <button onClick={() => downloadDraftPdf(item.id)} className="btn btn-secondary h-8 px-5 text-[11px] font-800 uppercase tracking-widest">Download PDF</button>
-                              {!isClient && <button onClick={() => openModal('edit-draft', item)} className="btn btn-secondary h-8 px-5 text-[11px] font-800 uppercase tracking-widest">Edit</button>}
-                              {!isClient && <button onClick={() => openModal('use-template', { ...item, targetMatterId: caseId })} className="btn btn-primary h-8 px-5 text-[11px] font-800 uppercase tracking-widest">Clone Draft</button>}
-                              {!isClient && item.status !== 'signed' && <button onClick={() => sendTemplateForSignature(item.id)} className="btn btn-primary h-8 px-5 text-[11px] font-800 uppercase tracking-widest border-emerald-500/20 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white">Request Signature</button>}
+                              <button onClick={() => openDraftPreview(item)} className="btn btn-secondary h-8 px-5 text-[11px] font-800 uppercase tracking-widest">{t('preview')}</button>
+                              <button onClick={() => downloadDraftPdf(item.id)} className="btn btn-secondary h-8 px-5 text-[11px] font-800 uppercase tracking-widest">{t('downloadPdf')}</button>
+                              {!isClient && <button onClick={() => openModal('edit-draft', item)} className="btn btn-secondary h-8 px-5 text-[11px] font-800 uppercase tracking-widest">{t('edit')}</button>}
+                              {!isClient && <button onClick={() => openModal('use-template', { ...item, targetMatterId: caseId })} className="btn btn-primary h-8 px-5 text-[11px] font-800 uppercase tracking-widest">{t('cloneDraft')}</button>}
+                              {!isClient && item.status !== 'signed' && <button onClick={() => sendTemplateForSignature(item.id)} className="btn btn-primary h-8 px-5 text-[11px] font-800 uppercase tracking-widest border-emerald-500/20 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white">{t('requestSignature')}</button>}
                               {isClient && (item.status === 'sent_for_signature' || displayStatus === 'Pending Signature') && (
-                                <button onClick={() => openReviewAndSign(item)} className="btn btn-primary h-8 px-6 text-[11px] font-900 uppercase tracking-widest shadow-emerald-500/20">Review & Execute</button>
+                                <button onClick={() => openReviewAndSign(item)} className="btn btn-primary h-8 px-6 text-[11px] font-900 uppercase tracking-widest shadow-emerald-500/20">{t('reviewSign')}</button>
                               )}
                             </div>
                           </>
@@ -2651,14 +2654,14 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   )) : (
                     <EmptyState
                       icon={<svg className="w-12 h-12 text-[#8a94a6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
-                      title="Draft Registry Empty"
-                      desc="No legal drafts or templates have been initialized for this matter yet."
+                      title={t('draftRegistryEmpty')}
+                      desc={t('noLegalDraftsInitialized')}
                       action={
                         !isClient && (
                           <div className="flex gap-3">
-                            <button onClick={() => openModal('browse-templates', { targetMatterId: caseId })} className="btn btn-secondary h-9 px-4 text-[11px] font-800 uppercase tracking-widest">Library Access</button>
-                            <button onClick={() => openCreateDraftModal('letter')} className="btn btn-secondary h-9 px-4 text-[11px] font-800 uppercase tracking-widest">+ Draft Letter</button>
-                            <button onClick={() => openCreateDraftModal()} className="btn btn-primary h-9 px-4 text-[11px] font-800 uppercase tracking-widest">New Draft</button>
+                            <button onClick={() => openModal('browse-templates', { targetMatterId: caseId })} className="btn btn-secondary h-9 px-4 text-[11px] font-800 uppercase tracking-widest">{t('libraryAccessBtn')}</button>
+                            <button onClick={() => openCreateDraftModal('letter')} className="btn btn-secondary h-9 px-4 text-[11px] font-800 uppercase tracking-widest">{t('draftLetterBtn')}</button>
+                            <button onClick={() => openCreateDraftModal()} className="btn btn-primary h-9 px-4 text-[11px] font-800 uppercase tracking-widest">{t('newDraftBtn')}</button>
                           </div>
                         )
                       }
@@ -2674,11 +2677,11 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
               <div className="flex items-center justify-between mb-8 gap-2 flex-wrap">
                 <h3 className="text-[16px] font-800 text-white flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#38bdf8]" />
-                  {isClient ? 'Portal Messages' : 'Communication History'}
+                  {isClient ? t('portalMessages') : t('communicationHistory')}
                 </h3>
                 <div className="flex gap-3 flex-wrap">
-                  {!isClient && <button onClick={() => openModal('log-call', matterModalContext)} className="btn btn-secondary h-8 px-5 text-[11px] font-800 uppercase tracking-widest">Log Call</button>}
-                  <button className="btn btn-primary h-8 px-5 text-[11px] font-800 uppercase tracking-widest" onClick={() => openModal('compose-email', matterModalContext)}>{isClient ? 'New Message' : 'Send Email'}</button>
+                  {!isClient && <button onClick={() => openModal('log-call', matterModalContext)} className="btn btn-secondary h-8 px-5 text-[11px] font-800 uppercase tracking-widest">{t('logCallBtn')}</button>}
+                  <button className="btn btn-primary h-8 px-5 text-[11px] font-800 uppercase tracking-widest" onClick={() => openModal('compose-email', matterModalContext)}>{isClient ? t('newMessage') : t('sendEmail')}</button>
                 </div>
               </div>
               <div className="space-y-4">
@@ -2709,13 +2712,13 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                                   })}
                                   className="text-slate-400 hover:text-blue-400 text-[10px] font-900 uppercase tracking-widest transition-all cursor-pointer"
                                 >
-                                  Edit
+                                  {t('edit')}
                                 </button>
                                 <button 
                                   onClick={() => setShowConfirmDelete(com.id)}
                                   className="text-red-400/80 hover:text-red-400 text-[10px] font-900 uppercase tracking-widest transition-all cursor-pointer"
                                 >
-                                  Delete
+                                  {t('delete')}
                                 </button>
                               </>
                             )}
@@ -2760,25 +2763,25 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                         })()}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <span className="text-[10px] bg-[#0057c7]/10 text-[#38bdf8] border border-[#0057c7]/20 px-3 py-1 rounded-xl font-900 uppercase tracking-[0.15em]">{com.type}</span>
+                            <span className="text-[10px] bg-[#0057c7]/10 text-[#38bdf8] border border-[#0057c7]/20 px-3 py-1 rounded-xl font-900 uppercase tracking-[0.15em]">{t(com.type) || com.type}</span>
                             <span className="text-[11px] text-[#8a94a6] font-700 uppercase tracking-widest opacity-60">· {com.user}</span>
                           </div>
                           <div className="flex items-center gap-4">
                             <button
                               onClick={() => {
                                 setReplyingTo(com.id);
-                                setReplyText(`Replying to: ${com.text.slice(0, 50)}${com.text.length > 50 ? '...' : ''}\n\n`);
+                                setReplyText(`${t('replyingTo')}: ${com.text.slice(0, 50)}${com.text.length > 50 ? '...' : ''}\n\n`);
                               }}
                               className="text-[11px] font-900 text-[#38bdf8] hover:text-white transition-colors uppercase tracking-[0.25em]"
                             >
-                              Reply →
+                              {t('reply')} →
                             </button>
                             {com.repliesCount > 0 && (
                               <button
                                 onClick={() => loadThread(com.id)}
                                 className="text-[11px] font-900 text-white hover:text-[#38bdf8] transition-colors uppercase tracking-[0.25em]"
                               >
-                                {expandedThread === com.id ? 'Hide Thread' : `View Thread (${com.repliesCount})`}
+                                {expandedThread === com.id ? t('hideThread') : `${t('viewThread')} (${com.repliesCount})`}
                               </button>
                             )}
                           </div>
@@ -2786,7 +2789,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                         {replyingTo === com.id && (
                           <div className="mt-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] animate-slide-up">
                             <div className="flex items-center justify-between mb-5">
-                              <span className="text-[10px] font-900 uppercase tracking-[0.25em] text-[#38bdf8]">Secure Response Portal</span>
+                              <span className="text-[10px] font-900 uppercase tracking-[0.25em] text-[#38bdf8]">{t('secureResponsePortal')}</span>
                               <button onClick={() => setReplyingTo(null)} className="text-[#8a94a6] hover:text-white transition-colors">
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" /></svg>
                               </button>
@@ -2794,18 +2797,18 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                             <Textarea
                               value={replyText}
                               onChange={(e) => setReplyText(e.target.value)}
-                              placeholder="Type your reply here..."
+                              placeholder={t('typeReplyPlaceholder')}
                               rows={5}
                               className="mb-5 text-[14px] bg-white/[0.02] border-white/10 text-white rounded-xl focus:border-[#38bdf8] transition-all"
                             />
                             <div className="flex justify-end gap-3">
-                              <button onClick={() => setReplyingTo(null)} className="btn btn-secondary h-9 px-5 text-[11px] font-800 uppercase tracking-widest">Cancel</button>
+                              <button onClick={() => setReplyingTo(null)} className="btn btn-secondary h-9 px-5 text-[11px] font-800 uppercase tracking-widest">{t('cancel')}</button>
                               <button
                                 onClick={handleSendReply}
                                 disabled={isSubmittingReply || !replyText.trim()}
                                 className="btn btn-primary h-9 px-6 text-[11px] font-900 uppercase tracking-widest shadow-[#0057c7]/20"
                               >
-                                {isSubmittingReply ? 'Dispatching...' : 'Send Message'}
+                                {isSubmittingReply ? t('dispatching') : t('sendMessage')}
                               </button>
                             </div>
                           </div>
@@ -2817,7 +2820,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                                 <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                     <span className="text-[12px] font-900 text-white">{reply.sender?.full_name || '—'}</span>
-                                    <span className="text-[9px] bg-white/10 text-white px-2 py-0.5 rounded-full font-800 uppercase tracking-widest">{reply.sender?.role || 'User'}</span>
+                                    <span className="text-[9px] bg-white/10 text-white px-2 py-0.5 rounded-full font-800 uppercase tracking-widest">{t(reply.sender?.role) || reply.sender?.role || 'User'}</span>
                                   </div>
                                   <span className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest opacity-60">
                                     {new Date(reply.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
@@ -2846,21 +2849,21 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                       </div>
                       <div className="flex items-center justify-between mb-8">
                         <div>
-                          <p className="text-[10px] font-900 uppercase tracking-[0.25em] text-[#8a94a6] mb-1">Matter Management</p>
-                          <h3 className="text-xl font-900 text-white tracking-tight">Status & Workflow</h3>
+                          <p className="text-[10px] font-900 uppercase tracking-[0.25em] text-[#8a94a6] mb-1">{t('matterManagement')}</p>
+                          <h3 className="text-xl font-900 text-white tracking-tight">{t('statusWorkflow')}</h3>
                         </div>
                         <div className="text-right">
-                          <p className="text-[9px] text-[#8a94a6] font-900 uppercase tracking-[0.2em] mb-2">Current Matter Status</p>
+                          <p className="text-[9px] text-[#8a94a6] font-900 uppercase tracking-[0.2em] mb-2">{t('currentMatterStatus')}</p>
                           <Badge status={currentCase.status} />
                         </div>
                       </div>
 
                       <div className="space-y-8">
                         <div>
-                          <label className="block text-[12px] font-900 text-white uppercase tracking-widest mb-6">Matter Progression Control</label>
+                          <label className="block text-[12px] font-900 text-white uppercase tracking-widest mb-6">{t('matterProgressionControl')}</label>
                           <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 shadow-inner">
                             <div className="flex items-center justify-between text-[11px] text-[#8a94a6] mb-3 uppercase tracking-widest font-900">
-                              <span>Case Evolution</span>
+                              <span>{t('caseEvolution')}</span>
                               <span className="font-900 text-[#38bdf8]">{statusProgress}%</span>
                             </div>
                             <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden mb-6 shadow-inner">
@@ -2900,7 +2903,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                                         : 'bg-white/[0.03] text-[#8a94a6] hover:bg-white/[0.05] border border-white/5'
                                       }`}
                                   >
-                                    {s === 'closed' ? 'Finalized' : s}
+                                    {s === 'closed' ? t('finalized') : t(s)}
                                   </button>
                                 );
                               })}
@@ -2921,12 +2924,12 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                     return (
                     <div key={status} className="space-y-5">
                       <div className="flex items-center justify-between px-3">
-                        <h4 className="text-[11px] font-900 uppercase tracking-[0.25em] text-[#8a94a6]">{status}</h4>
+                        <h4 className="text-[11px] font-900 uppercase tracking-[0.25em] text-[#8a94a6]">{t(statusKey) || status}</h4>
                         <span className="w-7 h-7 bg-white/[0.05] rounded-xl flex items-center justify-center text-[12px] font-900 text-white border border-white/10 shadow-inner">
-                          {tasks.filter(t => t.status === statusKey).length}
+                          {tasks.filter(tItem => tItem.status === statusKey).length}
                         </span>
                       </div>
-                      {tasks.filter(t => t.status === statusKey).map(task => {
+                      {tasks.filter(tItem => tItem.status === statusKey).map(task => {
                         const isLegalDeadline = ['filing_deadline', 'trial_preparation', 'court_appearance'].includes(task.task_type);
                         const isOverdue = new Date(task.due) < new Date(new Date().setHours(0,0,0,0)) && task.status !== 'completed';
                         const isDueToday = task.due === new Date().toLocaleDateString();
@@ -2935,11 +2938,11 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                         <div key={task.id} className="bg-white/[0.03] p-6 rounded-2xl border border-white/5 shadow-2xl hover:border-[#38bdf8]/40 cursor-pointer transition-all group relative overflow-hidden">
                           {isLegalDeadline && <div className="absolute top-0 left-0 w-full h-1 bg-[#f59e0b] shadow-[0_0_10px_rgba(245,158,11,0.5)]" />}
                           <div className="flex justify-between items-start mb-4 relative z-10">
-                            <span className={`text-[9px] font-900 px-3 py-1 rounded-lg uppercase tracking-widest border shadow-lg ${task.priority === 'High' ? 'bg-red-500/10 text-red-400 border-red-500/20' : task.priority === 'Medium' ? 'bg-[#f59e0b]/10 text-[#f59e0b] border-[#f59e0b]/20' : 'bg-slate-500/10 text-slate-400 border-slate-500/20'}`}>{task.priority}</span>
+                            <span className={`text-[9px] font-900 px-3 py-1 rounded-lg uppercase tracking-widest border shadow-lg ${task.priority === 'High' ? 'bg-red-500/10 text-red-400 border-red-500/20' : task.priority === 'Medium' ? 'bg-[#f59e0b]/10 text-[#f59e0b] border-[#f59e0b]/20' : 'bg-slate-500/10 text-slate-400 border-slate-500/20'}`}>{t(task.priority) || task.priority}</span>
                             <div className="flex items-center gap-2">
-                              {isOverdue && <span className="text-[9px] text-red-400 font-900 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 uppercase">Overdue</span>}
-                              {isDueToday && <span className="text-[9px] text-[#f59e0b] font-900 bg-[#f59e0b]/10 px-2 py-0.5 rounded border border-[#f59e0b]/20 uppercase">Due Today</span>}
-                              <span className="text-[10px] text-[#8a94a6] font-800 uppercase tracking-widest opacity-60">Due: {task.due}</span>
+                              {isOverdue && <span className="text-[9px] text-red-400 font-900 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 uppercase">{t('overdue')}</span>}
+                              {isDueToday && <span className="text-[9px] text-[#f59e0b] font-900 bg-[#f59e0b]/10 px-2 py-0.5 rounded border border-[#f59e0b]/20 uppercase">{t('dueToday')}</span>}
+                              <span className="text-[10px] text-[#8a94a6] font-800 uppercase tracking-widest opacity-60">{t('due') || 'Due'}: {task.due}</span>
                             </div>
                           </div>
                           <p className="text-[15px] font-900 text-white leading-snug group-hover:text-[#38bdf8] transition-colors relative z-10">{task.title}</p>
@@ -2949,17 +2952,17 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                               <span className="text-[11px] text-[#8a94a6] font-800 uppercase tracking-widest opacity-60">{task.assignee}</span>
                             </div>
                             {status === 'Open' ? (
-                              <button onClick={(e) => handleStartTask(task.id, e)} className="text-[10px] font-900 text-[#38bdf8] hover:text-white uppercase tracking-widest bg-[#38bdf8]/10 px-3 py-1.5 rounded-lg border border-[#38bdf8]/20 transition-all shadow-lg hover:shadow-[#38bdf8]/20">▶ Start</button>
+                              <button onClick={(e) => handleStartTask(task.id, e)} className="text-[10px] font-900 text-[#38bdf8] hover:text-white uppercase tracking-widest bg-[#38bdf8]/10 px-3 py-1.5 rounded-lg border border-[#38bdf8]/20 transition-all shadow-lg hover:shadow-[#38bdf8]/20">{t('startTask')}</button>
                             ) : status === 'In Progress' ? (
-                              <button onClick={(e) => handleCompleteTask(task.id, e)} className="text-[10px] font-900 text-[#22c55e] hover:text-white uppercase tracking-widest bg-[#22c55e]/10 px-3 py-1.5 rounded-lg border border-[#22c55e]/20 transition-all shadow-lg hover:shadow-[#22c55e]/20">✓ Complete</button>
+                              <button onClick={(e) => handleCompleteTask(task.id, e)} className="text-[10px] font-900 text-[#22c55e] hover:text-white uppercase tracking-widest bg-[#22c55e]/10 px-3 py-1.5 rounded-lg border border-[#22c55e]/20 transition-all shadow-lg hover:shadow-[#22c55e]/20">{t('completeTask')}</button>
                             ) : (
-                              <button onClick={(e) => handleReopenTask(task.id, e)} className="text-[10px] font-900 text-[#f59e0b] hover:text-white uppercase tracking-widest bg-[#f59e0b]/10 px-3 py-1.5 rounded-lg border border-[#f59e0b]/20 transition-all shadow-lg hover:shadow-[#f59e0b]/20">⟲ Reopen</button>
+                              <button onClick={(e) => handleReopenTask(task.id, e)} className="text-[10px] font-900 text-[#f59e0b] hover:text-white uppercase tracking-widest bg-[#f59e0b]/10 px-3 py-1.5 rounded-lg border border-[#f59e0b]/20 transition-all shadow-lg hover:shadow-[#f59e0b]/20">{t('reopenTask')}</button>
                             )}
                           </div>
                         </div>
                       );})}
                       {status === 'Open' && (
-                        <button onClick={() => openModal('add-task', matterModalContext)} className="w-full py-4 border-2 border-dashed border-white/5 rounded-2xl text-[11px] text-[#8a94a6] font-900 uppercase tracking-widest hover:bg-white/[0.04] hover:border-[#38bdf8]/40 hover:text-white transition-all shadow-inner">+ Add Task</button>
+                        <button onClick={() => openModal('add-task', matterModalContext)} className="w-full py-4 border-2 border-dashed border-white/5 rounded-2xl text-[11px] text-[#8a94a6] font-900 uppercase tracking-widest hover:bg-white/[0.04] hover:border-[#38bdf8]/40 hover:text-white transition-all shadow-inner">{t('addTaskBtn')}</button>
                       )}
                     </div>
                   )})}
@@ -2979,12 +2982,12 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
               <div className="animate-fade-in space-y-6">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h3 className="text-xl font-900 text-white tracking-tight mb-1">Court & Case Schedule</h3>
-                    <p className="text-[12px] text-[#8a94a6] font-600">Hearings, trials, filing deadlines, and proceedings.</p>
+                    <h3 className="text-xl font-900 text-white tracking-tight mb-1">{t('courtCaseSchedule')}</h3>
+                    <p className="text-[12px] text-[#8a94a6] font-600">{t('courtCaseScheduleDesc')}</p>
                   </div>
                   {isStaff && (
                     <button onClick={() => openModal('add-event', { matterId: caseId })} className="btn btn-primary shadow-[#0057c7]/20">
-                      + Add Court Event
+                      {t('addCourtEventBtn')}
                     </button>
                   )}
                 </div>
@@ -2994,10 +2997,10 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   <div>
                     <h4 className="text-[11px] font-900 uppercase tracking-[0.25em] text-[#38bdf8] mb-3 flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-[#38bdf8] animate-pulse" />
-                      Upcoming Hearings ({upcomingHearings.length})
+                      {t('upcomingHearings')} ({upcomingHearings.length})
                     </h4>
                     {upcomingHearings.length === 0 ? (
-                      <p className="text-[12px] text-slate-500 italic pl-4">No upcoming hearings scheduled.</p>
+                      <p className="text-[12px] text-slate-500 italic pl-4">{t('noUpcomingHearings')}</p>
                     ) : (
                       <div className="space-y-3">
                         {upcomingHearings.sort((a, b) => new Date(a.date) - new Date(b.date)).map((e) => (
@@ -3005,10 +3008,10 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                             <div>
                               <h5 className="text-[15px] font-800 text-white">{e.title}</h5>
                               <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#8a94a6] mt-2 font-600">
-                                {e.court_name && <span>Court: <strong className="text-white">{e.court_name}</strong></span>}
-                                {e.court_room && <span>Room: <strong className="text-white">{e.court_room}</strong></span>}
-                                {e.judge_name && <span>Judge: <strong className="text-white">{e.judge_name}</strong></span>}
-                                {e.appearance_type && <span>Type: <strong className="text-white uppercase">{e.appearance_type}</strong></span>}
+                                {e.court_name && <span>{t('courtName')}: <strong className="text-white">{e.court_name}</strong></span>}
+                                {e.court_room && <span>{t('courtRoom') || 'Room'}: <strong className="text-white">{e.court_room}</strong></span>}
+                                {e.judge_name && <span>{t('judgeName')}: <strong className="text-white">{e.judge_name}</strong></span>}
+                                {e.appearance_type && <span>{t('typeCol')}: <strong className="text-white uppercase">{t(e.appearance_type)}</strong></span>}
                               </div>
                             </div>
                             <div className="text-right">
@@ -3025,10 +3028,10 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   <div>
                     <h4 className="text-[11px] font-900 uppercase tracking-[0.25em] text-red-400 mb-3 flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-red-400" />
-                      Trial Dates ({trialDates.length})
+                      {t('trialDates')} ({trialDates.length})
                     </h4>
                     {trialDates.length === 0 ? (
-                      <p className="text-[12px] text-slate-500 italic pl-4">No trial dates scheduled.</p>
+                      <p className="text-[12px] text-slate-500 italic pl-4">{t('noTrialDates')}</p>
                     ) : (
                       <div className="space-y-3">
                         {trialDates.sort((a, b) => new Date(a.date) - new Date(b.date)).map((e) => (
@@ -3036,9 +3039,9 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                             <div>
                               <h5 className="text-[15px] font-800 text-white">{e.title}</h5>
                               <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#8a94a6] mt-2 font-600">
-                                {e.court_name && <span>Court: <strong className="text-white">{e.court_name}</strong></span>}
-                                {e.court_room && <span>Room: <strong className="text-white">{e.court_room}</strong></span>}
-                                {e.judge_name && <span>Judge: <strong className="text-white">{e.judge_name}</strong></span>}
+                                {e.court_name && <span>{t('courtName')}: <strong className="text-white">{e.court_name}</strong></span>}
+                                {e.court_room && <span>{t('courtRoom') || 'Room'}: <strong className="text-white">{e.court_room}</strong></span>}
+                                {e.judge_name && <span>{t('judgeName')}: <strong className="text-white">{e.judge_name}</strong></span>}
                               </div>
                             </div>
                             <div className="text-right">
@@ -3055,17 +3058,17 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   <div>
                     <h4 className="text-[11px] font-900 uppercase tracking-[0.25em] text-amber-500 mb-3 flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-amber-500" />
-                      Filing Deadlines ({filingDeadlines.length})
+                      {t('filingDeadlines')} ({filingDeadlines.length})
                     </h4>
                     {filingDeadlines.length === 0 ? (
-                      <p className="text-[12px] text-slate-500 italic pl-4">No upcoming filing deadlines.</p>
+                      <p className="text-[12px] text-slate-500 italic pl-4">{t('noUpcomingFilingDeadlines')}</p>
                     ) : (
                       <div className="space-y-3">
                         {filingDeadlines.sort((a, b) => new Date(a.date) - new Date(b.date)).map((e) => (
                           <div key={e.id} onClick={() => openModal('view-event', e)} className="p-5 rounded-2xl bg-white/[0.02] border border-amber-500/20 hover:bg-white/[0.05] transition-all flex justify-between items-center cursor-pointer">
                             <div>
                               <h5 className="text-[15px] font-800 text-white">{e.title}</h5>
-                              <p className="text-[11px] text-[#8a94a6] mt-1 font-600">{e.description || 'Filing requirement'}</p>
+                              <p className="text-[11px] text-[#8a94a6] mt-1 font-600">{e.description || t('filingRequirement')}</p>
                             </div>
                             <div className="text-right">
                               <span className="text-[13px] font-900 text-white">{new Date(e.date).toLocaleDateString()}</span>
@@ -3081,10 +3084,10 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   <div>
                     <h4 className="text-[11px] font-900 uppercase tracking-[0.25em] text-emerald-400 mb-3 flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                      Past Appearances ({pastAppearances.length})
+                      {t('pastAppearances')} ({pastAppearances.length})
                     </h4>
                     {pastAppearances.length === 0 ? (
-                      <p className="text-[12px] text-slate-500 italic pl-4">No past appearances recorded.</p>
+                      <p className="text-[12px] text-slate-500 italic pl-4">{t('noPastAppearances')}</p>
                     ) : (
                       <div className="space-y-3">
                         {pastAppearances.sort((a, b) => new Date(b.date) - new Date(a.date)).map((e) => (
@@ -3092,8 +3095,8 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                             <div>
                               <h5 className="text-[15px] font-800 text-white">{e.title}</h5>
                               <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#8a94a6] mt-1 font-600">
-                                {e.court_name && <span>Court: {e.court_name}</span>}
-                                {e.judge_name && <span>Judge: {e.judge_name}</span>}
+                                {e.court_name && <span>{t('courtName')}: {e.court_name}</span>}
+                                {e.judge_name && <span>{t('judgeName')}: {e.judge_name}</span>}
                               </div>
                             </div>
                             <div className="text-right">
@@ -3109,7 +3112,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   {otherEvents.length > 0 && (
                     <div>
                       <h4 className="text-[11px] font-900 uppercase tracking-[0.25em] text-slate-400 mb-3">
-                        Other Scheduled Events ({otherEvents.length})
+                        {t('otherScheduledEvents')} ({otherEvents.length})
                       </h4>
                       <div className="space-y-3">
                         {otherEvents.map((e) => (
@@ -3136,7 +3139,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 relative z-10">
                 <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group">
                   <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#0057c7]/5 rounded-full blur-3xl" />
-                  <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-[0.3em] mb-4 opacity-70">Total Matter Billed</p>
+                  <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-[0.3em] mb-4 opacity-70">{t('totalBilled') || 'Total Matter Billed'}</p>
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-[#0057c7]/10 flex items-center justify-center text-[#38bdf8] border border-[#0057c7]/20 shadow-inner">
                       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
@@ -3147,7 +3150,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
 
                 <div className="bg-emerald-500/5 backdrop-blur-xl border border-emerald-500/10 p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group">
                   <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl" />
-                  <p className="text-[10px] text-emerald-400 font-900 uppercase tracking-[0.3em] mb-4 opacity-70">Remittance Secured</p>
+                  <p className="text-[10px] text-emerald-400 font-900 uppercase tracking-[0.3em] mb-4 opacity-70">{t('remittanceSecured')}</p>
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 shadow-inner">
                       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -3158,7 +3161,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
 
                 <div className="bg-red-500/5 backdrop-blur-xl border border-red-500/10 p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group">
                   <div className="absolute -top-10 -right-10 w-32 h-32 bg-red-500/5 rounded-full blur-3xl" />
-                  <p className="text-[10px] text-red-400 font-900 uppercase tracking-[0.3em] mb-4 opacity-70">Current Arrears</p>
+                  <p className="text-[10px] text-red-400 font-900 uppercase tracking-[0.3em] mb-4 opacity-70">{t('currentArrears')}</p>
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20 shadow-inner">
                       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -3173,31 +3176,31 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   <div className="flex items-center gap-4">
                     <div className="w-1.5 h-8 bg-[#0057c7] rounded-full" />
                     <h3 className="text-lg font-900 text-white tracking-tight uppercase">
-                      {isClient ? 'Financial Ledger' : 'Matter Invoice Stream'}
+                      {isClient ? t('financialLedger') : t('matterInvoiceStream')}
                     </h3>
                   </div>
                   <div className="flex gap-4">
                     {!isClient && (
                       <button className="h-11 px-6 rounded-2xl bg-[#0057c7] text-white text-[11px] font-900 uppercase tracking-widest hover:bg-[#004bb1] transition-all shadow-xl shadow-[#0057c7]/20" onClick={() => openModal('create-invoice', matterModalContext)}>
-                        New Invoice
+                        {t('newInvoice')}
                       </button>
                     )}
                     {isClient && billingTotals.outstanding > 0 && (
                       <button className="h-11 px-8 rounded-2xl bg-emerald-600 text-white text-[11px] font-900 uppercase tracking-[0.2em] hover:bg-emerald-500 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-emerald-600/20" onClick={payAllOutstanding}>
-                        Pay All Outstanding
+                        {t('payAllOutstandingBtn')}
                       </button>
                     )}
                   </div>
                 </div>
 
                 <div className="overflow-x-auto">
-                  <Table headers={['Invoice', 'Issued', 'Due Date', 'Total', 'Paid', 'Balance', 'Status', '']}>
+                  <Table headers={[t('invoiceCol'), t('issuedCol'), t('dueDateCol'), t('totalCol'), t('paidCol'), t('balanceCol'), t('statusCol'), '']}>
                     {matterInvoices.map(inv => (
                       <Tr key={inv.id} className="group hover:bg-white/[0.02] transition-colors">
                         <Td>
                           <div className="flex flex-col">
                             <span className="font-mono text-[14px] font-900 text-[#38bdf8] tracking-tighter">{inv.id}</span>
-                            <span className="text-[9px] text-[#8a94a6] font-800 uppercase tracking-widest opacity-50">Transaction ID</span>
+                            <span className="text-[9px] text-[#8a94a6] font-800 uppercase tracking-widest opacity-50">{t('transactionId')}</span>
                           </div>
                         </Td>
                         <Td className="text-[#8a94a6] text-[13px] font-700 uppercase tracking-tight">{inv.issued}</Td>
@@ -3212,7 +3215,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                               type="button"
                               onClick={() => openModal('view-invoice', { ...inv, client: currentCase?.client || '—' })}
                               className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-[#38bdf8] hover:bg-[#0057c7] hover:text-white transition-all border border-white/5"
-                              title="Review Invoice"
+                              title={t('reviewInvoiceBtn')}
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                             </button>
@@ -3223,7 +3226,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                                 disabled={payingInvoiceDbId === inv.dbId}
                                 className="h-8 px-4 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-900 uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all"
                               >
-                                {payingInvoiceDbId === inv.dbId ? '...' : 'Pay'}
+                                {payingInvoiceDbId === inv.dbId ? '...' : t('payBtn')}
                               </button>
                             )}
                           </div>
@@ -3240,7 +3243,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
             <Card>
               <h3 className="text-[16px] font-900 text-white mb-10 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#38bdf8]" />
-                Case Activity Intelligence
+                {t('caseActivityIntelligence')}
               </h3>
               <div className="space-y-0">
                 {(activityRows || []).map((act, i) => (
@@ -3268,15 +3271,15 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                 <div className="flex items-center justify-between mb-10">
                   <h3 className="text-[16px] font-900 text-white flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
-                    Matter Intelligence Briefs
+                    {t('matterIntelligenceBriefs')}
                   </h3>
-                  {!isClient && <button className="btn btn-primary h-8 px-5 text-[11px] font-900 uppercase tracking-widest shadow-[#f59e0b]/10" onClick={() => openModal('add-note', matterModalContext)}>+ Add Brief</button>}
+                  {!isClient && <button className="btn btn-primary h-8 px-5 text-[11px] font-900 uppercase tracking-widest shadow-[#f59e0b]/10" onClick={() => openModal('add-note', matterModalContext)}>{t('addBriefBtn')}</button>}
                 </div>
                 <div className="space-y-5">
                   {(apiMatter?.communications || [])
                     .filter((c) => c.communication_type === 'note')
                     .map((c) => ({
-                      author: c.sender?.full_name || 'Legal Intelligence',
+                      author: c.sender?.full_name || t('legalBriefAuthor') || 'Legal Intelligence',
                       date: new Date(c.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }),
                       text: c.message_body || '',
                       visibility: c.visibility === 'client_visible' || c.visibility === 'client_shared' ? 'Shared' : 'Classified',
@@ -3297,7 +3300,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                             </div>
                             {!isClient && (
                               <span className={`text-[9px] font-900 px-3 py-1 rounded-lg uppercase tracking-widest border shadow-lg ${note.visibility === 'Classified' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
-                                {note.visibility}
+                                {t(note.visibility.toLowerCase()) || note.visibility}
                               </span>
                             )}
                           </div>
@@ -3317,15 +3320,15 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   <div>
                     <h3 className="text-[16px] font-800 text-white flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#38bdf8]" />
-                      California Court Forms
+                      {t('californiaCourtForms')}
                     </h3>
-                    <p className="text-[12px] text-[#8a94a6] mt-1 font-600">Generated Judicial Council forms and active drafts for this matter.</p>
+                    <p className="text-[12px] text-[#8a94a6] mt-1 font-600">{t('generatedJudicialFormsDesc')}</p>
                   </div>
                   <button
                     onClick={() => navigate(role === 'lawyer' ? '/lawyer/court-forms' : '/admin/court-forms')}
                     className="btn btn-primary h-9 px-5 text-[12px] font-700 uppercase tracking-wider"
                   >
-                    + Generate Court Form
+                    {t('generateCourtFormBtn')}
                   </button>
                 </div>
 
@@ -3351,14 +3354,14 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   if (forms.length === 0) {
                     return (
                       <div className="py-12 text-center border border-dashed border-white/5 rounded-2xl bg-white/[0.01]">
-                        <p className="text-sm text-[#8a94a6] italic">No court forms generated for this matter yet.</p>
+                        <p className="text-sm text-[#8a94a6] italic">{t('noCourtFormsGenerated')}</p>
                       </div>
                     );
                   }
 
                   return (
                     <div className="overflow-x-auto">
-                      <Table headers={['Form', 'Status', 'Generated By', 'Last Modified', '']}>
+                      <Table headers={[t('formCol'), t('statusCol'), t('generatedByCol'), t('lastModifiedCol'), '']}>
                         {forms.map((f) => (
                           <Tr key={f.id}>
                             <Td>
@@ -3368,7 +3371,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                             <Td>
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded border capitalize ${
                                 f.status === 'completed' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-                              }`}>{f.status}</span>
+                              }`}>{t(f.status) || f.status}</span>
                             </Td>
                             <Td className="text-sm text-[#8a94a6]">{f.creator?.full_name || '—'}</Td>
                             <Td className="text-sm text-[#8a94a6]">{new Date(f.updated_at).toLocaleDateString()}</Td>
@@ -3377,7 +3380,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                                 onClick={() => navigate(role === 'lawyer' ? `/lawyer/court-forms` : `/admin/court-forms`)}
                                 className="text-xs font-semibold px-3 py-1.5 bg-[#0057c7]/20 text-[#38bdf8] border border-[#0057c7]/30 rounded-lg hover:bg-[#0057c7]/40 transition-all"
                               >
-                                Manage in Library
+                                {t('manageInLibrary')}
                               </button>
                             </Td>
                           </Tr>
@@ -3395,27 +3398,27 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
         <div className="space-y-4 lg:sticky lg:top-0">
           <Card className="!p-0 overflow-hidden border-white/5 bg-white/[0.02]">
             <div className="bg-gradient-to-br from-slate-900 to-[#0057c7]/20 p-6 border-b border-white/5">
-              <p className="text-[10px] font-900 uppercase tracking-[0.25em] text-[#38bdf8] mb-6 text-center opacity-80">Matter Profile Identity</p>
+              <p className="text-[10px] font-900 uppercase tracking-[0.25em] text-[#38bdf8] mb-6 text-center opacity-80">{t('matterProfileIdentity')}</p>
               <div className="flex flex-col items-center gap-4">
                 <div className="min-w-[5rem] h-14 px-5 rounded-2xl bg-gradient-to-br from-[#0057c7] to-[#38bdf8] flex items-center justify-center text-white text-xl font-900 tracking-tighter shadow-[0_8px_20px_rgba(0,87,199,0.3)] border border-white/20">
                   {currentCase.matter_number || currentCase.id || '—'}
                 </div>
                 <div className="text-center">
                   <h3 className="text-xl font-800 text-white tracking-tight">{currentCase.title}</h3>
-                  <p className="text-[#8a94a6] text-[12px] font-600 mt-1 uppercase tracking-widest">{currentCase.type}</p>
+                  <p className="text-[#8a94a6] text-[12px] font-600 mt-1 uppercase tracking-widest">{t(currentCase.type)}</p>
                 </div>
               </div>
             </div>
             <div className="p-6 space-y-6">
               <div className="space-y-4">
-                <h4 className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.2em] mb-4">Personnel & Clients</h4>
+                <h4 className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.2em] mb-4">{t('personnelClients')}</h4>
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 group">
                     <div className="w-10 h-10 rounded-xl bg-white/[0.04] text-[#38bdf8] flex items-center justify-center text-lg border border-white/5 transition-colors group-hover:bg-[#0057c7]/10 group-hover:border-[#0057c7]/20">
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg>
                     </div>
                     <div>
-                      <p className="text-[10px] text-[#8a94a6] font-800 uppercase tracking-widest mb-0.5">Assigned Counsel</p>
+                      <p className="text-[10px] text-[#8a94a6] font-800 uppercase tracking-widest mb-0.5">{t('assignedCounsel')}</p>
                       <p className="text-[14px] font-700 text-white tracking-tight">{currentCase.lawyer}</p>
                     </div>
                   </div>
@@ -3424,32 +3427,32 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                     </div>
                     <div>
-                      <p className="text-[10px] text-[#8a94a6] font-800 uppercase tracking-widest mb-0.5">Clients</p>
+                      <p className="text-[10px] text-[#8a94a6] font-800 uppercase tracking-widest mb-0.5">{t('clients')}</p>
                       <p className="text-[14px] font-700 text-white tracking-tight leading-snug">{currentCase.client}</p>
                     </div>
                   </div>
                 </div>
               </div>
               <div className="pt-6 border-t border-white/5">
-                <h4 className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.2em] mb-4">Command Center</h4>
+                <h4 className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.2em] mb-4">{t('commandCenter')}</h4>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center text-[13px] bg-white/[0.02] p-2 rounded-xl">
-                    <span className="text-[#8a94a6] font-600">Current Status</span>
+                    <span className="text-[#8a94a6] font-600">{t('status')}</span>
                     <Badge status={currentCase.status} />
                   </div>
                   <div className="flex justify-between items-center text-[13px] bg-white/[0.02] p-2 rounded-xl">
-                    <span className="text-[#8a94a6] font-600">Action Priority</span>
+                    <span className="text-[#8a94a6] font-600">{t('actionPriority')}</span>
                     <Badge status={currentCase.priority} />
                   </div>
                   <div className="flex justify-between items-center text-[13px] p-2">
-                    <span className="text-[#8a94a6] font-600">Portal Sync</span>
+                    <span className="text-[#8a94a6] font-600">{t('portalSync')}</span>
                     <span className="flex items-center gap-2 text-emerald-400 font-800 text-[11px] uppercase tracking-widest">
                       <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                      Live
+                      {t('live') || 'Live'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-[11px] p-2 pt-1 border-t border-white/[0.03] mt-2">
-                    <span className="text-[#8a94a6] font-600">Registry Snapshot</span>
+                    <span className="text-[#8a94a6] font-600">{t('registrySnapshot')}</span>
                     <span className="font-800 text-white uppercase tracking-tighter">{currentCase.lastUpdated || '—'}</span>
                   </div>
                 </div>
@@ -3458,7 +3461,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                 <div className="pt-4">
                   <button onClick={() => setIsDeleteConfirmOpen(true)} className="w-full py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-[11px] font-900 uppercase tracking-[0.2em] hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-3 group/arch">
                     <svg className="w-4 h-4 transition-transform group-hover/arch:rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    Delete Case File
+                    {t('deleteCaseFileBtn')}
                   </button>
                 </div>
               )}
@@ -3470,12 +3473,12 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
 
       {isDeleteConfirmOpen && (
         <Modal
-          title="Delete Case File"
+          title={t('deleteCaseFileBtn')}
           onClose={() => setIsDeleteConfirmOpen(false)}
           footer={
             <>
-              <button onClick={() => setIsDeleteConfirmOpen(false)} className="btn btn-secondary btn-sm">Cancel</button>
-              <button onClick={handleDeleteCase} className="btn btn-primary btn-sm !bg-red-500 hover:!bg-red-600 !border-red-500">Delete Permanently</button>
+              <button onClick={() => setIsDeleteConfirmOpen(false)} className="btn btn-secondary btn-sm">{t('cancel')}</button>
+              <button onClick={handleDeleteCase} className="btn btn-primary btn-sm !bg-red-500 hover:!bg-red-600 !border-red-500">{t('deletePermanently')}</button>
             </>
           }
         >
@@ -3483,8 +3486,8 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
             <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex gap-3">
               <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
               <div>
-                <p className="text-[13px] text-red-200 font-700">Are you sure you want to delete this case file?</p>
-                <p className="text-[12px] text-red-300/70 mt-1">This action cannot be undone. All associated documents, communications, invoices, and records will be permanently removed.</p>
+                <p className="text-[13px] text-red-200 font-700">{t('areYouSureDeleteCaseFile')}</p>
+                <p className="text-[12px] text-red-300/70 mt-1">{t('deleteCaseFileDesc')}</p>
               </div>
             </div>
           </div>
@@ -3493,17 +3496,17 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
 
       {isCreateDraftOpen && (
         <Modal
-          title="Create New Draft"
+          title={t('createNewDraft')}
           onClose={() => setIsCreateDraftOpen(false)}
           footer={
             <>
-              <button onClick={() => setIsCreateDraftOpen(false)} className="btn btn-secondary btn-sm">Cancel</button>
-              <button onClick={saveNewDraft} className="btn btn-primary btn-sm">Save Draft</button>
+              <button onClick={() => setIsCreateDraftOpen(false)} className="btn btn-secondary btn-sm">{t('cancel')}</button>
+              <button onClick={saveNewDraft} className="btn btn-primary btn-sm">{t('saveDraft')}</button>
             </>
           }
         >
           <div className="space-y-4">
-            <Field label="Draft Creation Mode" required>
+            <Field label={t('draftCreationMode')} required>
               <Select
                 value={creationType}
                 onChange={(e) => {
@@ -3513,77 +3516,77 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   }
                 }}
               >
-                <option value="blank">Create Blank Draft</option>
-                <option value="template">Create From Template</option>
+                <option value="blank">{t('createBlankDraft')}</option>
+                <option value="template">{t('createFromTemplate')}</option>
               </Select>
             </Field>
 
             {creationType === 'template' && (
-              <Field label="Select Template" required>
+              <Field label={t('selectTemplate')} required>
                 <Select
                   value={selectedTemplateId}
                   onChange={(e) => handleTemplateChange(e.target.value)}
                 >
-                  <option value="">Select a template...</option>
-                  {globalTemplates.map(t => (
-                    <option key={t.id} value={t.id}>{t.title} ({t.category || 'General'})</option>
+                  <option value="">{t('selectTemplatePlaceholder')}</option>
+                  {globalTemplates.map(tItem => (
+                    <option key={tItem.id} value={tItem.id}>{tItem.title} ({tItem.category || 'General'})</option>
                   ))}
                 </Select>
               </Field>
             )}
 
-            <Field label="Draft Title" required>
+            <Field label={t('draftTitle')} required>
               <Input
                 value={newDraftForm.title}
                 onChange={(e) => setNewDraftForm((prev) => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter draft title"
+                placeholder={t('enterDraftTitlePlaceholder')}
               />
             </Field>
-            <Field label="Category / Template Type" required>
+            <Field label={t('categoryTemplateType')} required>
               <Select
                 value={newDraftForm.category}
                 onChange={(e) => setNewDraftForm((prev) => ({ ...prev, category: e.target.value }))}
               >
-                <option value="">Select category</option>
-                <option value="Agreement">Agreement</option>
-                <option value="letter">Letter</option>
-                <option value="court_form">Court Form</option>
-                <option value="Contract">Contract</option>
-                <option value="Motion">Motion</option>
-                <option value="Pleading">Pleading</option>
-                <option value="Affidavit">Affidavit</option>
-                <option value="Notice">Notice</option>
-                <option value="Demand Letter">Demand Letter</option>
-                <option value="Legal Disclaimer">Legal Disclaimer</option>
-                <option value="Engagement">Engagement</option>
-                <option value="Intake">Intake</option>
-                <option value="Litigation">Litigation</option>
-                <option value="Resolution">Resolution</option>
-                <option value="General">General</option>
-                <option value="Other">Other...</option>
+                <option value="">{t('selectCategory')}</option>
+                <option value="Agreement">{t('Agreement') || 'Agreement'}</option>
+                <option value="letter">{t('letter') || 'Letter'}</option>
+                <option value="court_form">{t('court_form') || 'Court Form'}</option>
+                <option value="Contract">{t('Contract') || 'Contract'}</option>
+                <option value="Motion">{t('Motion') || 'Motion'}</option>
+                <option value="Pleading">{t('Pleading') || 'Pleading'}</option>
+                <option value="Affidavit">{t('Affidavit') || 'Affidavit'}</option>
+                <option value="Notice">{t('Notice') || 'Notice'}</option>
+                <option value="Demand Letter">{t('Demand Letter') || 'Demand Letter'}</option>
+                <option value="Legal Disclaimer">{t('Legal Disclaimer') || 'Legal Disclaimer'}</option>
+                <option value="Engagement">{t('Engagement') || 'Engagement'}</option>
+                <option value="Intake">{t('Intake') || 'Intake'}</option>
+                <option value="Litigation">{t('Litigation') || 'Litigation'}</option>
+                <option value="Resolution">{t('Resolution') || 'Resolution'}</option>
+                <option value="General">{t('General') || 'General'}</option>
+                <option value="Other">{t('other') || 'Other...'}</option>
               </Select>
             </Field>
-            <Field label="Related Matter Name">
+            <Field label={t('relatedMatterName')}>
               <Input
                 value={newDraftForm.matterName}
                 onChange={(e) => setNewDraftForm((prev) => ({ ...prev, matterName: e.target.value }))}
               />
             </Field>
-            <Field label="Client Name">
+            <Field label={t('clientName')}>
               <Input
                 value={newDraftForm.clientName}
                 onChange={(e) => setNewDraftForm((prev) => ({ ...prev, clientName: e.target.value }))}
               />
             </Field>
-            <Field label="Draft Status">
+            <Field label={t('draftStatus')}>
               <Input value={newDraftForm.status} disabled />
             </Field>
-            <Field label="Mock Content / Notes">
+            <Field label={t('mockContentNotes')}>
               <Textarea
                 rows={4}
                 value={newDraftForm.notes}
                 onChange={(e) => setNewDraftForm((prev) => ({ ...prev, notes: e.target.value }))}
-                placeholder="Add mock legal draft notes..."
+                placeholder={t('addMockNotesPlaceholder')}
               />
             </Field>
           </div>
@@ -3592,7 +3595,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
 
       {reviewDraft && (
         <Modal
-          title={`Review & Sign · ${reviewDraft.title}`}
+          title={`${t('reviewSign')} · ${reviewDraft.title}`}
           onClose={() => {
             setReviewDraft(null);
             setReviewConfirmed(false);
@@ -3606,27 +3609,27 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                 setReviewConfirmed(false);
                 setHasDrawnSignature(false);
                 signaturePadRef.current?.clear();
-              }} className="btn btn-secondary btn-sm">Cancel</button>
+              }} className="btn btn-secondary btn-sm">{t('cancel')}</button>
               <button
                 onClick={signReviewedDraft}
                 disabled={!reviewConfirmed || !hasDrawnSignature}
                 className={`btn btn-primary btn-sm ${(!reviewConfirmed || !hasDrawnSignature) ? 'opacity-60 cursor-not-allowed hover:translate-y-0 hover:shadow-none' : ''}`}
               >
-                Sign Document
+                {t('signDocument')}
               </button>
             </>
           }
         >
           <div className="space-y-4">
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-[10px] font-800 uppercase tracking-[0.18em] text-[#8a94a6] mb-1">Document Title</p>
+              <p className="text-[10px] font-800 uppercase tracking-[0.18em] text-[#8a94a6] mb-1">{t('documentTitle')}</p>
               <p className="text-[14px] font-700 text-white tracking-tight">{reviewDraft.title}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-[10px] font-800 uppercase tracking-[0.18em] text-[#8a94a6] mb-2">Short Preview</p>
+              <p className="text-[10px] font-800 uppercase tracking-[0.18em] text-[#8a94a6] mb-2">{t('shortPreview')}</p>
               <p className="text-[13px] text-[#b8c2d1] leading-relaxed">{reviewDraft.preview}</p>
               <span className="inline-flex mt-3 text-[10px] font-900 px-3 py-1 rounded-lg uppercase tracking-[0.2em] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-lg shadow-indigo-500/10">
-                Pending Signature
+                {t('pendingSignature')}
               </span>
             </div>
             <div className="rounded-2xl border border-[#0057c7]/20 bg-[#0057c7]/5 p-4">
@@ -3638,7 +3641,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   className="mt-0.5 w-4 h-4 rounded-[6px] border-white/10 bg-white/5 text-[#38bdf8] focus:ring-[#38bdf8]/50"
                 />
                 <span className="text-[12.5px] text-[#b8c2d1] font-600 group-hover:text-white transition-colors">
-                  I confirm I have reviewed this document
+                  {t('confirmReviewedDoc')}
                 </span>
               </label>
               <div className="mt-3">
@@ -3654,7 +3657,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                   />
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
-                  <p className="text-[11px] text-[#8a94a6] font-600">Use your mouse or touch to sign</p>
+                  <p className="text-[11px] text-[#8a94a6] font-600">{t('useMouseOrTouchSign')}</p>
                   <button
                     onClick={() => {
                       signaturePadRef.current?.clear();
@@ -3662,7 +3665,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                     }}
                     className="btn btn-secondary btn-xs bg-white/5 border-white/10 hover:bg-white/10"
                   >
-                    Clear Signature
+                    {t('clearSignature')}
                   </button>
                 </div>
               </div>
@@ -3673,12 +3676,12 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
 
       {previewDraft && (
         <Modal
-          title={`Draft Preview · ${previewDraft.title}`}
+          title={`${t('draftPreview')} · ${previewDraft.title}`}
           onClose={closeDraftPreview}
           wide
           footer={
             <>
-              <button onClick={closeDraftPreview} className="btn btn-secondary btn-sm">Close</button>
+              <button onClick={closeDraftPreview} className="btn btn-secondary btn-sm">{t('close')}</button>
             </>
           }
         >
@@ -3686,19 +3689,19 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
             <div className="p-4 rounded-2xl border border-white/10 bg-white/[0.03]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-[10px] font-800 uppercase tracking-[0.18em] text-[#8a94a6] mb-1">Draft Title</p>
+                  <p className="text-[10px] font-800 uppercase tracking-[0.18em] text-[#8a94a6] mb-1">{t('draftTitle')}</p>
                   <p className="text-[14px] font-700 text-white">{previewDraft.title}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-800 uppercase tracking-[0.18em] text-[#8a94a6] mb-1">Matter Name</p>
+                  <p className="text-[10px] font-800 uppercase tracking-[0.18em] text-[#8a94a6] mb-1">{t('matterName')}</p>
                   <p className="text-[14px] font-600 text-[#dbe7ff]">{currentCase.title}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-800 uppercase tracking-[0.18em] text-[#8a94a6] mb-1">Client Name</p>
+                  <p className="text-[10px] font-800 uppercase tracking-[0.18em] text-[#8a94a6] mb-1">{t('clientName')}</p>
                   <p className="text-[14px] font-600 text-[#dbe7ff]">{currentCase.client}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-800 uppercase tracking-[0.18em] text-[#8a94a6] mb-1">Last Updated</p>
+                  <p className="text-[10px] font-800 uppercase tracking-[0.18em] text-[#8a94a6] mb-1">{t('lastUpdated') || 'Last Updated'}</p>
                   <p className="text-[14px] font-600 text-[#dbe7ff]">{previewDraft.updated}</p>
                 </div>
               </div>
@@ -3711,7 +3714,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                         ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20 shadow-indigo-500/10'
                         : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-emerald-500/10'
                   }`}>
-                  {previewDraft.status}
+                  {t(previewDraft.status) || previewDraft.status}
                 </span>
               </div>
             </div>
@@ -3739,22 +3742,22 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </div>
-            <h3 className="text-[16px] font-800">Delete Transmission?</h3>
+            <h3 className="text-[16px] font-800">{t('deleteTransmission')}</h3>
             <p className="text-[13px] text-slate-400 leading-relaxed">
-              Are you sure you want to delete this communication record? This action cannot be undone.
+              {t('deleteTransmissionDesc')}
             </p>
             <div className="flex gap-3 mt-2">
               <button
                 onClick={() => setShowConfirmDelete(null)}
                 className="flex-1 bg-white/5 hover:bg-white/10 text-white border border-white/10 text-[12px] font-700 py-2.5 rounded-xl transition-all"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 onClick={() => handleDeleteCommunication(showConfirmDelete)}
                 className="flex-1 bg-red-600 hover:bg-red-500 text-white text-[12px] font-700 py-2.5 rounded-xl transition-all shadow-md shadow-red-600/10"
               >
-                Yes, delete
+                {t('deletePermanently')}
               </button>
             </div>
           </div>
@@ -3769,6 +3772,7 @@ export function CaseDetailPage({ caseId, navigate, toast, openModal, role: origi
 //  CALENDAR PAGE
 // ─────────────────────────────────────────────────────────
 export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
+  const { t } = useLanguage();
   const isAdmin = role !== 'client';
   const [viewDate, setViewDate] = useState(() => new Date());
   const [events, setEvents] = useState([]);
@@ -4095,12 +4099,12 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
 
   return (
     <div className="animate-fade-in space-y-6 pb-12">
-      <PageHeader title="Calendar" subtitle={`${monthName} ${year} · Manage hearings, deadlines & meetings`}>
+      <PageHeader title={t('Calendar') || 'Calendar'} subtitle={`${t(monthName) || monthName} ${year} · ${t('Manage hearings, deadlines & meetings') || 'Manage hearings, deadlines & meetings'}`}>
         <div className="flex items-center gap-1 bg-white/[0.03] border border-white/5 p-1 rounded-xl">
           <button onClick={handlePrev} className="p-2 hover:bg-white/5 rounded-lg text-white transition-colors">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M15 19l-7-7 7-7" /></svg>
           </button>
-          <span className="text-[13px] font-800 text-white px-4 min-w-[120px] text-center uppercase tracking-widest">{monthName} {year}</span>
+          <span className="text-[13px] font-800 text-white px-4 min-w-[120px] text-center uppercase tracking-widest">{t(monthName) || monthName} {year}</span>
           <button onClick={handleNext} className="p-2 hover:bg-white/5 rounded-lg text-white transition-colors">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M9 5l7 7-7 7" /></svg>
           </button>
@@ -4110,7 +4114,7 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
             onClick={() => setFilterType('all')}
             className={`px-3 py-1.5 rounded-lg text-[10px] font-900 uppercase tracking-widest whitespace-nowrap transition-all ${filterType === 'all' ? 'bg-[#38bdf8] text-black font-extrabold' : 'bg-white/5 text-[#8a94a6] hover:bg-white/10 hover:text-white'}`}
           >
-            All
+            {t('All') || 'All'}
           </button>
           {categories.filter(c => c.is_active).map(cat => (
             <button
@@ -4119,17 +4123,17 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
               className={`px-3 py-1.5 rounded-lg text-[10px] font-900 uppercase tracking-widest whitespace-nowrap transition-all`}
               style={filterType === cat.name.toLowerCase() ? { backgroundColor: cat.color, color: '#000', fontWeight: '900' } : { backgroundColor: 'rgba(255,255,255,0.05)', color: '#8a94a6' }}
             >
-              {cat.name}
+              {t(cat.name) || cat.name}
             </button>
           ))}
         </div>
         <button onClick={() => setIsManageCatsOpen(true)} className="btn btn-secondary shadow-md flex items-center gap-1.5">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-          Categories
+          {t('Categories') || 'Categories'}
         </button>
         <button onClick={() => openModal('add-event')} className="btn btn-primary shadow-[#0057c7]/20">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-          Add Event
+          {t('Add Event') || 'Add Event'}
         </button>
       </PageHeader>
 
@@ -4138,7 +4142,7 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
           <Card className="!p-0 overflow-hidden border-white/5 bg-white/[0.02]">
             <div className="grid grid-cols-7 border-b border-white/5 bg-white/[0.03]">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                <div key={d} className="py-4 text-center text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.2em]">{d}</div>
+                <div key={d} className="py-4 text-center text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.2em]">{t(d) || d}</div>
               ))}
             </div>
             <div className="grid grid-cols-7 divide-x divide-y divide-white/5 border-b border-white/5">
@@ -4206,7 +4210,7 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
           <Card className="bg-white/[0.02] border-white/5">
             <h3 className="text-[11px] font-900 text-white uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#38bdf8]" />
-              Agenda: {monthName}
+              {t('Agenda') || 'Agenda'}: {t(monthName) || monthName}
             </h3>
             <div className="space-y-3">
               {monthEventsSide.length > 0 ? monthEventsSide.map((e, i) => (
@@ -4218,20 +4222,20 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
                   <div className="absolute top-0 right-0 w-16 h-16 bg-[#0057c7]/5 blur-2xl pointer-events-none group-hover:bg-[#0057c7]/10" />
                   <div className="w-11 h-11 bg-white/[0.05] rounded-xl flex flex-col items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-inner border border-white/10">
                     <span className="text-[16px] font-900 text-white tracking-tighter leading-none">{new Date(e.date).getDate()}</span>
-                    <span className="text-[8px] text-[#38bdf8] font-900 uppercase mt-1 tracking-widest">{monthName.slice(0, 3)}</span>
+                    <span className="text-[8px] text-[#38bdf8] font-900 uppercase mt-1 tracking-widest">{t(monthName.slice(0, 3)) || monthName.slice(0, 3)}</span>
                   </div>
                   <div className="flex-1 min-w-0 relative z-10">
                     <div className="flex items-center gap-2">
                       <p className="text-[14px] font-800 text-white truncate tracking-tight">{e.title}</p>
                       {e.event_status !== 'completed' && isOverdue(e.date) && (
-                        <span className="text-[9px] font-900 bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded uppercase tracking-widest">Overdue</span>
+                        <span className="text-[9px] font-900 bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded uppercase tracking-widest">{t('Overdue') || 'Overdue'}</span>
                       )}
                       {e.event_status !== 'completed' && isDueToday(e.date) && (
-                        <span className="text-[9px] font-900 bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded uppercase tracking-widest">Due Today</span>
+                        <span className="text-[9px] font-900 bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded uppercase tracking-widest">{t('Due Today') || 'Due Today'}</span>
                       )}
                     </div>
                     <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest mt-0.5 opacity-60">
-                      {(e.categories && e.categories[0]) || e.type.replace('_', ' ')}
+                      {t((e.categories && e.categories[0]) || e.type.replace('_', ' ')) || ((e.categories && e.categories[0]) || e.type.replace('_', ' '))}
                     </p>
                   </div>
                   <div 
@@ -4241,8 +4245,8 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
                 </div>
               )) : (
                 <div className="py-20 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.01]">
-                  <p className="text-[12px] text-[#8a94a6] font-800 uppercase tracking-widest opacity-40">No entries detected</p>
-                  <p className="text-[10px] text-[#8a94a6] mt-2 italic">Calendar sync optimized.</p>
+                  <p className="text-[12px] text-[#8a94a6] font-800 uppercase tracking-widest opacity-40">{t('No entries detected') || 'No entries detected'}</p>
+                  <p className="text-[10px] text-[#8a94a6] mt-2 italic">{t('Calendar sync optimized.') || 'Calendar sync optimized.'}</p>
                 </div>
               )}
             </div>
@@ -4250,12 +4254,12 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
 
           <Card className="bg-gradient-to-br from-slate-900 to-[#0057c7]/20 border-white/10 shadow-2xl relative overflow-hidden group">
             <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary-500/10 rounded-full blur-3xl group-hover:bg-primary-500/20 transition-all duration-700" />
-            <h3 className="text-[11px] font-900 uppercase tracking-[0.3em] mb-6 text-[#38bdf8]">Quick Entry Terminal</h3>
+            <h3 className="text-[11px] font-900 uppercase tracking-[0.3em] mb-6 text-[#38bdf8]">{t('Quick Entry Terminal') || 'Quick Entry Terminal'}</h3>
             <div className="space-y-4">
               <div className="relative group/input">
                 <input
                   className="w-full text-[13px] bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 outline-none focus:border-[#38bdf8] focus:ring-4 focus:ring-[#0057c7]/20 transition-all font-600"
-                  placeholder="Event title or subject..."
+                  placeholder={t('Event title or subject...') || 'Event title or subject...'}
                   value={quickTitle}
                   onChange={e => setQuickTitle(e.target.value)}
                 />
@@ -4275,9 +4279,9 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
                   onChange={e => setQuickType(e.target.value)}
                 >
                   {categories.filter(c => c.is_active).map(cat => (
-                    <option key={cat.id} value={cat.name} className="bg-slate-900">{cat.name}</option>
+                    <option key={cat.id} value={cat.name} className="bg-slate-900">{t(cat.name) || cat.name}</option>
                   ))}
-                  <option value="general_event" className="bg-slate-900">General Event</option>
+                  <option value="general_event" className="bg-slate-900">{t('General Event') || 'General Event'}</option>
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#8a94a6]">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
@@ -4289,12 +4293,12 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
                   value={quickReminder}
                   onChange={e => setQuickReminder(e.target.value)}
                 >
-                  <option value="" className="bg-slate-900">No Reminder</option>
-                  <option value="1_hour" className="bg-slate-900">1 Hour Before</option>
-                  <option value="same_day" className="bg-slate-900">Same Day</option>
-                  <option value="1_day" className="bg-slate-900">1 Day Before</option>
-                  <option value="3_days" className="bg-slate-900">3 Days Before</option>
-                  <option value="7_days" className="bg-slate-900">7 Days Before</option>
+                  <option value="" className="bg-slate-900">{t('No Reminder') || 'No Reminder'}</option>
+                  <option value="1_hour" className="bg-slate-900">{t('1 Hour Before') || '1 Hour Before'}</option>
+                  <option value="same_day" className="bg-slate-900">{t('Same Day') || 'Same Day'}</option>
+                  <option value="1_day" className="bg-slate-900">{t('1 Day Before') || '1 Day Before'}</option>
+                  <option value="3_days" className="bg-slate-900">{t('3 Days Before') || '3 Days Before'}</option>
+                  <option value="7_days" className="bg-slate-900">{t('7 Days Before') || '7 Days Before'}</option>
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#8a94a6]">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
@@ -4303,7 +4307,7 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
               {['court_date', 'filing_deadline', 'hearing', 'trial_date'].includes(quickType) && (
                 <div className="flex items-center gap-2 px-1">
                   <input type="checkbox" id="quickTask" checked={quickCreateTask} onChange={e => setQuickCreateTask(e.target.checked)} className="w-4 h-4 rounded border-white/10 bg-black/20 text-[#38bdf8] focus:ring-[#38bdf8]/50" />
-                  <label htmlFor="quickTask" className="text-[12px] font-500 text-white cursor-pointer">Auto Create Task</label>
+                  <label htmlFor="quickTask" className="text-[12px] font-500 text-white cursor-pointer">{t('Auto Create Task') || 'Auto Create Task'}</label>
                 </div>
               )}
               <div className="relative group/input">
@@ -4312,7 +4316,7 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
                   value={quickMatter}
                   onChange={e => setQuickMatter(e.target.value)}
                 >
-                  <option value="" className="bg-slate-900">General Schedule</option>
+                  <option value="" className="bg-slate-900">{t('General Schedule') || 'General Schedule'}</option>
                   {matterPick.map((c) => <option key={c.id} value={c.id} className="bg-slate-900">{c.label}</option>)}
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#8a94a6]">
@@ -4324,7 +4328,7 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
                 disabled={isAdding}
                 className="btn btn-primary w-full justify-center h-12 text-[12px] font-900 uppercase tracking-widest shadow-xl shadow-[#0057c7]/20 disabled:opacity-50 active:scale-[0.98]"
               >
-                {isAdding ? 'Dispatching...' : 'Schedule Event →'}
+                {isAdding ? (t('Dispatching...') || 'Dispatching...') : (t('Schedule Event →') || 'Schedule Event →')}
               </button>
             </div>
           </Card>
@@ -4337,15 +4341,15 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
             {/* Header */}
             <div className="p-6 border-b border-white/5 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-900 text-white tracking-tight">Manage Calendar Categories</h3>
-                <p className="text-[11px] text-[#8a94a6] font-500 mt-1">Add, rename, delete, archive or reorder categories.</p>
+                <h3 className="text-lg font-900 text-white tracking-tight">{t('Manage Calendar Categories') || 'Manage Calendar Categories'}</h3>
+                <p className="text-[11px] text-[#8a94a6] font-500 mt-1">{t('Add, rename, delete, archive or reorder categories.') || 'Add, rename, delete, archive or reorder categories.'}</p>
               </div>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowArchived(prev => !prev)}
                   className={`px-3 py-1.5 rounded-lg text-[10px] font-900 uppercase tracking-widest whitespace-nowrap transition-all border ${showArchived ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-white/5 text-[#8a94a6] border-white/5 hover:text-white'}`}
                 >
-                  {showArchived ? 'Hide Archived' : 'Show Archived'}
+                  {showArchived ? (t('Hide Archived') || 'Hide Archived') : (t('Show Archived') || 'Show Archived')}
                 </button>
                 <button 
                   onClick={() => setIsManageCatsOpen(false)}
@@ -4376,8 +4380,8 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
                           onChange={e => setEditName(e.target.value)}
                           className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-[13px] text-white outline-none focus:border-[#38bdf8] flex-grow"
                         />
-                        <button onClick={() => handleSaveEdit(cat.id)} className="btn btn-primary btn-xs font-semibold py-1">Save</button>
-                        <button onClick={() => setEditingCatId(null)} className="btn btn-secondary btn-xs font-semibold py-1">Cancel</button>
+                        <button onClick={() => handleSaveEdit(cat.id)} className="btn btn-primary btn-xs font-semibold py-1">{t('Save') || 'Save'}</button>
+                        <button onClick={() => setEditingCatId(null)} className="btn btn-secondary btn-xs font-semibold py-1">{t('Cancel') || 'Cancel'}</button>
                       </div>
                     ) : (
                       <>
@@ -4402,9 +4406,9 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
                             </button>
                           </div>
                           <span className="w-3.5 h-3.5 rounded-full shrink-0 border border-white/10" style={{ backgroundColor: cat.color }} />
-                          <span className="text-[13px] font-800 text-white truncate">{cat.name}</span>
+                          <span className="text-[13px] font-800 text-white truncate">{t(cat.name) || cat.name}</span>
                           {!cat.is_active && (
-                            <span className="text-[9px] font-900 bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded uppercase tracking-widest">Archived</span>
+                            <span className="text-[9px] font-900 bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded uppercase tracking-widest">{t('Archived') || 'Archived'}</span>
                           )}
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
@@ -4443,7 +4447,7 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
 
             {/* Footer Form to Add New Category */}
             <div className="p-6 border-t border-white/5 bg-white/[0.01] space-y-3">
-              <h4 className="text-[11px] font-900 text-white uppercase tracking-wider">Create New Category</h4>
+              <h4 className="text-[11px] font-900 text-white uppercase tracking-wider">{t('Create New Category') || 'Create New Category'}</h4>
               <div className="flex items-center gap-2">
                 <input 
                   type="color" 
@@ -4453,7 +4457,7 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
                 />
                 <input 
                   type="text" 
-                  placeholder="E.g., Client Consultation"
+                  placeholder={t('E.g., Client Consultation') || 'E.g., Client Consultation'}
                   value={newCatName}
                   onChange={e => setNewCatName(e.target.value)}
                   className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-[13px] text-white outline-none focus:border-[#38bdf8] flex-grow font-600"
@@ -4462,7 +4466,7 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
                   onClick={handleAddCategory} 
                   className="btn btn-primary h-9 px-4 font-800 text-[11px] uppercase tracking-widest shrink-0"
                 >
-                  Create
+                  {t('Create') || 'Create'}
                 </button>
               </div>
             </div>
@@ -4478,6 +4482,7 @@ export function CalendarPage({ toast, openModal, role = 'lawyer' }) {
 //  DOCUMENTS PAGE
 // ─────────────────────────────────────────────────────────
 export function DocumentsPage({ toast, openModal, role = 'lawyer' }) {
+  const { t } = useLanguage();
   const isAdmin = role !== 'client';
   const [search, setSearch] = useState('');
   const [selectedFolder, setSelectedFolder] = useState(null);
@@ -4613,21 +4618,21 @@ export function DocumentsPage({ toast, openModal, role = 'lawyer' }) {
 
   return (
     <div className="animate-fade-in space-y-6 pb-12">
-      <PageHeader title="Documents" subtitle="Secure repository for all matter evidence & case files">
+      <PageHeader title={t('Documents') || 'Documents'} subtitle={t('documentsDesc') || 'Secure repository for all matter evidence & case files'}>
         <button onClick={() => openModal('add-document', selectedFolder ? { docCategory: selectedFolder } : null)} className="btn btn-secondary border-white/10 hover:bg-white/5">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-          Upload File
+          {t('Upload File') || 'Upload File'}
         </button>
         <button onClick={() => openModal('add-folder')} className="btn btn-primary shadow-[#0057c7]/20">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-          New Folder
+          {t('New Folder') || 'New Folder'}
         </button>
       </PageHeader>
 
       <Card className="bg-white/[0.02] border-white/5">
         <h3 className="text-[11px] font-900 text-white uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
-          Matter Repository Folders
+          {t('Matter Repository Folders') || 'Matter Repository Folders'}
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
           {folders.map(f => (
@@ -4650,8 +4655,8 @@ export function DocumentsPage({ toast, openModal, role = 'lawyer' }) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                 </svg>
               </div>
-              <p className={`text-[13px] font-800 text-center leading-tight mb-1 tracking-tight ${selectedFolder === f.name ? 'text-white' : 'text-[#b8c2d1]'}`}>{f.name}</p>
-              <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest opacity-60">{f.count} objects</p>
+              <p className={`text-[13px] font-800 text-center leading-tight mb-1 tracking-tight ${selectedFolder === f.name ? 'text-white' : 'text-[#b8c2d1]'}`}>{t(f.name) || f.name}</p>
+              <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest opacity-60">{f.count} {t('objects') || 'objects'}</p>
             </div>
           ))}
         </div>
@@ -4662,14 +4667,14 @@ export function DocumentsPage({ toast, openModal, role = 'lawyer' }) {
           <div>
             <h3 className="text-[11px] font-900 text-white uppercase tracking-[0.3em] flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#38bdf8]" />
-              Recent Objects & Files
+              {t('Recent Objects & Files') || 'Recent Objects & Files'}
             </h3>
             {selectedFolder && (
-              <p className="text-[10px] text-[#38bdf8] font-900 uppercase tracking-widest mt-2">Active Filter: {selectedFolder}</p>
+              <p className="text-[10px] text-[#38bdf8] font-900 uppercase tracking-widest mt-2">{t('Active Filter') || 'Active Filter'}: {t(selectedFolder) || selectedFolder}</p>
             )}
           </div>
           <div className="w-full sm:w-72">
-            <SearchInput placeholder="Search within vault..." value={search} onChange={setSearch} />
+            <SearchInput placeholder={t('Search within vault...') || 'Search within vault...'} value={search} onChange={setSearch} />
           </div>
         </div>
 
@@ -4682,7 +4687,7 @@ export function DocumentsPage({ toast, openModal, role = 'lawyer' }) {
                 setCurrentPathSegments([]);
               }}
             >
-              📁 {selectedFolder}
+              📁 {t(selectedFolder) || selectedFolder}
             </span>
             {currentPathSegments.map((segment, idx) => (
               <React.Fragment key={idx}>
@@ -4714,7 +4719,7 @@ export function DocumentsPage({ toast, openModal, role = 'lawyer' }) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-800 text-white truncate leading-tight">{sub.name}</p>
-                  <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest mt-1">{sub.count} items</p>
+                  <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest mt-1">{sub.count} {t('items') || 'items'}</p>
                 </div>
               </div>
             ))}
@@ -4728,7 +4733,7 @@ export function DocumentsPage({ toast, openModal, role = 'lawyer' }) {
               <div className="flex items-start justify-between relative z-10">
                 <FileIcon type={d.type} />
                 <div className="text-right">
-                  <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest opacity-60 leading-none mb-1">Uploaded</p>
+                  <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest opacity-60 leading-none mb-1">{t('Uploaded') || 'Uploaded'}</p>
                   <p className="text-[11px] text-white font-800 tracking-tight">{d.uploaded}</p>
                 </div>
               </div>
@@ -4757,7 +4762,7 @@ export function DocumentsPage({ toast, openModal, role = 'lawyer' }) {
                   className="btn btn-secondary justify-center text-[10px] font-900 uppercase tracking-widest h-10 border-white/10 hover:bg-[#38bdf8]/10 hover:text-[#38bdf8] hover:border-[#38bdf8]/30 transition-all"
                 >
                   <svg className="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                  Preview
+                  {t('Preview') || 'Preview'}
                 </button>
                 <button
                   onClick={async (e) => {
@@ -4772,7 +4777,7 @@ export function DocumentsPage({ toast, openModal, role = 'lawyer' }) {
                   className="btn btn-secondary justify-center text-[10px] font-900 uppercase tracking-widest h-10 border-white/10 hover:bg-[#38bdf8]/10 hover:text-[#38bdf8] hover:border-[#38bdf8]/30 transition-all"
                 >
                   <svg className="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                  Download
+                  {t('Download') || 'Download'}
                 </button>
               </div>
               {isAdmin && (
@@ -4784,7 +4789,7 @@ export function DocumentsPage({ toast, openModal, role = 'lawyer' }) {
                   className="mt-2 w-full btn btn-secondary justify-center text-[10px] font-900 uppercase tracking-widest h-10 border-white/10 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-all relative z-10"
                 >
                   <svg className="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                  Delete
+                  {t('Delete') || 'Delete'}
                 </button>
               )}
             </div>
@@ -4795,8 +4800,8 @@ export function DocumentsPage({ toast, openModal, role = 'lawyer' }) {
               <div className="w-20 h-20 bg-white/[0.03] rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
                 <svg className="w-10 h-10 text-[#8a94a6]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </div>
-              <p className="text-[14px] text-white font-800 tracking-tight mb-1">No objects found</p>
-              <p className="text-[12px] text-[#8a94a6] font-500">Try adjusting your search or filters.</p>
+              <p className="text-[14px] text-white font-800 tracking-tight mb-1">{t('No objects found') || 'No objects found'}</p>
+              <p className="text-[12px] text-[#8a94a6] font-500">{t('Try adjusting your search or filters.') || 'Try adjusting your search or filters.'}</p>
             </div>
           )}
         </div>
@@ -4815,13 +4820,13 @@ export function DocumentsPage({ toast, openModal, role = 'lawyer' }) {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-800 text-white leading-tight">Delete Document?</h3>
-                <p className="text-xs text-[#8a94a6] font-500 mt-1">This action cannot be undone.</p>
+                <h3 className="text-lg font-800 text-white leading-tight">{t('Delete Document?') || 'Delete Document?'}</h3>
+                <p className="text-xs text-[#8a94a6] font-500 mt-1">{t('This action cannot be undone.') || 'This action cannot be undone.'}</p>
               </div>
             </div>
             
             <p className="text-sm text-white/80 mb-6 bg-white/5 p-3 rounded-lg border border-white/5 break-words line-clamp-2">
-              <span className="font-700 opacity-50 mr-2">File:</span>
+              <span className="font-700 opacity-50 mr-2">{t('File') || 'File'}:</span>
               <span className="font-800 text-white">{documentToDelete.name}</span>
             </p>
             
@@ -4831,7 +4836,7 @@ export function DocumentsPage({ toast, openModal, role = 'lawyer' }) {
                 disabled={isDeleting}
                 className="flex-1 py-2.5 px-4 bg-transparent border border-white/10 hover:bg-white/5 text-white text-xs font-800 uppercase tracking-wider rounded-xl transition-all"
               >
-                Cancel
+                {t('Cancel') || 'Cancel'}
               </button>
               <button
                 onClick={async () => {
@@ -4850,7 +4855,7 @@ export function DocumentsPage({ toast, openModal, role = 'lawyer' }) {
                 disabled={isDeleting}
                 className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-500 text-white text-xs font-800 uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-red-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {isDeleting ? 'Deleting...' : 'Delete'}
+                {isDeleting ? (t('Deleting...') || 'Deleting...') : (t('Delete') || 'Delete')}
               </button>
             </div>
           </div>
@@ -4864,6 +4869,7 @@ export function DocumentsPage({ toast, openModal, role = 'lawyer' }) {
 //  BILLING PAGE
 // ─────────────────────────────────────────────────────────
 export function BillingPage({ openModal, toast, navigate, role = 'lawyer' }) {
+  const { t } = useLanguage();
   const isAdmin = role !== 'client';
   const canMarkPaid = role === 'admin';
   const [tab, setTab] = useState('Invoices');
@@ -5026,25 +5032,25 @@ export function BillingPage({ openModal, toast, navigate, role = 'lawyer' }) {
 
   return (
     <div className="animate-fade-in space-y-6 pb-12">
-      <PageHeader title="Billing & Financials" subtitle="Executive oversight of firm revenue, trust accounts, and unbilled time">
+      <PageHeader title={t('Billing & Financials') || 'Billing & Financials'} subtitle={t('billingFinancialsDesc') || 'Executive oversight of firm revenue, trust accounts, and unbilled time'}>
         <button onClick={() => navigate('calendar')} className="btn btn-secondary border-white/10 hover:bg-white/5 active:scale-[0.98]">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          Time Entries
+          {t('Time Entries') || 'Time Entries'}
         </button>
         <button onClick={() => openModal('create-invoice')} className="btn btn-primary shadow-[#0057c7]/20 active:scale-[0.98]">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-          Create Invoice
+          {t('Create Invoice') || 'Create Invoice'}
         </button>
       </PageHeader>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Unbilled Time" value={adminStats.unbilled} change="+8.2%"
+        <StatCard label={t('Unbilled Time') || 'Unbilled Time'} value={adminStats.unbilled} change="+8.2%"
           icon={<svg className="w-6 h-6 text-[#38bdf8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
-        <StatCard label="Draft Invoices" value={adminStats.draft} 
+        <StatCard label={t('Draft Invoices') || 'Draft Invoices'} value={adminStats.draft} 
           icon={<svg className="w-6 h-6 text-[#94a3b8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>} />
-        <StatCard label="Outstanding (A/R)" value={adminStats.ar} change="-2.4%"
+        <StatCard label={t('Outstanding (A/R)') || 'Outstanding (A/R)'} value={adminStats.ar} change="-2.4%"
           icon={<svg className="w-6 h-6 text-[#f59e0b]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /><path d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41M17.66 17.66l1.41 1.41M6.34 6.34l1.41-1.41" /></svg>} />
-        <StatCard label="Collected (MTD)" value={adminStats.mtd} change="+14.5%"
+        <StatCard label={t('Collected (MTD)') || 'Collected (MTD)'} value={adminStats.mtd} change="+14.5%"
           icon={<svg className="w-6 h-6 text-[#10b981]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3 1.343 3 3-1.343 3-3 3m0-12c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3m0-4v2m0 16v2" /></svg>} />
       </div>
 
@@ -5052,13 +5058,13 @@ export function BillingPage({ openModal, toast, navigate, role = 'lawyer' }) {
 
       {tab === 'Invoices' && (
         <Card className="!p-0 overflow-hidden border-white/5 bg-white/[0.02]">
-          <Table headers={['Invoice ID', 'Client Entity', 'Value & Status', 'Issuance', 'Due Date', 'Status', 'Actions']}
-            searchPlaceholder="Search invoice archives..." onSearch={setSearch}>
+          <Table headers={[t('Invoice ID') || 'Invoice ID', t('Client Entity') || 'Client Entity', t('Value & Status') || 'Value & Status', t('Issuance') || 'Issuance', t('Due Date') || 'Due Date', t('status'), t('actions') || 'Actions']}
+            searchPlaceholder={t('Search invoice archives...') || 'Search invoice archives...'} onSearch={setSearch}>
             {filteredInvoices.map(inv => (
               <Tr key={inv.id} className="hover:bg-white/[0.03] transition-colors group">
                 <Td>
                   <p className="text-[14px] font-900 text-white tracking-tighter group-hover:text-[#38bdf8] transition-colors">{inv.id}</p>
-                  <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest opacity-40">Financial Record</p>
+                  <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest opacity-40">{t('Financial Record') || 'Financial Record'}</p>
                 </Td>
                 <Td>
                   <div className="flex items-center gap-3">
@@ -5068,26 +5074,26 @@ export function BillingPage({ openModal, toast, navigate, role = 'lawyer' }) {
                 </Td>
                 <Td>
                   <div className="text-[15px] font-900 text-white tracking-tighter">{billFormatUsd(inv.amount)}</div>
-                  {inv.paid_amount > 0 && <p className="text-[10px] text-[#10b981] font-900 uppercase tracking-widest mt-1">Paid: {billFormatUsd(inv.paid_amount)}</p>}
-                  {inv.due_amount > 0 && <p className="text-[10px] text-red-400 font-900 uppercase tracking-widest mt-1">Due: {billFormatUsd(inv.due_amount)}</p>}
+                  {inv.paid_amount > 0 && <p className="text-[10px] text-[#10b981] font-900 uppercase tracking-widest mt-1">{t('Paid') || 'Paid'}: {billFormatUsd(inv.paid_amount)}</p>}
+                  {inv.due_amount > 0 && <p className="text-[10px] text-red-400 font-900 uppercase tracking-widest mt-1">{t('Due') || 'Due'}: {billFormatUsd(inv.due_amount)}</p>}
                 </Td>
                 <Td className="text-[13px] text-[#b8c2d1] font-600">{inv.issued}</Td>
                 <Td className="text-[13px] text-[#b8c2d1] font-600">{inv.due}</Td>
                 <Td><Badge status={inv.status} /></Td>
                 <Td>
                   <div className="flex gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => openModal('view-invoice', inv)} className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-[#38bdf8]/10 hover:text-[#38bdf8] hover:border-[#38bdf8]/30 transition-all" title="Review Intelligence">
+                    <button onClick={() => openModal('view-invoice', inv)} className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-[#38bdf8]/10 hover:text-[#38bdf8] hover:border-[#38bdf8]/30 transition-all" title={t('Review Intelligence') || 'Review Intelligence'}>
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                     </button>
                     {canMarkPaid && inv.status !== 'paid' && inv.status !== 'void' && inv.dbId != null && (
-                      <button onClick={() => openModal('pay-invoice', inv)} className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 hover:bg-emerald-500/20 transition-all" title="Authorize Payment">
+                      <button onClick={() => openModal('pay-invoice', inv)} className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 hover:bg-emerald-500/20 transition-all" title={t('Authorize Payment') || 'Authorize Payment'}>
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M5 13l4 4L19 7" /></svg>
                       </button>
                     )}
-                    <button onClick={() => downloadInvoicePdfBlob(inv.dbId, inv.id, toast)} className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-[#f59e0b]/10 hover:text-[#f59e0b] hover:border-[#f59e0b]/30 transition-all" title="Export Statement (PDF)">
+                    <button onClick={() => downloadInvoicePdfBlob(inv.dbId, inv.id, toast)} className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-[#f59e0b]/10 hover:text-[#f59e0b] hover:border-[#f59e0b]/30 transition-all" title={t('Export Statement (PDF)') || 'Export Statement (PDF)'}>
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                     </button>
-                    <button onClick={() => downloadInvoiceDocxBlob(inv.dbId, inv.id, toast)} className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 hover:bg-blue-500/20 transition-all" title="Export Word Draft (.docx)">
+                    <button onClick={() => downloadInvoiceDocxBlob(inv.dbId, inv.id, toast)} className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 hover:bg-blue-500/20 transition-all" title={t('Export Word Draft (.docx)') || 'Export Word Draft (.docx)'}>
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     </button>
                   </div>
@@ -5103,14 +5109,14 @@ export function BillingPage({ openModal, toast, navigate, role = 'lawyer' }) {
           <div className="flex justify-end">
              <button onClick={() => openModal('trust-deposit')} className="btn btn-primary shadow-[#0057c7]/20">
                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-               Trust Deposit
+               {t('Trust Deposit') || 'Trust Deposit'}
              </button>
           </div>
           <Card className="!p-0 overflow-hidden border-white/5 bg-white/[0.02]">
-            <Table headers={['Client Entity', 'Account Identifier', 'Current Balance', 'Last Activity', 'Lifecycle', 'Operations']}>
+            <Table headers={[t('Client Entity') || 'Client Entity', t('Account Identifier') || 'Account Identifier', t('Current Balance') || 'Current Balance', t('Last Activity') || 'Last Activity', t('Lifecycle') || 'Lifecycle', t('Operations') || 'Operations']}>
               {apiTrustAccounts.length === 0 ? (
                 <Tr>
-                  <td colSpan={6} className="px-4 py-24 text-center text-[#8a94a6] text-[13px] font-500 italic opacity-40">No institutional trust records located.</td>
+                  <td colSpan={6} className="px-4 py-24 text-center text-[#8a94a6] text-[13px] font-500 italic opacity-40">{t('noTrustRecordsLocated') || 'No institutional trust records located.'}</td>
                 </Tr>
               ) : (
                 apiTrustAccounts.map(ta => (
@@ -5123,20 +5129,20 @@ export function BillingPage({ openModal, toast, navigate, role = 'lawyer' }) {
                     </Td>
                     <Td>
                       <p className="text-[13px] text-white font-900 tracking-tighter uppercase">TR-{String(ta.id).padStart(4, '0')}</p>
-                      <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest opacity-40">Escrow ID</p>
+                      <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest opacity-40">{t('Escrow ID') || 'Escrow ID'}</p>
                     </Td>
                     <Td>
                       <p className="text-[15px] font-900 text-[#10b981] tracking-tighter">{billFormatUsd(ta.balance)}</p>
-                      <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest opacity-40">Liquid Assets</p>
+                      <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest opacity-40">{t('Liquid Assets') || 'Liquid Assets'}</p>
                     </Td>
                     <Td className="text-[13px] text-[#b8c2d1] font-600">{ta.updated_at ? new Date(ta.updated_at).toLocaleDateString() : '—'}</Td>
                     <Td><Badge status="active" /></Td>
                     <Td>
                       <div className="flex gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => openModal('trust-ledger', ta)} className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-[#38bdf8]/10 hover:text-[#38bdf8] hover:border-[#38bdf8]/30 transition-all" title="View Intelligence">
+                        <button onClick={() => openModal('trust-ledger', ta)} className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-[#38bdf8]/10 hover:text-[#38bdf8] hover:border-[#38bdf8]/30 transition-all" title={t('View Intelligence') || 'View Intelligence'}>
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         </button>
-                        <button onClick={() => openModal('apply-trust', ta)} className="w-8 h-8 rounded-lg bg-[#0057c7]/10 border border-[#0057c7]/20 flex items-center justify-center text-[#38bdf8] hover:bg-[#0057c7]/20 transition-all" title="Apply Liquidated">
+                        <button onClick={() => openModal('apply-trust', ta)} className="w-8 h-8 rounded-lg bg-[#0057c7]/10 border border-[#0057c7]/20 flex items-center justify-center text-[#38bdf8] hover:bg-[#0057c7]/20 transition-all" title={t('Apply Liquidated') || 'Apply Liquidated'}>
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
                         </button>
                       </div>
@@ -5151,9 +5157,9 @@ export function BillingPage({ openModal, toast, navigate, role = 'lawyer' }) {
 
       {tab === 'Expenses' && (
         <Card className="!p-0 overflow-hidden border-white/5 bg-white/[0.02]">
-          <Table headers={['Vendor Brief', 'Matter Reference', 'Classification', 'Fiscal Value', 'Execution Date', 'Status']}>
+          <Table headers={[t('Vendor Brief') || 'Vendor Brief', t('Matter Reference') || 'Matter Reference', t('Classification') || 'Classification', t('Fiscal Value') || 'Fiscal Value', t('Execution Date') || 'Execution Date', t('status')]}>
             <Tr>
-              <td colSpan={6} className="px-4 py-24 text-center text-[#8a94a6] text-[13px] font-500 italic opacity-40">No outstanding expense records synchronized.</td>
+              <td colSpan={6} className="px-4 py-24 text-center text-[#8a94a6] text-[13px] font-500 italic opacity-40">{t('noExpenseRecordsSynchronized') || 'No outstanding expense records synchronized.'}</td>
             </Tr>
           </Table>
         </Card>
@@ -5165,12 +5171,12 @@ export function BillingPage({ openModal, toast, navigate, role = 'lawyer' }) {
             <div>
               <h3 className="text-[11px] font-900 text-white uppercase tracking-[0.3em] flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
-                Institutional Transaction Ledger
+                {t('Institutional Transaction Ledger') || 'Institutional Transaction Ledger'}
               </h3>
-              <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest mt-2 opacity-60">Verified Immutable Record</p>
+              <p className="text-[10px] text-[#8a94a6] font-900 uppercase tracking-widest mt-2 opacity-60">{t('Verified Immutable Record') || 'Verified Immutable Record'}</p>
             </div>
             <button onClick={() => {
-              if (!ledgerRows.length) { toast('No ledger data to export.', 'warning'); return; }
+              if (!ledgerRows.length) { toast(t('noLedgerDataExport') || 'No ledger data to export.', 'warning'); return; }
               const header = 'Date,Description,Amount,Balance\n';
               const rows = ledgerRows.map(r => {
                 const cleanAmt = (r.amount || '').replace(/[,$]/g, '');
@@ -5187,9 +5193,9 @@ export function BillingPage({ openModal, toast, navigate, role = 'lawyer' }) {
               a.click();
               a.remove();
               window.URL.revokeObjectURL(url);
-              toast('Financial statement exported successfully!', 'success');
+              toast(t('financialStatementExportedSuccessfully') || 'Financial statement exported successfully!', 'success');
             }} className="btn btn-secondary border-white/10 hover:bg-white/5 text-[11px] font-900 uppercase tracking-widest">
-              Export Statement
+              {t('Export Statement') || 'Export Statement'}
             </button>
           </div>
           <div className="space-y-0 text-[13px]">
@@ -5212,6 +5218,7 @@ export function BillingPage({ openModal, toast, navigate, role = 'lawyer' }) {
 //  EMAIL PAGE
 // ─────────────────────────────────────────────────────────
 export function EmailPage({ toast, openModal, role = 'lawyer' }) {
+  const { t } = useLanguage();
   const isAdmin = role !== 'client';
   const [selected, setSelected] = useState(null);
   const [commList, setCommList] = useState([]);
@@ -5367,10 +5374,10 @@ export function EmailPage({ toast, openModal, role = 'lawyer' }) {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <PageHeader title="Intelligence Hub" subtitle="Real-time communication & outreach monitoring">
+      <PageHeader title={t('Intelligence Hub') || 'Intelligence Hub'} subtitle={t('intelligenceHubDesc') || 'Real-time communication & outreach monitoring'}>
         <button onClick={() => openModal('compose-email')} className="btn btn-primary h-11 px-6 text-[11px] font-900 uppercase tracking-widest flex items-center gap-2 group">
           <svg className="w-4 h-4 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-          Compose Outbound
+          {t('Compose Outbound') || 'Compose Outbound'}
         </button>
       </PageHeader>
 
@@ -5380,7 +5387,7 @@ export function EmailPage({ toast, openModal, role = 'lawyer' }) {
           <div className={`w-full lg:w-80 flex-shrink-0 border-r border-white/5 flex flex-col bg-white/[0.01] ${selected ? 'hidden lg:flex' : 'flex'}`}>
             <div className="p-4 border-b border-white/5 bg-white/[0.02]">
               <SearchInput 
-                placeholder="Search transmissions..." 
+                placeholder={t('Search transmissions...') || 'Search transmissions...'} 
                 value={searchQuery} 
                 onChange={(val) => setSearchQuery(val)} 
               />
@@ -5409,7 +5416,7 @@ export function EmailPage({ toast, openModal, role = 'lawyer' }) {
                 <div className="p-4 lg:p-6 border-b border-white/5 bg-white/[0.03]">
                   <button onClick={() => setSelected(null)} className="lg:hidden flex items-center gap-2 text-[#38bdf8] font-900 uppercase tracking-[0.2em] text-[10px] mb-4 hover:opacity-80 transition-opacity">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M15 18l-6-6 6-6" /></svg>
-                    Back to Inbox
+                    {t('Back to Inbox') || 'Back to Inbox'}
                   </button>
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                     <h3 className="text-[18px] font-900 text-white tracking-tighter">{selected.subject}</h3>
@@ -5431,7 +5438,7 @@ export function EmailPage({ toast, openModal, role = 'lawyer' }) {
                             <svg className="w-3.5 h-3.5 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                             </svg>
-                            Edit
+                            {t('Edit') || 'Edit'}
                           </button>
                           
                           <button 
@@ -5441,46 +5448,46 @@ export function EmailPage({ toast, openModal, role = 'lawyer' }) {
                             <svg className="w-3.5 h-3.5 text-red-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
-                            Delete
+                            {t('Delete') || 'Delete'}
                           </button>
                           
                           <div className="h-4 w-px bg-white/10 mx-1" />
                         </>
                       )}
                       
-                      <button onClick={() => setAction('reply')} className={`h-9 px-4 rounded-xl text-[10px] font-900 uppercase tracking-widest transition-all ${action === 'reply' ? 'bg-[#0057c7] text-white' : 'bg-white/5 text-white hover:bg-white/10 border border-white/10'}`}>Reply</button>
-                      <button onClick={() => setAction('forward')} className={`h-9 px-4 rounded-xl text-[10px] font-900 uppercase tracking-widest transition-all ${action === 'forward' ? 'bg-[#0057c7] text-white' : 'bg-white/5 text-white hover:bg-white/10 border border-white/10'}`}>Forward</button>
+                      <button onClick={() => setAction('reply')} className={`h-9 px-4 rounded-xl text-[10px] font-900 uppercase tracking-widest transition-all ${action === 'reply' ? 'bg-[#0057c7] text-white' : 'bg-white/5 text-white hover:bg-white/10 border border-white/10'}`}>{t('Reply') || 'Reply'}</button>
+                      <button onClick={() => setAction('forward')} className={`h-9 px-4 rounded-xl text-[10px] font-900 uppercase tracking-widest transition-all ${action === 'forward' ? 'bg-[#0057c7] text-white' : 'bg-white/5 text-white hover:bg-white/10 border border-white/10'}`}>{t('Forward') || 'Forward'}</button>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <Avatar initials={selected.from.charAt(0)} size="md" className="ring-2 ring-[#0057c7]/20" />
                     <div className="flex-1">
                       <p className="text-[14px] font-900 text-white tracking-tight">{selected.from}</p>
-                      <p className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.2em] opacity-40">Verification Timestamp: {selected.time}</p>
+                      <p className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.2em] opacity-40">{t('Verification Timestamp') || 'Verification Timestamp'}: {selected.time}</p>
                     </div>
                   </div>
 
                   {(selected.communication_type === 'email_log' || selected.to) && (
                     <div className="mt-4 p-4 bg-[#121826]/40 border border-white/5 rounded-2xl flex flex-col gap-2 text-[12px] text-white/70">
                       <div className="flex items-center gap-2">
-                        <span className="w-14 text-white/30 font-850 uppercase tracking-widest text-[9px]">From:</span>
+                        <span className="w-14 text-white/30 font-850 uppercase tracking-widest text-[9px]">{t('From') || 'From'}:</span>
                         <span className="font-600 text-white">{selected.from} {selected.fromEmail && `<${selected.fromEmail}>`}</span>
                       </div>
                       {selected.to && (
                         <div className="flex items-center gap-2">
-                          <span className="w-14 text-white/30 font-850 uppercase tracking-widest text-[9px]">To:</span>
+                          <span className="w-14 text-white/30 font-850 uppercase tracking-widest text-[9px]">{t('To') || 'To'}:</span>
                           <span className="font-600 text-white/95">{selected.to}</span>
                         </div>
                       )}
                       {selected.cc && (
                         <div className="flex items-center gap-2">
-                          <span className="w-14 text-white/30 font-850 uppercase tracking-widest text-[9px]">Cc:</span>
+                          <span className="w-14 text-white/30 font-850 uppercase tracking-widest text-[9px]">{t('Cc') || 'Cc'}:</span>
                           <span className="font-600 text-white/90">{selected.cc}</span>
                         </div>
                       )}
                       {selected.bcc && (
                         <div className="flex items-center gap-2">
-                          <span className="w-14 text-white/30 font-850 uppercase tracking-widest text-[9px]">Bcc:</span>
+                          <span className="w-14 text-white/30 font-850 uppercase tracking-widest text-[9px]">{t('Bcc') || 'Bcc'}:</span>
                           <span className="font-600 text-white/80">{selected.bcc}</span>
                         </div>
                       )}
@@ -5503,7 +5510,7 @@ export function EmailPage({ toast, openModal, role = 'lawyer' }) {
                         </div>
                         {attachments.length > 0 && (
                           <div className="p-4 rounded-2xl border border-white/5 bg-white/[0.02]">
-                            <h4 className="text-[11px] font-900 text-[#8a94a6] uppercase tracking-[0.2em] mb-3">Attachments ({attachments.length})</h4>
+                            <h4 className="text-[11px] font-900 text-[#8a94a6] uppercase tracking-[0.2em] mb-3">{t('Attachments') || 'Attachments'} ({attachments.length})</h4>
                             <div className="flex flex-wrap gap-3">
                               {attachments.map((att, attIdx) => (
                                 <div key={attIdx} className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 shadow-md">
@@ -5537,7 +5544,7 @@ export function EmailPage({ toast, openModal, role = 'lawyer' }) {
                     <div className="animate-slide-up bg-[#0b1f3a] rounded-[2.5rem] border border-white/10 shadow-3xl overflow-hidden">
                       <div className="bg-white/[0.05] px-6 py-4 border-b border-white/5 flex items-center justify-between">
                         <span className="text-[11px] font-900 text-[#38bdf8] uppercase tracking-[0.2em]">
-                          {action === 'reply' ? 'Institutional Response' : 'Strategic Forwarding'}
+                          {action === 'reply' ? (t('Institutional Response') || 'Institutional Response') : (t('Strategic Forwarding') || 'Strategic Forwarding')}
                         </span>
                         <button onClick={() => setAction(null)} className="w-8 h-8 rounded-full flex items-center justify-center text-[#8a94a6] hover:text-white transition-colors">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path d="M6 18L18 6M6 6l12 12" /></svg>
@@ -5545,17 +5552,17 @@ export function EmailPage({ toast, openModal, role = 'lawyer' }) {
                       </div>
                       <form onSubmit={handleSend} className="p-8 space-y-5">
                         {action === 'forward' && (
-                          <Field label="Target Recipient" required>
+                          <Field label={t('Target Recipient') || 'Target Recipient'} required>
                             <Input name="target" placeholder="institutional.entity@domain.com" required />
                           </Field>
                         )}
-                        <Field label={action === 'reply' ? 'Draft Statement' : 'Transmission Notes'} required={action === 'reply'}>
-                          <Textarea name="message" rows={6} placeholder={action === 'reply' ? 'Formulate institutional response...' : 'Append executive context to this forwarding...'} required={action === 'reply'} />
+                        <Field label={action === 'reply' ? (t('Draft Statement') || 'Draft Statement') : (t('Transmission Notes') || 'Transmission Notes')} required={action === 'reply'}>
+                          <Textarea name="message" rows={6} placeholder={action === 'reply' ? (t('Formulate institutional response...') || 'Formulate institutional response...') : (t('Append executive context to this forwarding...') || 'Append executive context to this forwarding...')} required={action === 'reply'} />
                         </Field>
                         <div className="flex justify-end gap-3 pt-2">
-                          <button type="button" onClick={() => setAction(null)} className="h-11 px-6 rounded-2xl bg-white/5 text-white text-[11px] font-900 uppercase tracking-widest hover:bg-white/10 transition-all">Cancel</button>
+                          <button type="button" onClick={() => setAction(null)} className="h-11 px-6 rounded-2xl bg-white/5 text-white text-[11px] font-900 uppercase tracking-widest hover:bg-white/10 transition-all">{t('Cancel') || 'Cancel'}</button>
                           <button type="submit" className="btn btn-primary h-11 px-8 text-[11px] font-900 uppercase tracking-widest">
-                            {action === 'reply' ? 'Execute Reply' : 'Execute Forward'}
+                            {action === 'reply' ? (t('Execute Reply') || 'Execute Reply') : (t('Execute Forward') || 'Execute Forward')}
                           </button>
                         </div>
                       </form>
@@ -5568,8 +5575,8 @@ export function EmailPage({ toast, openModal, role = 'lawyer' }) {
                 <div className="w-20 h-20 rounded-[2rem] bg-white/[0.03] border border-white/5 flex items-center justify-center mb-6">
                   <svg className="w-10 h-10 text-[#8a94a6] opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path d="M3 8l7.89 5.26a2 2 0 002.22 0L22 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                 </div>
-                <h4 className="text-[18px] font-900 text-white tracking-tighter mb-2">Initialize Communication Overview</h4>
-                <p className="text-[13px] text-[#8a94a6] max-w-xs mx-auto opacity-60">Select an active transmission from the sidebar to begin institutional review.</p>
+                <h4 className="text-[18px] font-900 text-white tracking-tighter mb-2">{t('Initialize Communication Overview') || 'Initialize Communication Overview'}</h4>
+                <p className="text-[13px] text-[#8a94a6] max-w-xs mx-auto opacity-60">{t('Select an active transmission from the sidebar to begin institutional review.') || 'Select an active transmission from the sidebar to begin institutional review.'}</p>
               </div>
             )}
           </div>
@@ -5585,22 +5592,22 @@ export function EmailPage({ toast, openModal, role = 'lawyer' }) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </div>
-            <h3 className="text-[16px] font-800">Delete Transmission?</h3>
+            <h3 className="text-[16px] font-800">{t('Delete Transmission?') || 'Delete Transmission?'}</h3>
             <p className="text-[13px] text-slate-400 leading-relaxed">
-              Are you sure you want to delete this communication record? This action cannot be undone.
+              {t('deleteCommunicationConfirm') || 'Are you sure you want to delete this communication record? This action cannot be undone.'}
             </p>
             <div className="flex gap-3 mt-2">
               <button
                 onClick={() => setShowConfirmDelete(null)}
                 className="flex-1 bg-white/5 hover:bg-white/10 text-white border border-white/10 text-[12px] font-700 py-2.5 rounded-xl transition-all"
               >
-                Cancel
+                {t('Cancel') || 'Cancel'}
               </button>
               <button
                 onClick={() => handleDeleteCommunication(showConfirmDelete)}
                 className="flex-1 bg-red-600 hover:bg-red-500 text-white text-[12px] font-700 py-2.5 rounded-xl transition-all shadow-md shadow-red-600/10"
               >
-                Yes, delete
+                {t('Yes, delete') || 'Yes, delete'}
               </button>
             </div>
           </div>

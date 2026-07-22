@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { PageHeader, Table, Tr, Td, Badge, Modal, Field, Input, Select, EmptyState, useToast } from '../../components/UI.jsx';
+import { useLanguage } from '../../context/LanguageContext';
 
 const initialParties = [
   { id: 'PTY-101', name: 'Emily Carter', partyType: 'Plaintiff', matter: 'MAT-2026-001 (Civil Litigation)', contact: 'emily.carter@gmail.com', phone: '+1 (555) 234-5678', counsel: 'Alex Parker, Esq.', status: 'active' },
@@ -10,6 +11,7 @@ const initialParties = [
 ];
 
 export function AdminPartiesPage() {
+  const { t } = useLanguage();
   const [parties, setParties] = useState(initialParties);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -53,7 +55,7 @@ export function AdminPartiesPage() {
 
   const handleSaveAdd = () => {
     if (!formData.name || !formData.contact) {
-      toast('Please enter party name and contact email.', 'error');
+      toast(t('enterPartyNameEmail'), 'error');
       return;
     }
     const newParty = {
@@ -68,33 +70,33 @@ export function AdminPartiesPage() {
     };
     setParties([newParty, ...parties]);
     setActiveModal(null);
-    toast(`Party "${formData.name}" added successfully!`, 'success');
+    toast(t('party') + ` "${formData.name}" ` + t('addedSuccessfully'), 'success');
   };
 
   const handleSaveEdit = () => {
     setParties(parties.map(p => p.id === selectedParty.id ? { ...p, ...formData } : p));
     setActiveModal(null);
-    toast(`Party "${formData.name}" updated!`, 'success');
+    toast(t('party') + ` "${formData.name}" ` + t('updatedSuccessfully'), 'success');
   };
 
   const handleDelete = () => {
     setParties(parties.filter(p => p.id !== selectedParty.id));
     setActiveModal(null);
-    toast(`Party "${selectedParty.name}" removed!`, 'success');
+    toast(t('party') + ` "${selectedParty.name}" ` + t('removedSuccessfully'), 'success');
   };
 
   return (
     <div className="space-y-8 animate-fade-in">
       <PageHeader 
-        title="Case Parties Directory" 
-        subtitle="Manage all involved plaintiffs, defendants, co-counsels, expert witnesses, and key case entities" 
+        title={t('casePartiesDirectory')} 
+        subtitle={t('manageInvolvedPartiesDesc')} 
       >
         <button 
           onClick={handleOpenAdd}
           className="px-5 py-2.5 rounded-xl bg-[#0057c7] text-white font-700 text-[14px] hover:bg-[#0057c7]/80 shadow-lg shadow-[#0057c7]/20 flex items-center gap-2 transition-all"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M12 4v16m8-8H4" /></svg>
-          Add New Party
+          {t('addNewParty')}
         </button>
       </PageHeader>
 
@@ -102,19 +104,19 @@ export function AdminPartiesPage() {
       <div className="flex items-center gap-4 flex-wrap bg-[#1a2233]/40 p-4 rounded-2xl border border-white/5 backdrop-blur-xl">
         <div className="flex-1 min-w-[240px]">
           <Input 
-            placeholder="Search parties by name, email, or associated matter..." 
+            placeholder={t('searchPartiesPlaceholder')} 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <div className="w-56">
           <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-            <option value="all">All Party Roles</option>
-            <option value="plaintiff">Plaintiff</option>
-            <option value="defendant">Defendant</option>
-            <option value="expert witness">Expert Witness</option>
-            <option value="co-counsel">Co-Counsel</option>
-            <option value="witness">Witness</option>
+            <option value="all">{t('allPartyRoles')}</option>
+            <option value="plaintiff">{t('plaintiff')}</option>
+            <option value="defendant">{t('defendant')}</option>
+            <option value="expert witness">{t('expertWitness')}</option>
+            <option value="co-counsel">{t('coCounsel')}</option>
+            <option value="witness">{t('witness')}</option>
           </Select>
         </div>
       </div>
@@ -123,11 +125,11 @@ export function AdminPartiesPage() {
       {filteredParties.length === 0 ? (
         <EmptyState 
           icon={<svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
-          title="No Case Parties Found" 
-          desc="No registered case parties match your search query." 
+          title={t('noCasePartiesFound')} 
+          desc={t('noCasePartiesMatchQuery')} 
         />
       ) : (
-        <Table headers={['Party Name', 'Party Type', 'Associated Matter', 'Contact Email / Phone', 'Counsel', 'Status', 'Actions']}>
+        <Table headers={[t('Party Name'), t('Party Type'), t('Associated Matter'), t('Contact Email / Phone'), t('Counsel'), t('status'), t('actions') || 'Actions']}>
           {filteredParties.map((party) => (
             <Tr key={party.id}>
               <Td className="font-700 text-white">
@@ -136,7 +138,7 @@ export function AdminPartiesPage() {
               </Td>
               <Td>
                 <span className="px-2.5 py-1 rounded-lg text-[11px] font-800 uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                  {party.partyType}
+                  {t(party.partyType)}
                 </span>
               </Td>
               <Td className="text-white font-600">
@@ -155,13 +157,13 @@ export function AdminPartiesPage() {
               <Td>
                 <div className="flex items-center gap-2">
                   <button onClick={() => handleOpenView(party)} className="px-3 py-1.5 rounded-lg bg-white/5 text-white hover:bg-white/10 text-[12px] font-700 transition-all">
-                    View
+                    {t('view')}
                   </button>
                   <button onClick={() => handleOpenEdit(party)} className="px-3 py-1.5 rounded-lg bg-[#0057c7]/20 text-[#38bdf8] hover:bg-[#0057c7]/30 text-[12px] font-700 transition-all">
-                    Edit
+                    {t('edit')}
                   </button>
                   <button onClick={() => handleOpenDelete(party)} className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 text-[12px] font-700 transition-all">
-                    Delete
+                    {t('delete')}
                   </button>
                 </div>
               </Td>
@@ -172,36 +174,36 @@ export function AdminPartiesPage() {
 
       {/* Modals */}
       {activeModal === 'add' && (
-        <Modal title="Add New Case Party" onClose={() => setActiveModal(null)}
+        <Modal title={t('addNewCaseParty')} onClose={() => setActiveModal(null)}
           footer={
             <>
-              <button onClick={() => setActiveModal(null)} className="px-4 py-2 rounded-xl bg-white/5 text-white text-[13px] font-700">Cancel</button>
-              <button onClick={handleSaveAdd} className="px-5 py-2 rounded-xl bg-[#0057c7] text-white text-[13px] font-700">Save Party</button>
+              <button onClick={() => setActiveModal(null)} className="px-4 py-2 rounded-xl bg-white/5 text-white text-[13px] font-700">{t('cancel')}</button>
+              <button onClick={handleSaveAdd} className="px-5 py-2 rounded-xl bg-[#0057c7] text-white text-[13px] font-700">{t('saveParty')}</button>
             </>
           }
         >
           <div className="space-y-4">
-            <Field label="Party Full Name / Entity" required>
+            <Field label={t('partyFullNameEntity') || 'Party Full Name / Entity'} required>
               <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Global Logistics Corp" />
             </Field>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Party Role Type">
+              <Field label={t('partyRoleType') || 'Party Role Type'}>
                 <Select value={formData.partyType} onChange={(e) => setFormData({ ...formData, partyType: e.target.value })}>
-                  <option value="Plaintiff">Plaintiff</option>
-                  <option value="Defendant">Defendant</option>
-                  <option value="Expert Witness">Expert Witness</option>
-                  <option value="Co-Counsel">Co-Counsel</option>
-                  <option value="Witness">Witness</option>
+                  <option value="Plaintiff">{t('plaintiff')}</option>
+                  <option value="Defendant">{t('defendant')}</option>
+                  <option value="Expert Witness">{t('expertWitness')}</option>
+                  <option value="Co-Counsel">{t('coCounsel')}</option>
+                  <option value="Witness">{t('witness')}</option>
                 </Select>
               </Field>
-              <Field label="Associated Matter">
+              <Field label={t('associatedMatter') || 'Associated Matter'}>
                 <Input value={formData.matter} onChange={(e) => setFormData({ ...formData, matter: e.target.value })} />
               </Field>
             </div>
-            <Field label="Contact Email" required>
+            <Field label={t('contactEmail') || 'Contact Email'} required>
               <Input type="email" value={formData.contact} onChange={(e) => setFormData({ ...formData, contact: e.target.value })} placeholder="email@domain.com" />
             </Field>
-            <Field label="Phone">
+            <Field label={t('phone') || 'Phone'}>
               <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+1 (555) 000-0000" />
             </Field>
           </div>
@@ -209,19 +211,19 @@ export function AdminPartiesPage() {
       )}
 
       {activeModal === 'edit' && selectedParty && (
-        <Modal title={`Edit Party - ${selectedParty.name}`} onClose={() => setActiveModal(null)}
+        <Modal title={`${t('editParty')}: ${selectedParty.name}`} onClose={() => setActiveModal(null)}
           footer={
             <>
-              <button onClick={() => setActiveModal(null)} className="px-4 py-2 rounded-xl bg-white/5 text-white text-[13px] font-700">Cancel</button>
-              <button onClick={handleSaveEdit} className="px-5 py-2 rounded-xl bg-[#0057c7] text-white text-[13px] font-700">Update Party</button>
+              <button onClick={() => setActiveModal(null)} className="px-4 py-2 rounded-xl bg-white/5 text-white text-[13px] font-700">{t('cancel')}</button>
+              <button onClick={handleSaveEdit} className="px-5 py-2 rounded-xl bg-[#0057c7] text-white text-[13px] font-700">{t('updateParty')}</button>
             </>
           }
         >
           <div className="space-y-4">
-            <Field label="Party Name" required>
+            <Field label={t('Party Name') || 'Party Name'} required>
               <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
             </Field>
-            <Field label="Contact Email" required>
+            <Field label={t('contactEmail') || 'Contact Email'} required>
               <Input type="email" value={formData.contact} onChange={(e) => setFormData({ ...formData, contact: e.target.value })} />
             </Field>
           </div>
@@ -229,28 +231,28 @@ export function AdminPartiesPage() {
       )}
 
       {activeModal === 'view' && selectedParty && (
-        <Modal title={`Party Profile - ${selectedParty.name}`} onClose={() => setActiveModal(null)}
-          footer={<button onClick={() => setActiveModal(null)} className="px-5 py-2 rounded-xl bg-[#0057c7] text-white text-[13px] font-700">Close</button>}
+        <Modal title={`${t('partyProfile')}: ${selectedParty.name}`} onClose={() => setActiveModal(null)}
+          footer={<button onClick={() => setActiveModal(null)} className="px-5 py-2 rounded-xl bg-[#0057c7] text-white text-[13px] font-700">{t('close')}</button>}
         >
           <div className="grid grid-cols-2 gap-4 p-4 bg-white/5 rounded-xl border border-white/5 text-[14px]">
-            <div><p className="text-[11px] text-[#8a94a6] uppercase font-700">Party ID</p><p className="text-white font-800">{selectedParty.id}</p></div>
-            <div><p className="text-[11px] text-[#8a94a6] uppercase font-700">Role</p><p className="text-blue-400 font-800">{selectedParty.partyType}</p></div>
-            <div><p className="text-[11px] text-[#8a94a6] uppercase font-700">Matter</p><p className="text-white font-600">{selectedParty.matter}</p></div>
-            <div><p className="text-[11px] text-[#8a94a6] uppercase font-700">Counsel</p><p className="text-white font-600">{selectedParty.counsel}</p></div>
+            <div><p className="text-[11px] text-[#8a94a6] uppercase font-700">{t('partyId')}</p><p className="text-white font-800">{selectedParty.id}</p></div>
+            <div><p className="text-[11px] text-[#8a94a6] uppercase font-700">{t('role')}</p><p className="text-blue-400 font-800">{t(selectedParty.partyType)}</p></div>
+            <div><p className="text-[11px] text-[#8a94a6] uppercase font-700">{t('associatedMatter')}</p><p className="text-white font-600">{selectedParty.matter}</p></div>
+            <div><p className="text-[11px] text-[#8a94a6] uppercase font-700">{t('counsel')}</p><p className="text-white font-600">{selectedParty.counsel}</p></div>
           </div>
         </Modal>
       )}
 
       {activeModal === 'delete' && selectedParty && (
-        <Modal title="Delete Party" onClose={() => setActiveModal(null)}
+        <Modal title={t('deleteParty')} onClose={() => setActiveModal(null)}
           footer={
             <>
-              <button onClick={() => setActiveModal(null)} className="px-4 py-2 rounded-xl bg-white/5 text-white text-[13px] font-700">Cancel</button>
-              <button onClick={handleDelete} className="px-5 py-2 rounded-xl bg-red-600 text-white text-[13px] font-700">Delete Party</button>
+              <button onClick={() => setActiveModal(null)} className="px-4 py-2 rounded-xl bg-white/5 text-white text-[13px] font-700">{t('cancel')}</button>
+              <button onClick={handleDelete} className="px-5 py-2 rounded-xl bg-red-600 text-white text-[13px] font-700">{t('deleteParty')}</button>
             </>
           }
         >
-          <p className="text-[14px] text-[#b8c2d1]">Are you sure you want to remove <strong className="text-white">{selectedParty.name}</strong> from this case registry?</p>
+          <p className="text-[14px] text-[#b8c2d1]">{t('areYouSureRemoveParty')} <strong className="text-white">{selectedParty.name}</strong> {t('fromCaseRegistry')}</p>
         </Modal>
       )}
     </div>

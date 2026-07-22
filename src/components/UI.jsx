@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 export function downloadFile(filename, content = "Dummy legal document content.") {
   const el = document.createElement('a');
@@ -39,34 +40,35 @@ export function ToastContainer({ toasts }) {
 
 // ── Badge Component ───────────────────────────────────────
 export function Badge({ status }) {
+  const { t } = useLanguage();
   const map = {
-    active:   ['bg-emerald-500/15 text-emerald-400 border border-emerald-500/20', 'Active',  'bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse'],
-    inactive: ['bg-slate-500/15 text-slate-400 border border-slate-500/20',      'Inactive','bg-slate-400'],
-    pending:  ['bg-amber-500/15 text-amber-400 border border-amber-500/20',        'Pending', 'bg-amber-400 shadow-[0_0_8px_#fbbf24]'],
-    closed:   ['bg-slate-500/15 text-slate-400 border border-slate-500/20',       'Closed',  'bg-slate-500'],
-    completed:['bg-slate-500/15 text-slate-400 border border-slate-500/20',       'Complete','bg-slate-500'],
-    new:      ['bg-blue-500/15 text-blue-400 border border-blue-500/20',           'New',     'bg-blue-400 shadow-[0_0_8px_#60a5fa]'],
-    screening:['bg-amber-500/15 text-amber-400 border border-amber-500/20',       'Screening','bg-amber-400'],
-    referred: ['bg-teal-500/15 text-teal-400 border border-teal-500/20',          'Referred', 'bg-teal-400 shadow-[0_0_8px_#14b8a6]'],
-    consultation_set: ['bg-indigo-500/15 text-indigo-400 border border-indigo-500/20', 'Consultation','bg-indigo-400'],
-    retained: ['bg-emerald-500/15 text-emerald-400 border border-emerald-500/20',  'Retained','bg-emerald-400'],
-    declined: ['bg-red-500/15 text-red-400 border border-red-500/20',              'Declined','bg-red-400'],
-    archived: ['bg-slate-500/15 text-slate-400 border border-slate-500/20',       'Archived','bg-slate-500'],
-    draft:    ['bg-slate-500/15 text-slate-400 border border-slate-500/20',       'Draft',   'bg-slate-400'],
-    void:     ['bg-slate-500/15 text-slate-400 border border-slate-500/20',       'Void',    'bg-slate-500'],
-    unpaid:   ['bg-red-500/15 text-red-400 border border-red-500/20',              'Unpaid',  'bg-red-400'],
-    due:      ['bg-[#0057c7]/15 text-[#38bdf8] border border-[#0057c7]/20',        'Due',     'bg-[#38bdf8]'],
-    paid:     ['bg-emerald-500/15 text-emerald-400 border border-emerald-500/20',  'Paid',    'bg-emerald-400'],
-    overdue:  ['bg-red-500/15 text-red-400 border border-red-500/20',              'Overdue', 'bg-red-400 shadow-[0_0_8px_#ef4444]'],
-    high:     ['bg-red-500/15 text-red-400 border border-red-500/20',              'High',    'bg-red-400 shadow-[0_0_8px_#ef4444]'],
-    medium:   ['bg-amber-500/15 text-amber-400 border border-amber-500/20',        'Medium',  'bg-amber-400 shadow-[0_0_8px_#fbbf24]'],
-    low:      ['bg-[#0057c7]/15 text-[#38bdf8] border border-[#0057c7]/20',        'Low',     'bg-[#38bdf8]'],
+    active:   ['bg-emerald-500/15 text-emerald-400 border border-emerald-500/20', 'active',  'bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse'],
+    inactive: ['bg-slate-500/15 text-slate-400 border border-slate-500/20',      'inactive','bg-slate-400'],
+    pending:  ['bg-amber-500/15 text-amber-400 border border-amber-500/20',        'pending', 'bg-amber-400 shadow-[0_0_8px_#fbbf24]'],
+    closed:   ['bg-slate-500/15 text-slate-400 border border-slate-500/20',       'closed',  'bg-slate-500'],
+    completed:['bg-slate-500/15 text-slate-400 border border-slate-500/20',       'completed','bg-slate-500'],
+    new:      ['bg-blue-500/15 text-blue-400 border border-blue-500/20',           'new',     'bg-blue-400 shadow-[0_0_8px_#60a5fa]'],
+    screening:['bg-amber-500/15 text-amber-400 border border-amber-500/20',       'screening','bg-amber-400'],
+    referred: ['bg-teal-500/15 text-teal-400 border border-teal-500/20',          'referred', 'bg-teal-400 shadow-[0_0_8px_#14b8a6]'],
+    consultation_set: ['bg-indigo-500/15 text-indigo-400 border border-indigo-500/20', 'consultationSet','bg-indigo-400'],
+    retained: ['bg-emerald-500/15 text-emerald-400 border border-emerald-500/20',  'retained','bg-emerald-400'],
+    declined: ['bg-red-500/15 text-red-400 border border-red-500/20',              'declined','bg-red-400'],
+    archived: ['bg-slate-500/15 text-slate-400 border border-slate-500/20',       'archived','bg-slate-500'],
+    draft:    ['bg-slate-500/15 text-slate-400 border border-slate-500/20',       'draft',   'bg-slate-400'],
+    void:     ['bg-slate-500/15 text-slate-400 border border-slate-500/20',       'void',    'bg-slate-500'],
+    unpaid:   ['bg-red-500/15 text-red-400 border border-red-500/20',              'unpaid',  'bg-red-400'],
+    due:      ['bg-[#0057c7]/15 text-[#38bdf8] border border-[#0057c7]/20',        'due',     'bg-[#38bdf8]'],
+    paid:     ['bg-emerald-500/15 text-emerald-400 border border-emerald-500/20',  'paid',    'bg-emerald-400'],
+    overdue:  ['bg-red-500/15 text-red-400 border border-red-500/20',              'overdue', 'bg-red-400 shadow-[0_0_8px_#ef4444]'],
+    high:     ['bg-red-500/15 text-red-400 border border-red-500/20',              'high',    'bg-red-400 shadow-[0_0_8px_#ef4444]'],
+    medium:   ['bg-amber-500/15 text-amber-400 border border-amber-500/20',        'medium',  'bg-amber-400 shadow-[0_0_8px_#fbbf24]'],
+    low:      ['bg-[#0057c7]/15 text-[#38bdf8] border border-[#0057c7]/20',        'low',     'bg-[#38bdf8]'],
   };
-  const [cls, label, dotCls] = map[status?.toLowerCase()] || ['bg-slate-500/15 text-slate-400 border border-slate-500/20', status, 'bg-slate-400'];
+  const [cls, labelKey, dotCls] = map[status?.toLowerCase()] || ['bg-slate-500/15 text-slate-400 border border-slate-500/20', status, 'bg-slate-400'];
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-900 uppercase tracking-widest border shadow-sm ${cls}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${dotCls}`} />
-      {label}
+      {t(labelKey)}
     </span>
   );
 }
@@ -91,6 +93,7 @@ export function Avatar({ initials, size = 'sm', color, className = '' }) {
 
 // ── Stat Card ─────────────────────────────────────────────
 export function StatCard({ label, value, change, icon, gradient, iconBg }) {
+  const { t } = useLanguage();
   return (
     <div className="group cursor-pointer relative active:scale-[0.98] transition-all">
       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent opacity-50 rounded-3xl" />
@@ -110,7 +113,7 @@ export function StatCard({ label, value, change, icon, gradient, iconBg }) {
 
         <div className="relative">
           <div className="text-3xl font-900 text-white font-display leading-tight tracking-tighter mb-1.5 group-hover:translate-x-1 transition-transform duration-500">{value}</div>
-          <div className="text-[11px] text-[#8a94a6] font-800 uppercase tracking-[0.2em] opacity-60">{label}</div>
+          <div className="text-[11px] text-[#8a94a6] font-800 uppercase tracking-[0.2em] opacity-60">{t(label)}</div>
         </div>
         
         {/* Animated accent bar */}
@@ -122,11 +125,12 @@ export function StatCard({ label, value, change, icon, gradient, iconBg }) {
 
 // ── Page Header ───────────────────────────────────────────
 export function PageHeader({ title, subtitle, children }) {
+  const { t } = useLanguage();
   return (
     <div className="flex items-start sm:items-center justify-between mb-8 flex-wrap gap-4">
       <div>
-        <h1 className="text-3xl font-900 text-white font-display tracking-tight">{title}</h1>
-        {subtitle && <p className="text-[14px] text-[#8a94a6] mt-1 font-medium">{subtitle}</p>}
+        <h1 className="text-3xl font-900 text-white font-display tracking-tight">{t(title)}</h1>
+        {subtitle && <p className="text-[14px] text-[#8a94a6] mt-1 font-medium">{t(subtitle)}</p>}
       </div>
       {children && <div className="flex items-center gap-3 flex-wrap w-full sm:w-auto">{children}</div>}
     </div>
@@ -144,6 +148,7 @@ export function Card({ children, className = '', noPad = false }) {
 
 // ── Table ─────────────────────────────────────────────────
 export function Table({ headers, children, searchPlaceholder, onSearch, actions }) {
+  const { t } = useLanguage();
   return (
     <div className="card overflow-hidden border-white/5">
       {(searchPlaceholder || actions) && (
@@ -151,7 +156,7 @@ export function Table({ headers, children, searchPlaceholder, onSearch, actions 
           {searchPlaceholder && (
             <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2 min-w-0 w-full sm:w-80 focus-within:border-[#0057c7] transition-all">
               <svg className="w-4 h-4 text-[#8a94a6] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input className="bg-transparent border-none outline-none text-[14px] text-white w-full placeholder:text-[#8a94a6] font-medium" placeholder={searchPlaceholder} onChange={e => onSearch?.(e.target.value)} />
+              <input className="bg-transparent border-none outline-none text-[14px] text-white w-full placeholder:text-[#8a94a6] font-medium" placeholder={t(searchPlaceholder)} onChange={e => onSearch?.(e.target.value)} />
             </div>
           )}
           {actions && <div className="flex items-center gap-3">{actions}</div>}
@@ -162,7 +167,7 @@ export function Table({ headers, children, searchPlaceholder, onSearch, actions 
           <thead>
             <tr className="bg-white/[0.03] border-b border-white/5">
               {headers.map(h => (
-                <th key={h} className="px-6 py-4 text-[11px] font-800 text-[#8a94a6] uppercase tracking-[0.1em] whitespace-nowrap">{h}</th>
+                <th key={h} className="px-6 py-4 text-[11px] font-800 text-[#8a94a6] uppercase tracking-[0.1em] whitespace-nowrap">{t(h)}</th>
               ))}
             </tr>
           </thead>
@@ -187,12 +192,13 @@ export function Td({ children, className = '' }) {
 
 // ── Tabs ──────────────────────────────────────────────────
 export function Tabs({ tabs, active, onChange }) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-nowrap w-full max-w-full border-b border-white/10 mb-8 overflow-x-auto no-scrollbar scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
       {tabs.map(tab => (
         <button key={tab} onClick={() => onChange(tab)}
           className={`tab-btn whitespace-nowrap flex-shrink-0 ${active === tab ? 'active' : ''}`}>
-          {tab}
+          {t(tab)}
         </button>
       ))}
     </div>
@@ -237,18 +243,20 @@ export function Modal({ title, onClose, children, footer, wide }) {
 
 // ── Form Fields ───────────────────────────────────────────
 export function Field({ label, required, children }) {
+  const { t } = useLanguage();
   return (
     <div className="mb-5 last:mb-0">
       <label className="block text-[13px] font-800 text-[#b8c2d1] uppercase tracking-[0.1em] mb-2 ml-1">
-        {label}{required && <span className="text-[#ef4444] ml-1">*</span>}
+        {t(label)}{required && <span className="text-[#ef4444] ml-1">*</span>}
       </label>
       {children}
     </div>
   );
 }
 
-export function Input({ className = '', ...props }) {
-  return <input className={`form-input ${className}`} {...props} />;
+export function Input({ className = '', placeholder, ...props }) {
+  const { t } = useLanguage();
+  return <input className={`form-input ${className}`} placeholder={placeholder ? t(placeholder) : undefined} {...props} />;
 }
 
 export function Select({ children, className = '', ...props }) {
@@ -262,8 +270,9 @@ export function Select({ children, className = '', ...props }) {
   );
 }
 
-export function Textarea({ className = '', ...props }) {
-  return <textarea className={`form-input resize-none min-h-[100px] ${className}`} {...props} />;
+export function Textarea({ className = '', placeholder, ...props }) {
+  const { t } = useLanguage();
+  return <textarea className={`form-input resize-none min-h-[100px] ${className}`} placeholder={placeholder ? t(placeholder) : undefined} {...props} />;
 }
 
 // ── Timeline ──────────────────────────────────────────────

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Avatar } from './UI.jsx';
 import api from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const ROLE_INFO = {
   super_admin: { name: 'Pilbågen Admin', role: 'Super Admin', initials: 'PA', color: '#7c3aed' },
@@ -21,6 +22,8 @@ const NOTIF_CONFIG = {
 };
 
 export default function Topbar({ sidebarOpen, onToggleSidebar, role, onLogout, onSwitchRole, toast, navigate, user }) {
+  const { language, toggleLanguage, t } = useLanguage();
+  const [showLang, setShowLang] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [notifs, setNotifs] = useState([]);
@@ -174,7 +177,7 @@ export default function Topbar({ sidebarOpen, onToggleSidebar, role, onLogout, o
         <svg className="w-5 h-5 text-white/60 group-focus-within:text-[#38bdf8] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
         <input 
           className="bg-transparent border-none outline-none text-[14px] text-white w-full placeholder:text-white/60 font-medium" 
-          placeholder="Search matters, parties, invoices..." 
+          placeholder={t("Search matters, parties, invoices...")} 
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => setShowResults(true)}
@@ -237,9 +240,32 @@ export default function Topbar({ sidebarOpen, onToggleSidebar, role, onLogout, o
       </div>
 
       <div className="flex items-center gap-4 ml-auto">
+        {/* Language Switcher */}
+        <div className="relative">
+          <button onClick={() => { setShowLang(!showLang); setShowNotifs(false); setShowProfile(false); }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[13px] font-700 transition-all active:scale-95"
+            title={language === 'sv' ? 'Byt språk' : 'Switch Language'}>
+            <span>{language === 'sv' ? '🇸🇪 SV' : '🇬🇧 EN'}</span>
+            <svg className={`w-3.5 h-3.5 text-white/60 transition-transform ${showLang ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="6 9 12 15 18 9" /></svg>
+          </button>
+
+          {showLang && (
+            <div className="absolute right-0 top-11 w-32 bg-[#1a2233] rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 overflow-hidden z-[70] p-1.5 space-y-1">
+              <button onClick={() => { toggleLanguage('sv'); setShowLang(false); }}
+                className={`w-full px-3 py-2 text-left text-[13px] font-700 rounded-lg transition-all flex items-center gap-2.5 ${language === 'sv' ? 'bg-[#0057c7] text-white' : 'text-[#8a94a6] hover:bg-white/10 hover:text-white'}`}>
+                <span>🇸🇪</span> Svenska
+              </button>
+              <button onClick={() => { toggleLanguage('en'); setShowLang(false); }}
+                className={`w-full px-3 py-2 text-left text-[13px] font-700 rounded-lg transition-all flex items-center gap-2.5 ${language === 'en' ? 'bg-[#0057c7] text-white' : 'text-[#8a94a6] hover:bg-white/10 hover:text-white'}`}>
+                <span>🇬🇧</span> English
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Notifications */}
         <div className="relative">
-          <button onClick={() => { setShowNotifs(!showNotifs); setShowProfile(false); }}
+          <button onClick={() => { setShowNotifs(!showNotifs); setShowProfile(false); setShowLang(false); }}
             className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all active:scale-95 relative ${showNotifs ? 'bg-white text-[#0057c7]' : 'bg-white/10 text-white hover:bg-white/20'}`}>
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
             {unreadCount > 0 && (
@@ -253,11 +279,11 @@ export default function Topbar({ sidebarOpen, onToggleSidebar, role, onLogout, o
             <div className="absolute right-0 top-14 w-80 bg-[#1a2233] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 animate-fade-in overflow-hidden z-[70]">
               <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-white/5">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-[15px] font-700 text-white">Notifications</h4>
+                  <h4 className="text-[15px] font-700 text-white">{t('Notifications')}</h4>
                   {unreadCount > 0 && <span className="text-[11px] bg-[#0057c7] text-white font-700 px-2.5 py-0.5 rounded-full">{unreadCount}</span>}
                 </div>
                 {notifs.length > 0 && (
-                  <button onClick={handleClearAll} className="text-[10px] text-[#8a94a6] hover:text-[#ef4444] font-800 transition-colors uppercase tracking-widest">Clear All</button>
+                  <button onClick={handleClearAll} className="text-[10px] text-[#8a94a6] hover:text-[#ef4444] font-800 transition-colors uppercase tracking-widest">{t('Clear All')}</button>
                 )}
               </div>
               <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
@@ -286,12 +312,12 @@ export default function Topbar({ sidebarOpen, onToggleSidebar, role, onLogout, o
                     <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-[#f59e0b] shadow-[0_0_20px_rgba(245,158,11,0.2)]">
                       <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                     </div>
-                    <p className="text-[13px] font-600">All caught up!</p>
+                    <p className="text-[13px] font-600">{t('All caught up!')}</p>
                   </div>
                 )}
               </div>
               <div className="p-4 border-t border-white/5 bg-black/20">
-                <button onClick={handleMarkAllRead} className="text-[12px] text-[#38bdf8] font-700 hover:bg-white/10 w-full py-2.5 rounded-xl transition-all border border-white/10">Mark all as read</button>
+                <button onClick={handleMarkAllRead} className="text-[12px] text-[#38bdf8] font-700 hover:bg-white/10 w-full py-2.5 rounded-xl transition-all border border-white/10">{t('Mark all as read')}</button>
               </div>
             </div>
           )}
@@ -299,7 +325,7 @@ export default function Topbar({ sidebarOpen, onToggleSidebar, role, onLogout, o
 
         {/* Profile */}
         <div className="relative">
-          <button onClick={() => { setShowProfile(!showProfile); setShowNotifs(false); }}
+          <button onClick={() => { setShowProfile(!showProfile); setShowNotifs(false); setShowLang(false); }}
             className={`flex items-center gap-3 px-1 py-1 rounded-full transition-all active:scale-95 ${showProfile ? 'bg-white/20' : 'hover:bg-white/10'}`}>
             <Avatar initials={displayInitials} size="sm" color={info.color} className="ring-2 ring-white/20" />
             <svg className={`w-4 h-4 text-white/60 transition-transform hidden sm:block ${showProfile ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="6 9 12 15 18 9" /></svg>
@@ -309,19 +335,19 @@ export default function Topbar({ sidebarOpen, onToggleSidebar, role, onLogout, o
             <div className="absolute right-0 top-14 w-60 bg-[#1a2233] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 animate-fade-in overflow-hidden z-[70]">
               <div className="px-5 py-5 border-b border-white/5 bg-white/5">
                 <p className="text-[15px] font-700 text-white">{displayName}</p>
-                <p className="text-[11px] text-[#8a94a6] font-600 uppercase tracking-widest mt-1">{info.role}</p>
+                <p className="text-[11px] text-[#8a94a6] font-600 uppercase tracking-widest mt-1">{t(info.role)}</p>
               </div>
               <div className="p-2">
                 <button onClick={() => { setShowProfile(false); navigate(role === 'admin' ? '/admin/settings' : `/${role}/profile`); }}
                   className="w-full px-4 py-3 text-left text-[13.5px] font-600 text-[#dbe7ff] hover:bg-white/10 hover:text-white rounded-xl transition-all flex items-center gap-3">
                   <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><circle cx="12" cy="12" r="3" /></svg>
-                  Account Settings
+                  {t('Account Settings')}
                 </button>
               </div>
               
               {user?.roles?.length > 1 && (
                 <div className="p-2 border-t border-white/5 bg-black/10">
-                  <p className="px-4 py-2 text-[10px] font-800 text-[#8a94a6] uppercase tracking-widest">Switch Role</p>
+                  <p className="px-4 py-2 text-[10px] font-800 text-[#8a94a6] uppercase tracking-widest">{t('Switch Role')}</p>
                   {user.roles.map(r => (
                     <button key={r} onClick={() => { setShowProfile(false); onSwitchRole(r); }}
                       className={`w-full px-4 py-2 text-left text-[13px] font-700 rounded-xl transition-all flex items-center justify-between group ${role === r ? 'bg-[#0057c7] text-white' : 'text-[#8a94a6] hover:bg-white/10 hover:text-white'}`}>
@@ -336,7 +362,7 @@ export default function Topbar({ sidebarOpen, onToggleSidebar, role, onLogout, o
                 <button onClick={() => { setShowProfile(false); onLogout(); }}
                   className="w-full px-4 py-3 text-left text-[13.5px] font-800 text-[#ef4444] hover:bg-[#ef4444]/10 rounded-xl transition-all flex items-center gap-3">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                  Sign Out Platform
+                  {t('Sign Out Platform')}
                 </button>
               </div>
             </div>
@@ -344,8 +370,8 @@ export default function Topbar({ sidebarOpen, onToggleSidebar, role, onLogout, o
         </div>
       </div>
 
-      {(showNotifs || showProfile) && (
-        <div className="fixed inset-0 z-[65]" onClick={() => { setShowNotifs(false); setShowProfile(false); }} />
+      {(showNotifs || showProfile || showLang) && (
+        <div className="fixed inset-0 z-[65]" onClick={() => { setShowNotifs(false); setShowProfile(false); setShowLang(false); }} />
       )}
     </header>
   );

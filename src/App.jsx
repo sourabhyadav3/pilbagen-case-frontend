@@ -7,6 +7,7 @@ import { useToast, ToastContainer, Modal, Field, Input, Select, Textarea } from 
 import logoImg from './assets/pilbagen-logo.png';
 import justiceBg from './assets/lady_justice_login_bg_1777101771752.png';
 import api from './services/api';
+import { useLanguage } from './context/LanguageContext';
 import OutlookEventComposer from './components/OutlookEventComposer.jsx';
 import EmailComposeModal from './components/EmailComposeModal.jsx';
 import { saveDraft, loadDraft, clearDraft } from './utils/autoDraftSaver';
@@ -1136,6 +1137,7 @@ function ViewInvoicePdfEmbed({ dbId, toast }) {
 //  MODAL SYSTEM
 // ─────────────────────────────────────────────────────────
 function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lookups, openModal }) {
+  const { t } = useLanguage();
   const [isValid, setIsValid] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formState, setFormState] = useState({});
@@ -1384,7 +1386,11 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
     if (type === 'add-case' || type === 'edit-case') {
       promises.push(
         api.customFields.list({ active: 'true' })
-          .then(res => setCustomFields(res.data || []))
+          .then(res => {
+            const allowed = ['Settlement Goal', 'Settlement Goall', 'Statute of Limitations', 'Court Jurisdiction'];
+            const filtered = (res.data || []).filter(cf => allowed.includes(cf.name));
+            setCustomFields(filtered);
+          })
           .catch(() => {})
       );
     }
@@ -1503,24 +1509,24 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
       onSave: () => toast('Lead added successfully!', 'success'),
     },
     'add-client': {
-      title: 'Add New Client', wide: false,
+      title: t('addClient'), wide: false,
       body: <>
         <div className="grid grid-cols-2 gap-3 mb-3">
           <Field label="Client Type" required>
             <Select name="party_type" required defaultValue="Individual">
-              <option value="Individual">Individual</option>
-              <option value="Organization">Organization</option>
+              <option value="Individual">{t('individual')}</option>
+              <option value="Organization">{t('organization')}</option>
             </Select>
           </Field>
           <Field label="Client Role" required>
             <Select name="party_role" required defaultValue="Client">
-              <option value="Client">Client</option>
-              <option value="Plaintiff">Plaintiff</option>
-              <option value="Defendant">Defendant</option>
-              <option value="Petitioner">Petitioner</option>
-              <option value="Respondent">Respondent</option>
-              <option value="Claimant">Claimant</option>
-              <option value="Other">Other</option>
+              <option value="Client">{t('client')}</option>
+              <option value="Plaintiff">{t('plaintiff')}</option>
+              <option value="Defendant">{t('defendant')}</option>
+              <option value="Petitioner">{t('petitioner')}</option>
+              <option value="Respondent">{t('respondent')}</option>
+              <option value="Claimant">{t('claimant')}</option>
+              <option value="Other">{t('other')}</option>
             </Select>
           </Field>
         </div>
@@ -1528,7 +1534,7 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
         {formState.party_role === 'Other' && (
           <div className="mb-3">
             <Field label="Custom Client Role" required>
-              <Input name="custom_party_role" placeholder="Enter custom role..." required />
+              <Input name="custom_party_role" placeholder="enterCustomRole" required />
             </Field>
           </div>
         )}
@@ -1553,16 +1559,16 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
         <div className="mb-3"><Field label="Phone"><Input name="phone" placeholder="+1 (555) 000-0000" /></Field></div>
         <div className="mb-3"><Field label="Home Address"><Input name="home_address" placeholder="456 Main St, City" /></Field></div>
         
-        <div className="mb-3"><Field label="Opposing Party Name"><Input name="opposing_party_name" placeholder="Opposing Party Name" /></Field></div>
-        <div className="mb-3"><Field label="Opposing Law Firm & Contacts"><Input name="opposing_law_firm" placeholder="Firm Name / Phone / Email" /></Field></div>
-        <div className="mb-3"><Field label="Opposing Counsel"><Input name="opposing_counsel_name" placeholder="Attorney Name, Esq." /></Field></div>
+        <div className="mb-3"><Field label="Opposing Party Name"><Input name="opposing_party_name" placeholder="opposingPartyName" /></Field></div>
+        <div className="mb-3"><Field label="Opposing Law Firm & Contacts"><Input name="opposing_law_firm" placeholder="firmNamePhoneEmail" /></Field></div>
+        <div className="mb-3"><Field label="Opposing Counsel"><Input name="opposing_counsel_name" placeholder="attorneyNameEsq" /></Field></div>
 
-        <Field label="Notes"><Textarea name="notes" rows={3} placeholder="Initial notes..." /></Field>
+        <Field label="Notes"><Textarea name="notes" rows={3} placeholder="initialNotes" /></Field>
       </>,
-      onSave: () => toast('Client added successfully!', 'success'),
+      onSave: () => toast(t('clientAddedSuccessfully'), 'success'),
     },
     'edit-client': {
-      title: data ? `Edit Client: ${data.full_name || data.name || ''}` : 'Edit Client', wide: false,
+      title: data ? `${t('editClient')}: ${data.full_name || data.name || ''}` : t('editClient'), wide: false,
       body: (() => {
         const predefinedRoles = ['Client', 'Plaintiff', 'Defendant', 'Petitioner', 'Respondent', 'Claimant'];
         const isCustomRole = data?.party_role && !predefinedRoles.includes(data.party_role);
@@ -1574,19 +1580,19 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
             <div className="grid grid-cols-2 gap-3 mb-3">
               <Field label="Client Type" required>
                 <Select name="party_type" required defaultValue={data?.party_type || 'Individual'}>
-                  <option value="Individual">Individual</option>
-                  <option value="Organization">Organization</option>
+                  <option value="Individual">{t('individual')}</option>
+                  <option value="Organization">{t('organization')}</option>
                 </Select>
               </Field>
               <Field label="Client Role" required>
                 <Select name="party_role" required defaultValue={defaultRoleValue}>
-                  <option value="Client">Client</option>
-                  <option value="Plaintiff">Plaintiff</option>
-                  <option value="Defendant">Defendant</option>
-                  <option value="Petitioner">Petitioner</option>
-                  <option value="Respondent">Respondent</option>
-                  <option value="Claimant">Claimant</option>
-                  <option value="Other">Other</option>
+                  <option value="Client">{t('client')}</option>
+                  <option value="Plaintiff">{t('plaintiff')}</option>
+                  <option value="Defendant">{t('defendant')}</option>
+                  <option value="Petitioner">{t('petitioner')}</option>
+                  <option value="Respondent">{t('respondent')}</option>
+                  <option value="Claimant">{t('claimant')}</option>
+                  <option value="Other">{t('other')}</option>
                 </Select>
               </Field>
             </div>
@@ -1594,7 +1600,7 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
             {showCustomRole && (
               <div className="mb-3">
                 <Field label="Custom Client Role" required>
-                  <Input name="custom_party_role" defaultValue={data?.party_role || ''} placeholder="Enter custom role..." required />
+                  <Input name="custom_party_role" defaultValue={data?.party_role || ''} placeholder="enterCustomRole" required />
                 </Field>
               </div>
             )}
@@ -1620,30 +1626,30 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
               <Field label="Phone"><Input name="phone" defaultValue={data ? data.phone : ''} /></Field>
               <Field label="Status">
                 <Select name="status" defaultValue={data ? (data.status === 'pending' ? 'pending' : data.is_portal_enabled === false ? 'inactive' : 'active') : 'active'}>
-                  <option value="active">Active</option>
-                  <option value="pending">Pending</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="active">{t('active')}</option>
+                  <option value="pending">{t('pending')}</option>
+                  <option value="inactive">{t('inactive')}</option>
                 </Select>
               </Field>
             </div>
             <div className="mb-3"><Field label="Home Address"><Input name="home_address" defaultValue={data?.home_address || ''} /></Field></div>
             
-            <div className="mb-3"><Field label="Opposing Party Name"><Input name="opposing_party_name" defaultValue={data?.opposing_party_name || ''} placeholder="Opposing Party Name" /></Field></div>
-            <div className="mb-3"><Field label="Opposing Law Firm & Contacts"><Input name="opposing_law_firm" defaultValue={data?.opposing_law_firm || ''} placeholder="Firm Name / Phone / Email" /></Field></div>
-            <div className="mb-3"><Field label="Opposing Counsel"><Input name="opposing_counsel_name" defaultValue={data?.opposing_counsel_name || ''} placeholder="Attorney Name, Esq." /></Field></div>
+            <div className="mb-3"><Field label="Opposing Party Name"><Input name="opposing_party_name" defaultValue={data?.opposing_party_name || ''} placeholder="opposingPartyName" /></Field></div>
+            <div className="mb-3"><Field label="Opposing Law Firm & Contacts"><Input name="opposing_law_firm" defaultValue={data?.opposing_law_firm || ''} placeholder="firmNamePhoneEmail" /></Field></div>
+            <div className="mb-3"><Field label="Opposing Counsel"><Input name="opposing_counsel_name" defaultValue={data?.opposing_counsel_name || ''} placeholder="attorneyNameEsq" /></Field></div>
 
-            <Field label="Notes"><Textarea name="notes" rows={3} defaultValue={data?.notes || ''} /></Field>
+            <Field label="Notes"><Textarea name="notes" rows={3} placeholder="initialNotes" defaultValue={data?.notes || ''} /></Field>
           </>
         );
       })(),
       onSave: () => toast('Client updated successfully!', 'success'),
     },
     'add-case': {
-      title: 'Create New Matter', wide: true,
+      title: t('Create New Matter'), wide: true,
       body: <>
-        <div className="mb-3"><Field label="Matter Title" required><Input name="title" placeholder="Plaintiff vs. Defendant" required /></Field></div>
+        <div className="mb-3"><Field label={t("Case Title")} required><Input name="title" placeholder="Plaintiff vs. Defendant" required /></Field></div>
         <div className="mb-3">
-          <Field label="Clients" required>
+          <Field label={t("Clients")} required>
             <div className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-4 max-h-[160px] overflow-y-auto space-y-2.5 custom-scrollbar">
               {clientRows.length > 0 ? (
                 clientRows.map((c) => (
@@ -1655,97 +1661,97 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
                       className="w-4.5 h-4.5 rounded border-white/20 bg-white/5 text-[#38bdf8] focus:ring-0 cursor-pointer accent-[#38bdf8]" 
                     />
                     <span className="text-[13px] font-700 tracking-tight group-hover:text-[#38bdf8] transition-colors">
-                      {c.full_name || c.name} <span className="text-[11px] text-[#8a94a6] font-800 uppercase tracking-widest ml-1.5 opacity-60">({c.party_role || 'Client'})</span>
+                      {c.full_name || c.name} <span className="text-[11px] text-[#8a94a6] font-800 uppercase tracking-widest ml-1.5 opacity-60">({t(c.party_role || 'Client')})</span>
                     </span>
                   </label>
                 ))
               ) : (
-                <p className="text-[12px] text-[#8a94a6] font-800 uppercase tracking-widest p-2 opacity-50">No registered parties found</p>
+                <p className="text-[12px] text-[#8a94a6] font-800 uppercase tracking-widest p-2 opacity-50">{t('No registered parties found')}</p>
               )}
             </div>
           </Field>
         </div>
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Field label="Assigned Lawyer"><Select name="lawyerId"><option value="">Unassigned</option>{lawyerRows.map((u) => <option key={u.id} value={u.id}>{u.full_name}</option>)}</Select></Field>
+          <Field label={t("Assigned Lawyer")}><Select name="lawyerId"><option value="">{t('Unassigned')}</option>{lawyerRows.map((u) => <option key={u.id} value={u.id}>{u.full_name}</option>)}</Select></Field>
         </div>
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Field label="Case Type">
+          <Field label={t("Case Type")}>
             <Select name="matterType">
               {practiceAreas.length > 0 ? practiceAreas.map(pa => (
                 <option key={pa.id} value={pa.name}>{pa.name}</option>
               )) : (
                 <>
-                  <option>Personal Injury</option>
-                  <option>Immigration</option>
-                  <option>Property Damage</option>
-                  <option>Unlawful Detainer</option>
-                  <option>Employment</option>
-                  <option>Business</option>
-                  <option>Wrongful Death</option>
-                  <option>Medical Malpractice</option>
-                  <option>Contracts</option>
-                  <option>Civil Rights</option>
+                  <option>{t('Personal Injury')}</option>
+                  <option>{t('Immigration')}</option>
+                  <option>{t('Property Damage')}</option>
+                  <option>{t('Unlawful Detainer')}</option>
+                  <option>{t('Employment')}</option>
+                  <option>{t('Business')}</option>
+                  <option>{t('Wrongful Death')}</option>
+                  <option>{t('Medical Malpractice')}</option>
+                  <option>{t('Contracts')}</option>
+                  <option>{t('Civil Rights')}</option>
                 </>
               )}
-              <option value="other">Other...</option>
+              <option value="other">{t('Other')}...</option>
             </Select>
           </Field>
-          <Field label="Priority"><Select name="priority"><option>High</option><option>Medium</option><option>Low</option></Select></Field>
+          <Field label={t("Priority")}><Select name="priority"><option value="High">{t('High')}</option><option value="Medium">{t('Medium')}</option><option value="Low">{t('Low')}</option></Select></Field>
         </div>
         {formState.matterType === 'other' && (
           <div className="mb-3">
-            <Field label="Custom Case Type" required>
+            <Field label={t("Custom Case Type")} required>
               <Input name="custom_matter_type" placeholder="E.g., Immigration Law" required />
             </Field>
           </div>
         )}
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Field label="Initial Filing Date"><Input name="initial_filing_date" type="date" /></Field>
-          <Field label="Date of Loss"><Input name="date_of_loss" type="date" /></Field>
+          <Field label={t("Initial Filing Date")}><Input name="initial_filing_date" type="date" /></Field>
+          <Field label={t("Date of Loss")}><Input name="date_of_loss" type="date" /></Field>
         </div>
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Field label="Trial Date"><Input name="trial_date" type="date" /></Field>
-          <Field label="Case Number"><Input name="case_number" placeholder="Case #" /></Field>
+          <Field label={t("Trial Date")}><Input name="trial_date" type="date" /></Field>
+          <Field label={t("Case Number")}><Input name="case_number" placeholder="Case #" /></Field>
         </div>
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Field label="Court Name"><Input name="court_name" placeholder="Court Name" /></Field>
-          <Field label="Judge Name"><Input name="judge_name" placeholder="Honorable Judge..." /></Field>
+          <Field label={t("Court Name")}><Input name="court_name" placeholder="Court Name" /></Field>
+          <Field label={t("Judge Name")}><Input name="judge_name" placeholder="Honorable Judge..." /></Field>
         </div>
-        <div className="mb-3"><Field label="Court Address"><Input name="court_address" placeholder="Court Address" /></Field></div>
+        <div className="mb-3"><Field label={t("Court Address")}><Input name="court_address" placeholder="Court Address" /></Field></div>
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Field label="Opposing party">
+          <Field label={t("Opposing party")}>
             <Select name="opposingParty" value={formState.opposingParty || ''} onChange={handleChange}>
-              <option value="">Party</option>
-              <option value="Plaintiff">Plaintiff</option>
-              <option value="Defendant">Defendant</option>
-              <option value="Witness">Witness</option>
-              <option value="Insurance Company">Insurance Company</option>
-              <option value="Attorney Office">Attorney Office</option>
-              <option value="Organization">Organization</option>
-              <option value="Business">Business</option>
-              <option value="Other">Other</option>
+              <option value="">{t('Party')}</option>
+              <option value="Plaintiff">{t('Plaintiff')}</option>
+              <option value="Defendant">{t('Defendant')}</option>
+              <option value="Witness">{t('Witness')}</option>
+              <option value="Insurance Company">{t('Insurance Company')}</option>
+              <option value="Attorney Office">{t('Attorney Office')}</option>
+              <option value="Organization">{t('Organization')}</option>
+              <option value="Business">{t('Business')}</option>
+              <option value="Other">{t('Other')}</option>
             </Select>
           </Field>
-          <Field label="Opened At"><Input name="filed" type="date" /></Field>
+          <Field label={t("Opened At")}><Input name="filed" type="date" /></Field>
         </div>
         {formState.opposingParty === 'Other' && (
           <div className="mb-3">
-            <Field label="Custom Opposing Party Name" required>
+            <Field label={t("Custom Opposing Party Name")} required>
               <Input name="custom_opposing_party" placeholder="Enter custom opposing party name..." required />
             </Field>
           </div>
         )}
-        <Field label="Case Description"><Textarea name="description" rows={3} placeholder="Brief description of the case..." /></Field>
+        <Field label={t("Case Description")}><Textarea name="description" rows={3} placeholder="Brief description of the case..." /></Field>
         
         {customFields.length > 0 && (
           <div className="mt-6 pt-4 border-t border-white/10">
-            <h4 className="text-[12px] font-900 text-white uppercase tracking-widest mb-3">Custom Fields</h4>
+            <h4 className="text-[12px] font-900 text-white uppercase tracking-widest mb-3">{t('Custom Fields')}</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {customFields.map(f => (
-                <Field key={f.id} label={f.name}>
+                <Field key={f.id} label={t(f.name)}>
                   {f.type === 'dropdown' ? (
                     <Select name={`cf_${f.id}`}>
-                      <option value="">Select option...</option>
+                      <option value="">{t('Select option')}...</option>
                       {(f.options || []).map(opt => <option key={opt} value={opt}>{opt}</option>)}
                     </Select>
                   ) : f.type === 'date' ? (
@@ -1754,9 +1760,9 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
                     <Input type="number" step="any" name={`cf_${f.id}`} placeholder={f.type === 'currency' ? '0.00' : ''} />
                   ) : f.type === 'checkbox' || f.type === 'yes_no' ? (
                     <Select name={`cf_${f.id}`}>
-                      <option value="">Select...</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
+                      <option value="">{t('Select')}...</option>
+                      <option value="Yes">{t('Yes')}</option>
+                      <option value="No">{t('No')}</option>
                     </Select>
                   ) : (
                     <Input type="text" name={`cf_${f.id}`} />
@@ -1767,7 +1773,7 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
           </div>
         )}
       </>,
-      onSave: () => toast('Case created!', 'success'),
+      onSave: () => toast(t('Case created!'), 'success'),
     },
     'compose-email': {
       title: 'Compose Email', wide: false,
@@ -2489,65 +2495,65 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
       onSave: () => {},
     },
     'edit-case': {
-      title: data ? `Edit Matter: ${data.id}` : 'Edit Matter', wide: false,
+      title: data ? `${t('Edit Matter')}: ${data.id}` : t('Edit Matter'), wide: false,
       body: <>
-        <div className="mb-3"><Field label="Matter Title" required><Input name="title" defaultValue={data ? data.title : ''} required /></Field></div>
+        <div className="mb-3"><Field label={t("Case Title")} required><Input name="title" defaultValue={data ? data.title : ''} required /></Field></div>
         {(role === 'admin' || role === 'lawyer') && (
           <div className="mb-3">
-            <Field label="Assigned Lawyer">
+            <Field label={t("Assigned Lawyer")}>
               <Select name="assigned_lawyer_id" defaultValue={data ? data.assigned_lawyer_id : ''}>
-                <option value="">Select lawyer...</option>
+                <option value="">{t('Select lawyer')}...</option>
                 {lawyerRows.map((u) => <option key={u.id} value={u.user_id || u.id}>{u.full_name || u.display_name}</option>)}
               </Select>
             </Field>
           </div>
         )}
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Field label="Status" required>
+          <Field label={t("Status")} required>
             <Select name="status" defaultValue={data ? data.status : 'active'} required>
-              <option value="active">Active</option>
-              <option value="pending">Pending</option>
-              <option value="closed">Closed</option>
+              <option value="active">{t('Active')}</option>
+              <option value="pending">{t('Pending')}</option>
+              <option value="closed">{t('Closed')}</option>
             </Select>
           </Field>
-          <Field label="Priority" required>
+          <Field label={t("Priority")} required>
             <Select name="priority" defaultValue={data ? data.priority : 'medium'} required>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
+              <option value="high">{t('High')}</option>
+              <option value="medium">{t('Medium')}</option>
+              <option value="low">{t('Low')}</option>
             </Select>
           </Field>
         </div>
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Field label="Case Type" required>
+          <Field label={t("Case Type")} required>
             <Select name="type" defaultValue={(() => { const predefinedTypes = ['Civil Litigation','Family Law','Criminal Defense','Corporate Law','Real Estate'].concat(practiceAreas.map(pa => pa.name)); return predefinedTypes.includes(data?.type) ? data.type : (data?.type ? 'other' : ''); })()} required>
               {practiceAreas.length > 0 ? practiceAreas.map(pa => (
                 <option key={pa.id} value={pa.name}>{pa.name}</option>
               )) : (
-                <><option>Civil Litigation</option><option>Family Law</option><option>Criminal Defense</option><option>Corporate Law</option><option>Real Estate</option></>
+                <><option>{t('Civil Litigation')}</option><option>{t('Family Law')}</option><option>{t('Criminal Defense')}</option><option>{t('Corporate Law')}</option><option>{t('Real Estate')}</option></>
               )}
-              <option value="other">Other...</option>
+              <option value="other">{t('Other')}...</option>
             </Select>
           </Field>
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Field label="Opposing party">
+          <Field label={t("Opposing party")}>
             <Select name="opposingParty" value={formState.opposingParty !== undefined ? formState.opposingParty : (data?.opposing_party_name ? (['Plaintiff', 'Defendant', 'Witness', 'Insurance Company', 'Attorney Office', 'Organization', 'Business'].includes(data.opposing_party_name) ? data.opposing_party_name : 'Other') : '')} onChange={handleChange}>
-              <option value="">Party</option>
-              <option value="Plaintiff">Plaintiff</option>
-              <option value="Defendant">Defendant</option>
-              <option value="Witness">Witness</option>
-              <option value="Insurance Company">Insurance Company</option>
-              <option value="Attorney Office">Attorney Office</option>
-              <option value="Organization">Organization</option>
-              <option value="Business">Business</option>
-              <option value="Other">Other</option>
+              <option value="">{t('Party')}</option>
+              <option value="Plaintiff">{t('Plaintiff')}</option>
+              <option value="Defendant">{t('Defendant')}</option>
+              <option value="Witness">{t('Witness')}</option>
+              <option value="Insurance Company">{t('Insurance Company')}</option>
+              <option value="Attorney Office">{t('Attorney Office')}</option>
+              <option value="Organization">{t('Organization')}</option>
+              <option value="Business">{t('Business')}</option>
+              <option value="Other">{t('Other')}</option>
             </Select>
           </Field>
-          <Field label="Next Hearing"><Input name="nextHearing" type="date" defaultValue={data?.next_hearing ? data.next_hearing.split('T')[0] : (data?.nextHearing && data.nextHearing !== '—' ? data.nextHearing.split('T')[0] : '')} /></Field>
+          <Field label={t("Next Hearing")}><Input name="nextHearing" type="date" defaultValue={data?.next_hearing ? data.next_hearing.split('T')[0] : (data?.nextHearing && data.nextHearing !== '—' ? data.nextHearing.split('T')[0] : '')} /></Field>
         </div>
         {((formState.opposingParty === 'Other') || (formState.opposingParty === undefined && data?.opposing_party_name && !['Plaintiff', 'Defendant', 'Witness', 'Insurance Company', 'Attorney Office', 'Organization', 'Business'].includes(data.opposing_party_name))) && (
           <div className="mb-3">
-            <Field label="Custom Opposing Party Name" required>
+            <Field label={t("Custom Opposing Party Name")} required>
               <Input name="custom_opposing_party" defaultValue={data?.opposing_party_name || ''} placeholder="Enter custom opposing party name..." required />
             </Field>
           </div>
@@ -2555,36 +2561,36 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
         </div>
         {(formState.type === 'other' || (formState.type === undefined && (() => { const predefinedTypes = ['Civil Litigation','Family Law','Criminal Defense','Corporate Law','Real Estate'].concat(practiceAreas.map(pa => pa.name)); return !predefinedTypes.includes(data?.type) && !!data?.type; })() )) && (
           <div className="mb-3">
-            <Field label="Custom Case Type" required>
+            <Field label={t("Custom Case Type")} required>
               <Input name="custom_matter_type" defaultValue={(() => { const predefinedTypes = ['Civil Litigation','Family Law','Criminal Defense','Corporate Law','Real Estate'].concat(practiceAreas.map(pa => pa.name)); return !predefinedTypes.includes(data?.type) ? (data?.type || '') : ''; })()} placeholder="E.g., Immigration Law" required />
             </Field>
           </div>
         )}
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Field label="Initial Filing Date"><Input name="initial_filing_date" type="date" defaultValue={data?.initial_filing_date ? data.initial_filing_date.split('T')[0] : ''} /></Field>
-          <Field label="Date of Loss"><Input name="date_of_loss" type="date" defaultValue={data?.date_of_loss ? data.date_of_loss.split('T')[0] : ''} /></Field>
+          <Field label={t("Initial Filing Date")}><Input name="initial_filing_date" type="date" defaultValue={data?.initial_filing_date ? data.initial_filing_date.split('T')[0] : ''} /></Field>
+          <Field label={t("Date of Loss")}><Input name="date_of_loss" type="date" defaultValue={data?.date_of_loss ? data.date_of_loss.split('T')[0] : ''} /></Field>
         </div>
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Field label="Trial Date"><Input name="trial_date" type="date" defaultValue={data?.trial_date ? data.trial_date.split('T')[0] : ''} /></Field>
-          <Field label="Case Number"><Input name="case_number" placeholder="Case #" defaultValue={data?.case_number || ''} /></Field>
+          <Field label={t("Trial Date")}><Input name="trial_date" type="date" defaultValue={data?.trial_date ? data.trial_date.split('T')[0] : ''} /></Field>
+          <Field label={t("Case Number")}><Input name="case_number" placeholder="Case #" defaultValue={data?.case_number || ''} /></Field>
         </div>
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Field label="Court Name"><Input name="court_name" placeholder="Court Name" defaultValue={data?.court_name || ''} /></Field>
-          <Field label="Judge Name"><Input name="judge_name" placeholder="Honorable Judge..." defaultValue={data?.judge_name || ''} /></Field>
+          <Field label={t("Court Name")}><Input name="court_name" placeholder="Court Name" defaultValue={data?.court_name || ''} /></Field>
+          <Field label={t("Judge Name")}><Input name="judge_name" placeholder="Honorable Judge..." defaultValue={data?.judge_name || ''} /></Field>
         </div>
-        <div className="mb-3"><Field label="Court Address"><Input name="court_address" placeholder="Court Address" defaultValue={data?.court_address || ''} /></Field></div>
+        <div className="mb-3"><Field label={t("Court Address")}><Input name="court_address" placeholder="Court Address" defaultValue={data?.court_address || ''} /></Field></div>
         
         {customFields.length > 0 && (
           <div className="mt-6 pt-4 border-t border-white/10">
-            <h4 className="text-[12px] font-900 text-white uppercase tracking-widest mb-3">Custom Fields</h4>
+            <h4 className="text-[12px] font-900 text-white uppercase tracking-widest mb-3">{t('Custom Fields')}</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {customFields.map(f => {
                 const existingVal = data?.custom_fields?.find(cf => cf.field_id === f.id)?.value || '';
                 return (
-                  <Field key={f.id} label={f.name}>
+                  <Field key={f.id} label={t(f.name)}>
                     {f.type === 'dropdown' ? (
                       <Select name={`cf_${f.id}`} defaultValue={existingVal}>
-                        <option value="">Select option...</option>
+                        <option value="">{t('Select option')}...</option>
                         {(f.options || []).map(opt => <option key={opt} value={opt}>{opt}</option>)}
                       </Select>
                     ) : f.type === 'date' ? (
@@ -2593,9 +2599,9 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
                       <Input type="number" step="any" name={`cf_${f.id}`} defaultValue={existingVal} placeholder={f.type === 'currency' ? '0.00' : ''} />
                     ) : f.type === 'checkbox' || f.type === 'yes_no' ? (
                       <Select name={`cf_${f.id}`} defaultValue={existingVal}>
-                        <option value="">Select...</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
+                        <option value="">{t('Select')}...</option>
+                        <option value="Yes">{t('Yes')}</option>
+                        <option value="No">{t('No')}</option>
                       </Select>
                     ) : (
                       <Input type="text" name={`cf_${f.id}`} defaultValue={existingVal} />
@@ -3519,7 +3525,7 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
         footer={
           <>
             <button type="button" onClick={onClose} className="btn btn-secondary" disabled={saving || (type === 'add-document' && isUploadingQueue && !isQueueFinished)}>
-              {type === 'preview-document' ? 'Close' : 'Cancel'}
+              {type === 'preview-document' ? t('close') : t('cancel')}
             </button>
             {type !== 'preview-document' && (
               <button
@@ -3528,7 +3534,7 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
                 disabled={primaryDisabled}
                 className={`btn btn-primary transition-all ${primaryDisabled ? 'opacity-50 cursor-not-allowed hover:translate-y-0 shadow-none' : ''}`}
               >
-                {saving && type !== 'view-invoice' ? 'Saving…' : primaryLabel}
+                {saving && type !== 'view-invoice' ? `${t('saving')}…` : t(primaryLabel)}
               </button>
             )}
           </>
