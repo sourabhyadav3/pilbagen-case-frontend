@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PageHeader, Card, StatCard, ProgressBar, Input, Select, Field, downloadFile } from '../components/UI.jsx';
 import api from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 // ─────────────────────────────────────────────────────────
 //  MARKETING DASHBOARD
@@ -152,6 +153,7 @@ export function MarketingDashboard({ navigate, toast, openModal }) {
 //  REPORTS DASHBOARD
 // ─────────────────────────────────────────────────────────
 export function ReportsDashboard({ navigate, toast, openModal }) {
+  const { t } = useLanguage();
   const [reports, setReports] = useState([]);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Financial');
@@ -224,25 +226,25 @@ export function ReportsDashboard({ navigate, toast, openModal }) {
     const d = r.data;
     const stats = [
       { 
-        label: 'Lead Inbound', 
+        label: t('Lead Inbound') || 'Lead Inbound', 
         value: d.leads ?? 0, 
         icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>, 
         color: 'text-[#f59e0b] bg-[#f59e0b]/10 border-[#f59e0b]/20' 
       },
       { 
-        label: 'Matters Initialized', 
+        label: t('Matters Initialized') || 'Matters Initialized', 
         value: d.matters ?? 0, 
         icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>, 
         color: 'text-[#38bdf8] bg-[#38bdf8]/10 border-[#38bdf8]/20' 
       },
       { 
-        label: 'Revenue Reconciled', 
+        label: t('Revenue Reconciled') || 'Revenue Reconciled', 
         value: `$${Number(d.revenue || 0).toLocaleString()}`, 
         icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3 1.343 3 3-1.343 3-3 3m0-12c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3m0-4v2m0 16v2" /></svg>, 
         color: 'text-[#10b981] bg-[#10b981]/10 border-[#10b981]/20' 
       },
       { 
-        label: 'Billable Capacity', 
+        label: t('Billable Capacity') || 'Billable Capacity', 
         value: `${d.hours || 0}h`, 
         icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>, 
         color: 'text-[#8a94a6] bg-white/5 border-white/10' 
@@ -255,11 +257,11 @@ export function ReportsDashboard({ navigate, toast, openModal }) {
         <div className="space-y-8 py-2">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.3em] mb-1">Fiscal Analysis Period</p>
+              <p className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.3em] mb-1">{t('Fiscal Analysis Period') || 'Fiscal Analysis Period'}</p>
               <p className="text-[13px] font-800 text-white tracking-tight">{new Date(r.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} — {new Date(r.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.3em] mb-1">Validation Hash</p>
+              <p className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.3em] mb-1">{t('Validation Hash') || 'Validation Hash'}</p>
               <p className="text-[13px] font-800 text-[#38bdf8] tracking-tighter opacity-80">REF-{String(r.id).slice(-8).toUpperCase()}</p>
             </div>
           </div>
@@ -284,12 +286,10 @@ export function ReportsDashboard({ navigate, toast, openModal }) {
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-4">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#38bdf8]" />
-                <p className="text-[11px] uppercase tracking-[0.3em] text-[#38bdf8] font-900">Executive Synthesis</p>
+                <p className="text-[11px] uppercase tracking-[0.3em] text-[#38bdf8] font-900">{t('Executive Synthesis') || 'Executive Synthesis'}</p>
               </div>
               <p className="text-[15px] font-500 text-white/90 leading-relaxed tracking-tight">
-                This consolidated intelligence report for <span className="font-900 text-white">{r.title}</span> reflects a high-precision snapshot of firm operations. 
-                Liquidated revenue of <span className="text-[#10b981] font-900 underline decoration-2 decoration-[#10b981]/30 underline-offset-4">${Number(d.revenue || 0).toLocaleString()}</span> represents finalized billing cycles. 
-                Operational throughput is tracked at <span className="text-[#38bdf8] font-900">{d.hours || 0} verified billable hours</span>.
+                {t('consolidatedReportIntro') || 'This consolidated intelligence report for'} <span className="font-900 text-white">{r.title}</span> {t('consolidatedReportBody') || 'reflects a high-precision snapshot of firm operations. Liquidated revenue of'} <span className="text-[#10b981] font-900 underline decoration-2 decoration-[#10b981]/30 underline-offset-4">${Number(d.revenue || 0).toLocaleString()}</span> {t('consolidatedReportEnd') || 'represents finalized billing cycles. Operational throughput is tracked at'} <span className="text-[#38bdf8] font-900">{d.hours || 0} {t('verifiedBillableHours') || 'verified billable hours'}</span>.
               </p>
             </div>
           </div>
@@ -297,7 +297,7 @@ export function ReportsDashboard({ navigate, toast, openModal }) {
           <div className="flex gap-4">
              <button onClick={() => handleDownload(r)} className="h-14 flex-1 rounded-2xl bg-white/5 border border-white/10 text-white text-[11px] font-900 uppercase tracking-[0.2em] hover:bg-white/10 transition-all flex items-center justify-center gap-3 group">
                 <svg className="w-5 h-5 group-hover:translate-y-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                Secure PDF Export
+                {t('Secure PDF Export') || 'Secure PDF Export'}
              </button>
           </div>
         </div>
@@ -307,7 +307,7 @@ export function ReportsDashboard({ navigate, toast, openModal }) {
 
   return (
     <div className="animate-fade-in space-y-6 pb-12">
-      <PageHeader title="Firm Intelligence" subtitle="Institutional performance audits and financial reconciliations" />
+      <PageHeader title={t('Firm Intelligence') || 'Firm Intelligence'} subtitle={t('firmIntelligenceDesc') || 'Institutional performance audits and financial reconciliations'} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {reports.map((r) => (
@@ -323,19 +323,19 @@ export function ReportsDashboard({ navigate, toast, openModal }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[15px] font-900 text-white tracking-tight truncate group-hover:text-[#38bdf8] transition-colors">{r.title}</p>
-                  <p className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.2em] mt-1 opacity-60">{r.category} Audit · {new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                  <p className="text-[10px] font-900 text-[#8a94a6] uppercase tracking-[0.2em] mt-1 opacity-60">{t(r.category) || r.category} Audit · {new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
                 </div>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => viewReport(r)} className="h-10 px-4 flex-1 rounded-xl bg-white/5 text-white text-[10px] font-900 uppercase tracking-widest hover:bg-white/10 transition-all">Audit View</button>
-                <button onClick={() => handleDownload(r)} className="h-10 px-4 flex-1 rounded-xl bg-[#0057c7] text-white text-[10px] font-900 uppercase tracking-widest hover:bg-[#004bb1] transition-all shadow-[0_10px_20px_-10px_#0057c7]">Download</button>
+                <button onClick={() => viewReport(r)} className="h-10 px-4 flex-1 rounded-xl bg-white/5 text-white text-[10px] font-900 uppercase tracking-widest hover:bg-white/10 transition-all">{t('Audit View') || 'Audit View'}</button>
+                <button onClick={() => handleDownload(r)} className="h-10 px-4 flex-1 rounded-xl bg-[#0057c7] text-white text-[10px] font-900 uppercase tracking-widest hover:bg-[#004bb1] transition-all shadow-[0_10px_20px_-10px_#0057c7]">{t('Download') || 'Download'}</button>
               </div>
             </div>
           </Card>
         ))}
         {reports.length === 0 && (
           <div className="lg:col-span-3 py-12 text-center border-2 border-dashed border-white/5 rounded-[2.5rem]">
-            <p className="text-[13px] text-[#8a94a6] font-900 uppercase tracking-widest opacity-40">No generated reports synchronized.</p>
+            <p className="text-[13px] text-[#8a94a6] font-900 uppercase tracking-widest opacity-40">{t('No generated reports synchronized.') || 'No generated reports synchronized.'}</p>
           </div>
         )}
       </div>
@@ -345,30 +345,30 @@ export function ReportsDashboard({ navigate, toast, openModal }) {
         
         <div className="flex items-center gap-2 mb-8">
           <span className="w-2 h-2 rounded-full bg-[#f59e0b] shadow-[0_0_10px_#f59e0b]" />
-          <h3 className="text-[11px] font-900 text-white uppercase tracking-[0.3em]">Institutional Report Builder</h3>
+          <h3 className="text-[11px] font-900 text-white uppercase tracking-[0.3em]">{t('Institutional Report Builder') || 'Institutional Report Builder'}</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 items-end relative z-10">
           <div className="lg:col-span-3">
-            <Field label="Audit Identification" required>
-              <Input placeholder="E.g., Quarterly Tax Summary" value={title} onChange={e => setTitle(e.target.value)} />
+            <Field label={t('Audit Identification') || 'Audit Identification'} required>
+              <Input placeholder={t('E.g., Quarterly Tax Summary') || 'E.g., Quarterly Tax Summary'} value={title} onChange={e => setTitle(e.target.value)} />
             </Field>
           </div>
           <div className="lg:col-span-3">
-            <Field label="Audit Classification">
+            <Field label={t('Audit Classification') || 'Audit Classification'}>
               <Select value={category} onChange={e => setCategory(e.target.value)}>
-                <option value="Financial">Financial Performance</option>
-                <option value="Operational">Operational Efficiency</option>
-                <option value="Marketing">Market Attribution</option>
+                <option value="Financial">{t('Financial Performance') || 'Financial Performance'}</option>
+                <option value="Operational">{t('Operational Efficiency') || 'Operational Efficiency'}</option>
+                <option value="Marketing">{t('Market Attribution') || 'Market Attribution'}</option>
               </Select>
             </Field>
           </div>
-          <div className="lg:col-span-2"><Field label="Period Start" required><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></Field></div>
-          <div className="lg:col-span-2"><Field label="Period End" required><Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></Field></div>
+          <div className="lg:col-span-2"><Field label={t('Period Start') || 'Period Start'} required><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></Field></div>
+          <div className="lg:col-span-2"><Field label={t('Period End') || 'Period End'} required><Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></Field></div>
           <div className="lg:col-span-2">
             <button onClick={handleGenerate} disabled={isGenerating}
               className="h-[46px] w-full rounded-2xl bg-[#0057c7] text-white text-[11px] font-900 uppercase tracking-widest hover:bg-[#004bb1] transition-all shadow-2xl shadow-[#0057c7]/40 disabled:opacity-50">
-              {isGenerating ? 'Processing...' : 'Execute Audit'}
+              {isGenerating ? (t('Processing...') || 'Processing...') : (t('Execute Audit') || 'Execute Audit')}
             </button>
           </div>
         </div>

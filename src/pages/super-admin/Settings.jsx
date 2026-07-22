@@ -1,21 +1,23 @@
 import { useState } from 'react';
 import { PageHeader, Card, Tabs, Field, Input, Select, useToast } from '../../components/UI.jsx';
 import { initialSettings } from '../../data/superAdminData';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function SuperAdminSettings() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('General');
   const [settings, setSettings] = useState(initialSettings);
   const { toast } = useToast();
 
   const handleSave = (section) => {
-    toast(`${section} settings updated successfully!`, 'success');
+    toast(t(section) + " " + t('settingsUpdatedSuccessfully'), 'success');
   };
 
   return (
     <div className="space-y-8 animate-fade-in">
       <PageHeader 
-        title="Super Admin Platform Settings" 
-        subtitle="Global platform configurations, system maintenance, email server, and branding" 
+        title="superAdminPlatformSettings" 
+        subtitle={t('globalPlatformConfigurations')} 
       />
 
       <Tabs 
@@ -27,27 +29,27 @@ export default function SuperAdminSettings() {
       {/* General Settings Tab */}
       {activeTab === 'General' && (
         <Card className="max-w-3xl space-y-6">
-          <h2 className="text-xl font-800 text-white font-display border-b border-white/5 pb-4">General Platform Details</h2>
+          <h2 className="text-xl font-800 text-white font-display border-b border-white/5 pb-4">{t('generalPlatformDetails')}</h2>
           
           <div className="space-y-4">
-            <Field label="Platform Name">
+            <Field label={t('platformName') || 'Platform Name'}>
               <Input value={settings.platformName} onChange={(e) => setSettings({ ...settings, platformName: e.target.value })} />
             </Field>
-            <Field label="Support Email">
+            <Field label={t('supportEmail') || 'Support Email'}>
               <Input type="email" value={settings.supportEmail} onChange={(e) => setSettings({ ...settings, supportEmail: e.target.value })} />
             </Field>
-            <Field label="Default System Language">
+            <Field label={t('defaultSystemLanguage') || 'Default System Language'}>
               <Select value={settings.defaultLanguage} onChange={(e) => setSettings({ ...settings, defaultLanguage: e.target.value })}>
-                <option value="English (US)">English (US)</option>
-                <option value="English (UK)">English (UK)</option>
-                <option value="Spanish">Spanish</option>
+                <option value="English (US)">{t('English (US)')}</option>
+                <option value="English (UK)">{t('English (UK)')}</option>
+                <option value="Spanish">{t('Spanish')}</option>
               </Select>
             </Field>
           </div>
 
           <div className="pt-4 flex justify-end">
             <button onClick={() => handleSave('General')} className="px-6 py-2.5 rounded-xl bg-[#0057c7] text-white font-700 text-[14px]">
-              Save General Settings
+              {t('saveGeneralSettings')}
             </button>
           </div>
         </Card>
@@ -56,13 +58,13 @@ export default function SuperAdminSettings() {
       {/* Security & Access Tab */}
       {activeTab === 'Security & Access' && (
         <Card className="max-w-3xl space-y-6">
-          <h2 className="text-xl font-800 text-white font-display border-b border-white/5 pb-4">Platform Security</h2>
+          <h2 className="text-xl font-800 text-white font-display border-b border-white/5 pb-4">{t('platformSecurity')}</h2>
           
           <div className="space-y-6">
             <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
               <div>
-                <p className="text-white font-700">Enforce Two-Factor Authentication (2FA)</p>
-                <p className="text-[12px] text-[#8a94a6]">Require 2FA for all Super Admin and Agency Admin logins</p>
+                <p className="text-white font-700">{t('enforceTwoFactorAuthentication')}</p>
+                <p className="text-[12px] text-[#8a94a6]">{t('require2FAForAdminLogins')}</p>
               </div>
               <input 
                 type="checkbox" 
@@ -74,8 +76,8 @@ export default function SuperAdminSettings() {
 
             <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
               <div>
-                <p className="text-white font-700">Allow Open Agency Registration</p>
-                <p className="text-[12px] text-[#8a94a6]">Enable new law firms to register accounts online</p>
+                <p className="text-white font-700">{t('allowOpenAgencyRegistration')}</p>
+                <p className="text-[12px] text-[#8a94a6]">{t('enableNewLawFirmsToRegister')}</p>
               </div>
               <input 
                 type="checkbox" 
@@ -85,14 +87,14 @@ export default function SuperAdminSettings() {
               />
             </div>
 
-            <Field label="Session Inactivity Timeout (Minutes)">
+            <Field label={t('sessionInactivityTimeoutMinutes') || 'Session Inactivity Timeout (Minutes)'}>
               <Input type="number" value={settings.sessionTimeoutMinutes} onChange={(e) => setSettings({ ...settings, sessionTimeoutMinutes: e.target.value })} />
             </Field>
           </div>
 
           <div className="pt-4 flex justify-end">
             <button onClick={() => handleSave('Security')} className="px-6 py-2.5 rounded-xl bg-[#0057c7] text-white font-700 text-[14px]">
-              Save Security Rules
+              {t('saveSecurityRules')}
             </button>
           </div>
         </Card>
@@ -101,17 +103,17 @@ export default function SuperAdminSettings() {
       {/* Email Server (SMTP) Tab */}
       {activeTab === 'Email Server (SMTP)' && (
         <Card className="max-w-3xl space-y-6">
-          <h2 className="text-xl font-800 text-white font-display border-b border-white/5 pb-4">Global SMTP Mailer</h2>
+          <h2 className="text-xl font-800 text-white font-display border-b border-white/5 pb-4">{t('globalSMTPMailer')}</h2>
           
           <div className="space-y-4">
-            <Field label="SMTP Host Server">
+            <Field label={t('smtpHostServer') || 'SMTP Host Server'}>
               <Input value={settings.smtpServer} onChange={(e) => setSettings({ ...settings, smtpServer: e.target.value })} />
             </Field>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="SMTP Port">
+              <Field label={t('smtpPort') || 'SMTP Port'}>
                 <Input value={settings.smtpPort} onChange={(e) => setSettings({ ...settings, smtpPort: e.target.value })} />
               </Field>
-              <Field label="Sender Email Address">
+              <Field label={t('senderEmailAddress') || 'Sender Email Address'}>
                 <Input value={settings.smtpSender} onChange={(e) => setSettings({ ...settings, smtpSender: e.target.value })} />
               </Field>
             </div>
@@ -119,7 +121,7 @@ export default function SuperAdminSettings() {
 
           <div className="pt-4 flex justify-end">
             <button onClick={() => handleSave('SMTP Configuration')} className="px-6 py-2.5 rounded-xl bg-[#0057c7] text-white font-700 text-[14px]">
-              Save Mailer Config
+              {t('saveMailerConfig')}
             </button>
           </div>
         </Card>
@@ -128,13 +130,13 @@ export default function SuperAdminSettings() {
       {/* Maintenance & System Tab */}
       {activeTab === 'Maintenance & System' && (
         <Card className="max-w-3xl space-y-6">
-          <h2 className="text-xl font-800 text-white font-display border-b border-white/5 pb-4">Maintenance Mode Control</h2>
+          <h2 className="text-xl font-800 text-white font-display border-b border-white/5 pb-4">{t('maintenanceModeControl')}</h2>
           
           <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-amber-400 font-800 text-lg">System Maintenance Mode</p>
-                <p className="text-[13px] text-[#b8c2d1] mt-1">When active, non-Super Admin users will see a maintenance notice upon logging in.</p>
+                <p className="text-amber-400 font-800 text-lg">{t('systemMaintenanceMode')}</p>
+                <p className="text-[13px] text-[#b8c2d1] mt-1">{t('maintenanceModeNoticeDesc')}</p>
               </div>
               <input 
                 type="checkbox" 
@@ -147,7 +149,7 @@ export default function SuperAdminSettings() {
 
           <div className="pt-4 flex justify-end">
             <button onClick={() => handleSave('Maintenance Mode')} className="px-6 py-2.5 rounded-xl bg-amber-500 text-black font-800 text-[14px]">
-              Update Maintenance Status
+              {t('updateMaintenanceStatus')}
             </button>
           </div>
         </Card>
