@@ -1069,6 +1069,8 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
 //  CASES PAGE
 // ─────────────────────────────────────────────────────────
 export function CasesPage({ navigate, toast, openModal }) {
+  const { t } = useLanguage();
+  const role = localStorage.getItem('vktori_role') || 'admin';
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [matters, setMatters] = useState([]);

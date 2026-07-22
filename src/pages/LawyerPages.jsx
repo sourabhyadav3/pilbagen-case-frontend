@@ -449,7 +449,7 @@ export function LawyerClientsPage({ navigate, toast, openModal }) {
       <div className="absolute top-0 left-0 w-96 h-96 bg-[#10b981]/5 rounded-full blur-[120px] pointer-events-none" />
 
       <PageHeader title="myClients" subtitle={t('clientsUnderRepresentation')}>
-        <button onClick={() => toast(t('clientCreationManagedByAdmin'), 'info')} className="btn btn-primary h-11 px-5 rounded-xl font-800 uppercase tracking-widest text-[11px] shadow-lg shadow-primary-500/20">
+        <button onClick={() => openModal('add-client')} className="btn btn-primary h-11 px-5 rounded-xl font-800 uppercase tracking-widest text-[11px] shadow-lg shadow-primary-500/20">
           {t('addClientBtn')}
         </button>
       </PageHeader>
