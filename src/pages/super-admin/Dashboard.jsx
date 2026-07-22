@@ -1,0 +1,117 @@
+import { useState } from 'react';
+import { PageHeader, StatCard, Card, Table, Tr, Td, Badge, EmptyState } from '../../components/UI.jsx';
+import { initialAgencies, initialActivityLogs } from '../../data/superAdminData';
+
+export default function SuperAdminDashboard() {
+  const [agencies] = useState(initialAgencies);
+  const [logs] = useState(initialActivityLogs);
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+      <PageHeader 
+        title="Super Admin Dashboard" 
+        subtitle="Platform-wide ecosystem metrics, active agencies, and audit activity" 
+      />
+
+      {/* Top Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard 
+          label="Total Agencies" 
+          value={agencies.length} 
+          change="+12.5%" 
+          icon={<svg className="w-6 h-6 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+        />
+        <StatCard 
+          label="Active Offices" 
+          value="15" 
+          change="+8.4%" 
+          icon={<svg className="w-6 h-6 text-[#38bdf8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M3 21h18M3 7v14M21 7v14M6 10h4M6 14h4M6 18h4M14 10h4M14 14h4M14 18h4M9 3h6v4H9z" /></svg>}
+        />
+        <StatCard 
+          label="Total Users" 
+          value="134" 
+          change="+18.2%" 
+          icon={<svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>}
+        />
+        <StatCard 
+          label="Subscriptions" 
+          value="6 Active" 
+          change="100% Active" 
+          icon={<svg className="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>}
+        />
+      </div>
+
+      {/* Main Grid: Recent Agencies & Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Recent Agencies (2 cols) */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-800 text-white font-display">Recent Registered Agencies</h2>
+            <span className="text-[12px] text-[#38bdf8] font-700 uppercase tracking-widest cursor-pointer hover:underline">View All Agencies</span>
+          </div>
+
+          <Table headers={['Agency Name', 'Owner / Email', 'Plan', 'Offices / Users', 'Status']}>
+            {agencies.map((agency) => (
+              <Tr key={agency.id}>
+                <Td className="font-700 text-white">
+                  <div>{agency.name}</div>
+                  <div className="text-[11px] text-[#8a94a6] font-500">{agency.id}</div>
+                </Td>
+                <Td>
+                  <div className="text-white">{agency.owner}</div>
+                  <div className="text-[12px] text-[#8a94a6]">{agency.email}</div>
+                </Td>
+                <Td>
+                  <span className="px-2.5 py-1 rounded-lg text-[11px] font-800 uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                    {agency.plan}
+                  </span>
+                </Td>
+                <Td>
+                  <div className="text-white font-600">{agency.officesCount} Offices</div>
+                  <div className="text-[12px] text-[#8a94a6]">{agency.usersCount} Users</div>
+                </Td>
+                <Td>
+                  <Badge status={agency.status} />
+                </Td>
+              </Tr>
+            ))}
+          </Table>
+        </div>
+
+        {/* Right Column: System Activity Logs */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-800 text-white font-display">Recent System Activity</h2>
+            <span className="text-[12px] text-[#8a94a6] font-700 uppercase tracking-widest">Real-time</span>
+          </div>
+
+          <Card className="space-y-4">
+            {logs.length === 0 ? (
+              <EmptyState title="No Recent Activity" desc="All platform logs are synced." />
+            ) : (
+              logs.map((log) => (
+                <div key={log.id} className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13px] font-700 text-white">{log.actor}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-[#8a94a6] font-800 uppercase">{log.role}</span>
+                    </div>
+                    <p className="text-[12.5px] text-[#b8c2d1] font-500">{log.action}</p>
+                    <div className="text-[11px] text-[#8a94a6] flex items-center gap-2">
+                      <span>Module: {log.module}</span>
+                      <span>•</span>
+                      <span>{log.timestamp}</span>
+                    </div>
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-md font-900 uppercase tracking-wider ${log.severity === 'high' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
+                    {log.severity}
+                  </span>
+                </div>
+              ))
+            )}
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
