@@ -244,7 +244,7 @@ export default function Topbar({ sidebarOpen, onToggleSidebar, role, onLogout, o
         <div className="relative">
           <button onClick={() => { setShowLang(!showLang); setShowNotifs(false); setShowProfile(false); }}
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[13px] font-700 transition-all active:scale-95"
-            title={language === 'sv' ? 'Byt språk' : 'Switch Language'}>
+            title={t('Switch Language')}>
             <span>{language === 'sv' ? '🇸🇪 SV' : '🇬🇧 EN'}</span>
             <svg className={`w-3.5 h-3.5 text-white/60 transition-transform ${showLang ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="6 9 12 15 18 9" /></svg>
           </button>

@@ -32,15 +32,6 @@ export const translations = {
     settings: "Settings",
     team: "Team",
     signOut: "Sign Out",
-    encryptedChat: "Encrypted Chat",
-    messages: "Messages",
-    backOffice: "Back Office",
-    agencies: "Agencies",
-    offices: "Offices",
-    subscriptions: "Subscriptions",
-    activityLogs: "Activity Logs",
-    conflictControl: "Conflict Control",
-    conflictCheck: "Conflict Check",
     
     // Sidebar Sections
     workspace: "Workspace",

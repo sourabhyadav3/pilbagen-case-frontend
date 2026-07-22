@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import api, { API_BASE_URL } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function EmailComposeModal({ isOpen, onClose, onSave, data = {}, user = {}, lookups = {}, toast }) {
+  const { t } = useLanguage();
   // Fields
   const [toEmails, setToEmails] = useState([]);
   const [ccEmails, setCcEmails] = useState([]);
