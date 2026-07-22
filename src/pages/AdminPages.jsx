@@ -1064,10 +1064,11 @@ export function ClientDetailPage({ clientId, navigate, toast, openModal, role = 
 // ─────────────────────────────────────────────────────────
 //  CASES PAGE
 // ─────────────────────────────────────────────────────────
-export function CasesPage({ navigate, toast, openModal }) {
+export function CasesPage({ navigate, toast, openModal, role = 'admin' }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [matters, setMatters] = useState([]);
+  const basePath = role === 'partner' ? '/partner' : '/admin';
   
   const [loading, setLoading] = useState(true);
   const isFirstLoad = useRef(true);
@@ -1158,7 +1159,7 @@ export function CasesPage({ navigate, toast, openModal }) {
           </Select>
         }>
         {filtered.map(c => (
-          <Tr key={c.id} onClick={() => navigate(`/admin/matters/${c.id}`)}>
+          <Tr key={c.id} onClick={() => navigate(`${basePath}/matters/${c.id}`)}>
             <Td className="whitespace-nowrap">
               <span className="font-mono text-[12px] text-[#38bdf8] font-bold uppercase tracking-wider">{c.matterNumber}</span>
             </Td>
@@ -1182,7 +1183,7 @@ export function CasesPage({ navigate, toast, openModal }) {
             <Td className="whitespace-nowrap">
               <div className="flex justify-end pr-1">
                 <button 
-                  onClick={e => { e.stopPropagation(); navigate(`/admin/matters/${c.id}`); }} 
+                  onClick={e => { e.stopPropagation(); navigate(`${basePath}/matters/${c.id}`); }} 
                   className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 border border-white/5 text-[#8a94a6] hover:bg-[#0057c7] hover:text-white transition-all group/btn" 
                   title="View Matter">
                   <svg className="w-4 h-4 transition-transform group-hover/btn:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
