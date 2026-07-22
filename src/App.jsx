@@ -4202,6 +4202,7 @@ export default function App() {
           <Route path="vynius" element={<LawyerAIPage />} />
           <Route path="profile" element={<LawyerProfileWrapper />} />
           <Route path="settings" element={<LawyerSettingsPage />} />
+          <Route path="conflict-check" element={<ConflictPage />} />
         </Route>
 
         {/* PARTNER ROUTES */}

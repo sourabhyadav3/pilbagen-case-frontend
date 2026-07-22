@@ -72,6 +72,7 @@ const NAV_BY_ROLE = {
     { id: 'titan-email', label: 'Email', icon: 'titanemail', path: '/lawyer/titan-email' },
     { id: 'ai', label: 'VyNius', icon: 'ai', path: '/lawyer/vynius' },
     { id: 'integrations', label: 'Integrations', icon: 'integrations', path: '/lawyer/integrations' },
+    { id: 'l-conflict', label: 'Conflict Check', icon: 'leads', path: '/lawyer/conflict-check' },
     { section: 'Account' },
     { id: 'l-profile', label: 'My Profile', icon: 'profile', path: '/lawyer/profile' },
   ],
@@ -151,7 +152,7 @@ export default function Sidebar({ open, role, user, onToggle, onLogout, onItemCl
         {open && (
           <div className="flex flex-col">
             <span className="text-white font-display font-bold text-[19px] leading-tight tracking-tight">Pilbågen</span>
-            <span className="text-amber-400 font-semibold text-[10px] uppercase tracking-wider">Advokatbyrå System</span>
+            <span className="text-amber-400 font-semibold text-[10px] uppercase tracking-wider">System</span>
           </div>
         )}
         {open && (
