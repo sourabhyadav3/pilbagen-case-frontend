@@ -206,7 +206,7 @@ export function PartnerMyMatters(props) {
 
 export function PartnerFirmMatters(props) {
   const ctx = useOutletContext() || {};
-  return <CasesPage role="admin" {...ctx} {...props} />;
+  return <CasesPage role="partner" {...ctx} {...props} />;
 }
 
 export function PartnerCalendar(props) {

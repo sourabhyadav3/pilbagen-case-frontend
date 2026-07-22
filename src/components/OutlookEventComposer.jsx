@@ -311,7 +311,11 @@ export default function OutlookEventComposer({ isOpen, eventData, onClose, onSav
     if (eventData) {
       setTitle(eventData.title || '');
       const evDate = eventData.date ? new Date(eventData.date) : new Date();
-      setStartDate(evDate.toISOString().split('T')[0]);
+      const yyyy = evDate.getFullYear();
+      const mm = String(evDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(evDate.getDate()).padStart(2, '0');
+      const formattedDate = `${yyyy}-${mm}-${dd}`;
+      setStartDate(formattedDate);
       
       const hours = String(evDate.getHours()).padStart(2, '0');
       const minutes = String(evDate.getMinutes()).padStart(2, '0');
@@ -319,10 +323,18 @@ export default function OutlookEventComposer({ isOpen, eventData, onClose, onSav
 
       if (eventData.end_date) {
         const endEvDate = new Date(eventData.end_date);
-        setEndDate(endEvDate.toISOString().split('T')[0]);
+        const endYyyy = endEvDate.getFullYear();
+        const endMm = String(endEvDate.getMonth() + 1).padStart(2, '0');
+        const endDd = String(endEvDate.getDate()).padStart(2, '0');
+        setEndDate(`${endYyyy}-${endMm}-${endDd}`);
         const endHours = String(endEvDate.getHours()).padStart(2, '0');
         const endMinutes = String(endEvDate.getMinutes()).padStart(2, '0');
         setEndTime(`${endHours}:${endMinutes}`);
+      } else {
+        setEndDate(formattedDate);
+        if (hours === '00' && minutes === '00') {
+          setEndTime('00:30');
+        }
       }
 
       setIsAllDay(eventData.is_all_day || false);

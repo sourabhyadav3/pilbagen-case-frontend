@@ -4209,6 +4209,7 @@ export default function App() {
           <Route path="profile" element={<LawyerProfileWrapper />} />
           <Route path="settings" element={<LawyerSettingsPage />} />
           <Route path="conflict-check" element={<ConflictPage />} />
+          <Route path="integrations" element={<LawyerIntegrationsPage />} />
         </Route>
 
         {/* PARTNER ROUTES */}
