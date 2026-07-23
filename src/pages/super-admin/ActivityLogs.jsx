@@ -1,27 +1,49 @@
-import { useState, useMemo } from 'react';
-import { PageHeader, Table, Tr, Td, Modal, Input, Select, EmptyState } from '../../components/UI.jsx';
-import { initialActivityLogs } from '../../data/superAdminData';
+import { useState, useEffect, useCallback } from 'react';
+import { PageHeader, Table, Tr, Td, Modal, Input, Select, EmptyState, useToast } from '../../components/UI.jsx';
 import { useLanguage } from '../../context/LanguageContext';
+import api from '../../services/api';
 
 export default function SuperAdminActivityLogs() {
   const { t } = useLanguage();
-  const [logs] = useState(initialActivityLogs);
+  const [logs, setLogs] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [moduleFilter, setModuleFilter] = useState('all');
   const [severityFilter, setSeverityFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(false);
   
   const [selectedLog, setSelectedLog] = useState(null);
+  const { toast } = useToast();
 
-  const filteredLogs = useMemo(() => {
-    return logs.filter((log) => {
-      const matchesSearch = log.actor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            log.ip.includes(searchQuery);
-      const matchesModule = moduleFilter === 'all' || log.module.toLowerCase() === moduleFilter.toLowerCase();
-      const matchesSeverity = severityFilter === 'all' || log.severity.toLowerCase() === severityFilter.toLowerCase();
-      return matchesSearch && matchesModule && matchesSeverity;
-    });
-  }, [logs, searchQuery, moduleFilter, severityFilter]);
+  const loadData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.superAdmin.listActivityLogs({
+        q: searchQuery,
+        module: moduleFilter === 'all' ? undefined : moduleFilter,
+        severity: severityFilter === 'all' ? undefined : severityFilter
+      });
+      const list = res.data?.items || res.data || [];
+      setLogs(list.map(l => ({
+        id: `LOG-${l.id}`,
+        timestamp: new Date(l.timestamp).toLocaleString(),
+        actor: l.actor,
+        role: l.role,
+        action: l.action,
+        module: l.module || 'system',
+        ip: l.ip || '127.0.0.1',
+        severity: l.severity || 'low',
+      })));
+    } catch (e) {
+      console.error(e);
+      toast(t('failedToLoadActivityLogs'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchQuery, moduleFilter, severityFilter, t, toast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -60,7 +82,12 @@ export default function SuperAdminActivityLogs() {
       </div>
 
       {/* Log Table */}
-      {filteredLogs.length === 0 ? (
+      {isLoading ? (
+        <div className="py-20 flex flex-col items-center justify-center gap-4">
+          <div className="w-10 h-10 border-4 border-[#0057c7] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[12px] text-[#8a94a6] font-800 uppercase tracking-widest">{t('loading')}</p>
+        </div>
+      ) : logs.length === 0 ? (
         <EmptyState 
           icon={<svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           title={t('noLogsFound')} 
@@ -68,7 +95,7 @@ export default function SuperAdminActivityLogs() {
         />
       ) : (
         <Table headers={[t('Log ID') || 'Log ID', t('timestamp'), t('Actor Name') || 'Actor Name', t('Action Executed') || 'Action Executed', t('module'), t('IP Address') || 'IP Address', t('severity'), t('details') || 'Details']}>
-          {filteredLogs.map((log) => (
+          {logs.map((log) => (
             <Tr key={log.id}>
               <Td className="font-700 text-white">{log.id}</Td>
               <Td className="text-[12px] text-[#8a94a6] whitespace-nowrap">{log.timestamp}</Td>

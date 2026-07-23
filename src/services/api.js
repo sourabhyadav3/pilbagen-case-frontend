@@ -127,7 +127,7 @@ async function request(endpoint, options = {}) {
       console.error(`API Error [${endpoint}]:`, wrapped);
       throw wrapped;
     }
-    if (err.status !== 401) {
+    if (!err.status || err.status >= 500) {
       console.error(`API Error [${endpoint}]:`, err);
     }
     throw err;
@@ -179,7 +179,9 @@ export const authAPI = {
 
 export const dashboardAPI = {
   admin: () => request('/dashboard/admin'),
+  partner: () => request('/dashboard/partner'),
   lawyer: () => request('/dashboard/lawyer'),
+  paralegal: () => request('/dashboard/paralegal'),
   client: () => request('/dashboard/client'),
 };
 
@@ -531,6 +533,30 @@ export default {
     deleteDraft: (id) => request(`/court-forms/drafts/${id}`, { method: 'DELETE' }),
     // PDF Generation (returns a Blob)
     generatePdf: (draftId, data) => request(`/court-forms/generate/${draftId}`, { method: 'POST', body: data, responseType: 'blob' }),
+  },
+  superAdmin: {
+    getDashboard: () => request('/super-admin/dashboard'),
+    // Agencies CRUD
+    listAgencies: (params) => request(`/super-admin/agencies${buildQuery(params)}`),
+    createAgency: (data) => request('/super-admin/agencies', { method: 'POST', body: data }),
+    updateAgency: (id, data) => request(`/super-admin/agencies/${id}`, { method: 'PUT', body: data }),
+    deleteAgency: (id) => request(`/super-admin/agencies/${id}`, { method: 'DELETE' }),
+    // Offices CRUD
+    listOffices: (params) => request(`/super-admin/offices${buildQuery(params)}`),
+    createOffice: (data) => request('/super-admin/offices', { method: 'POST', body: data }),
+    updateOffice: (id, data) => request(`/super-admin/offices/${id}`, { method: 'PUT', body: data }),
+    deleteOffice: (id) => request(`/super-admin/offices/${id}`, { method: 'DELETE' }),
+    // Users CRUD
+    listUsers: (params) => request(`/super-admin/users${buildQuery(params)}`),
+    createUser: (data) => request('/super-admin/users', { method: 'POST', body: data }),
+    updateUser: (id, data) => request(`/super-admin/users/${id}`, { method: 'PUT', body: data }),
+    deleteUser: (id) => request(`/super-admin/users/${id}`, { method: 'DELETE' }),
+    resetPassword: (id, newPassword) => request(`/super-admin/users/${id}/reset-password`, { method: 'PATCH', body: { newPassword } }),
+    // Activity Logs
+    listActivityLogs: (params) => request(`/super-admin/activity-logs${buildQuery(params)}`),
+    // Settings
+    getSettings: () => request('/super-admin/settings'),
+    updateSettings: (data) => request('/super-admin/settings', { method: 'PUT', body: data }),
   },
 };
 

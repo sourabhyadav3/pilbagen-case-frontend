@@ -1,40 +1,72 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PageHeader, Table, Tr, Td, Badge, Modal, Field, Input, Select, EmptyState, useToast } from '../../components/UI.jsx';
-import { initialOffices, initialAgencies } from '../../data/superAdminData';
 import { useLanguage } from '../../context/LanguageContext';
+import api from '../../services/api';
 
 export default function SuperAdminOffices() {
   const { t } = useLanguage();
-  const [offices, setOffices] = useState(initialOffices);
+  const [offices, setOffices] = useState([]);
+  const [agenciesList, setAgenciesList] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [agencyFilter, setAgencyFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(false);
 
   const [activeModal, setActiveModal] = useState(null);
   const [selectedOffice, setSelectedOffice] = useState(null);
-  const [formData, setFormData] = useState({ name: '', agencyName: 'Apex Legal Group', location: '', phone: '', manager: '', status: 'active' });
+  const [formData, setFormData] = useState({ name: '', agencyId: '', city: '', status: 'active' });
 
   const { toast } = useToast();
 
-  const filteredOffices = useMemo(() => {
-    return offices.filter((item) => {
-      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            item.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            item.manager.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesAgency = agencyFilter === 'all' || item.agencyName === agencyFilter;
-      const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
-      return matchesSearch && matchesAgency && matchesStatus;
-    });
-  }, [offices, searchQuery, agencyFilter, statusFilter]);
+  const loadData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const [officesRes, agenciesRes] = await Promise.all([
+        api.superAdmin.listOffices({ q: searchQuery, status: statusFilter === 'all' ? undefined : statusFilter }),
+        api.superAdmin.listAgencies({ limit: 200 })
+      ]);
+      const list = officesRes.data?.items || officesRes.data || [];
+      const agencies = agenciesRes.data?.items || agenciesRes.data || [];
+      setAgenciesList(agencies);
+      
+      const mappedOffices = list.map(o => ({
+        id: o.id,
+        name: o.name,
+        agencyId: o.agency_id,
+        agencyName: o.agency?.name || 'Unknown',
+        location: o.city,
+        phone: '+1 (555) 000-0000',
+        manager: 'Unassigned',
+        activeMatters: 0,
+        status: o.status,
+      }));
+
+      // Filter in memory for agency Name if selected
+      const filtered = agencyFilter === 'all'
+        ? mappedOffices
+        : mappedOffices.filter(o => o.agencyName === agencyFilter);
+
+      setOffices(filtered);
+    } catch (e) {
+      console.error(e);
+      toast(t('failedToLoadOffices'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchQuery, agencyFilter, statusFilter, t, toast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleOpenAdd = () => {
-    setFormData({ name: '', agencyName: initialAgencies[0]?.name || 'Apex Legal Group', location: '', phone: '', manager: '', status: 'active' });
+    setFormData({ name: '', agencyId: agenciesList[0]?.id || '', city: '', status: 'active' });
     setActiveModal('add');
   };
 
   const handleOpenEdit = (office) => {
     setSelectedOffice(office);
-    setFormData({ ...office });
+    setFormData({ name: office.name, agencyId: office.agencyId, city: office.location, status: office.status });
     setActiveModal('edit');
   };
 
@@ -48,37 +80,64 @@ export default function SuperAdminOffices() {
     setActiveModal('delete');
   };
 
-  const handleSaveAdd = () => {
-    if (!formData.name || !formData.location) {
+  const handleSaveAdd = async () => {
+    if (!formData.name || !formData.city || !formData.agencyId) {
       toast(t('provideOfficeNameLocation'), 'error');
       return;
     }
-    const newOffice = {
-      id: `OFF-${offices.length + 1}`,
-      agencyId: 'AG-101',
-      agencyName: formData.agencyName,
-      name: formData.name,
-      location: formData.location,
-      phone: formData.phone || '+1 (555) 000-0000',
-      manager: formData.manager || 'Unassigned',
-      activeMatters: 0,
-      status: formData.status,
-    };
-    setOffices([newOffice, ...offices]);
-    setActiveModal(null);
-    toast(t('officeAdded') + ` "${formData.name}"!`, 'success');
+    try {
+      setIsLoading(true);
+      await api.superAdmin.createOffice({
+        name: formData.name,
+        agency_id: formData.agencyId,
+        city: formData.city,
+        status: formData.status
+      });
+      setActiveModal(null);
+      toast(t('officeAdded') + ` "${formData.name}"!`, 'success');
+      loadData();
+    } catch (e) {
+      toast(e.message || t('failedToAddOffice'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSaveEdit = () => {
-    setOffices(offices.map(o => o.id === selectedOffice.id ? { ...o, ...formData } : o));
-    setActiveModal(null);
-    toast(t('officeUpdated') + ` "${formData.name}"!`, 'success');
+  const handleSaveEdit = async () => {
+    if (!formData.name || !formData.city) {
+      toast(t('provideOfficeNameLocation'), 'error');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      await api.superAdmin.updateOffice(selectedOffice.id, {
+        name: formData.name,
+        agency_id: formData.agencyId,
+        city: formData.city,
+        status: formData.status
+      });
+      setActiveModal(null);
+      toast(t('officeUpdated') + ` "${formData.name}"!`, 'success');
+      loadData();
+    } catch (e) {
+      toast(e.message || t('failedToUpdateOffice'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDelete = () => {
-    setOffices(offices.filter(o => o.id !== selectedOffice.id));
-    setActiveModal(null);
-    toast(t('officeDeleted') + ` "${selectedOffice.name}"!`, 'success');
+  const handleDelete = async () => {
+    try {
+      setIsLoading(true);
+      await api.superAdmin.deleteOffice(selectedOffice.id);
+      setActiveModal(null);
+      toast(t('officeDeleted') + ` "${selectedOffice.name}"!`, 'success');
+      loadData();
+    } catch (e) {
+      toast(e.message || t('failedToRemoveOffice'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -109,7 +168,7 @@ export default function SuperAdminOffices() {
           <div className="flex-1 sm:w-44">
             <Select value={agencyFilter} onChange={(e) => setAgencyFilter(e.target.value)}>
               <option value="all">{t('allAgencies')}</option>
-              {initialAgencies.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+              {agenciesList.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
             </Select>
           </div>
           <div className="flex-1 sm:w-44">
@@ -123,7 +182,12 @@ export default function SuperAdminOffices() {
       </div>
 
       {/* Table Section */}
-      {filteredOffices.length === 0 ? (
+      {isLoading ? (
+        <div className="py-20 flex flex-col items-center justify-center gap-4">
+          <div className="w-10 h-10 border-4 border-[#0057c7] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[12px] text-[#8a94a6] font-800 uppercase tracking-widest">{t('loading')}</p>
+        </div>
+      ) : offices.length === 0 ? (
         <EmptyState 
           icon={<svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M3 21h18M3 7v14M21 7v14M6 10h4M6 14h4M6 18h4M14 10h4M14 14h4M14 18h4M9 3h6v4H9z" /></svg>}
           title={t('noOfficesFound')} 
@@ -131,11 +195,11 @@ export default function SuperAdminOffices() {
         />
       ) : (
         <Table headers={[t('Office Branch') || 'Office Branch', t('parentAgency'), t('location'), t('Branch Manager') || 'Branch Manager', t('activeCases'), t('status'), t('actions') || 'Actions']}>
-          {filteredOffices.map((office) => (
+          {offices.map((office) => (
             <Tr key={office.id}>
               <Td className="font-700 text-white">
                 <div>{office.name}</div>
-                <div className="text-[11px] text-[#8a94a6] font-500">{office.id}</div>
+                <div className="text-[11px] text-[#8a94a6] font-500">OFF-{office.id}</div>
               </Td>
               <Td className="text-white font-600">
                 {office.agencyName}
@@ -183,21 +247,21 @@ export default function SuperAdminOffices() {
         >
           <div className="space-y-4">
             <Field label={t('parentAgency') || 'Parent Agency'}>
-              <Select value={formData.agencyName} onChange={(e) => setFormData({ ...formData, agencyName: e.target.value })}>
-                {initialAgencies.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+              <Select value={formData.agencyId} onChange={(e) => setFormData({ ...formData, agencyId: e.target.value })}>
+                {agenciesList.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </Select>
             </Field>
             <Field label={t('branchOfficeName') || 'Branch Office Name'} required>
-              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Chicago Branch" />
+              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Chicago Branch" />
             </Field>
             <Field label={t('cityLocation') || 'City / Location'} required>
-              <Input value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} placeholder="e.g. Chicago, IL" />
+              <Input value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} placeholder="Chicago, IL" />
             </Field>
-            <Field label={t('phone') || 'Phone'}>
-              <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+1 (312) 555-0144" />
-            </Field>
-            <Field label={t('managerName') || 'Manager Name'}>
-              <Input value={formData.manager} onChange={(e) => setFormData({ ...formData, manager: e.target.value })} placeholder="e.g. Jessica Alba" />
+            <Field label={t('accountStatus') || 'Account Status'}>
+              <Select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
+                <option value="active">{t('active')}</option>
+                <option value="inactive">{t('inactive')}</option>
+              </Select>
             </Field>
           </div>
         </Modal>
@@ -214,14 +278,22 @@ export default function SuperAdminOffices() {
           }
         >
           <div className="space-y-4">
+            <Field label={t('parentAgency') || 'Parent Agency'}>
+              <Select value={formData.agencyId} onChange={(e) => setFormData({ ...formData, agencyId: e.target.value })}>
+                {agenciesList.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </Select>
+            </Field>
             <Field label={t('branchOfficeName') || 'Branch Office Name'} required>
               <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
             </Field>
             <Field label={t('location') || 'Location'} required>
-              <Input value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
+              <Input value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
             </Field>
-            <Field label={t('manager') || 'Manager'}>
-              <Input value={formData.manager} onChange={(e) => setFormData({ ...formData, manager: e.target.value })} />
+            <Field label={t('accountStatus') || 'Account Status'}>
+              <Select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
+                <option value="active">{t('active')}</option>
+                <option value="inactive">{t('inactive')}</option>
+              </Select>
             </Field>
           </div>
         </Modal>
@@ -235,7 +307,7 @@ export default function SuperAdminOffices() {
           <div className="grid grid-cols-2 gap-4 p-4 bg-white/5 rounded-xl border border-white/5 text-[14px]">
             <div>
               <p className="text-[11px] text-[#8a94a6] uppercase font-700">{t('officeId')}</p>
-              <p className="text-white font-800">{selectedOffice.id}</p>
+              <p className="text-white font-800">OFF-{selectedOffice.id}</p>
             </div>
             <div>
               <p className="text-[11px] text-[#8a94a6] uppercase font-700">{t('parentAgency')}</p>

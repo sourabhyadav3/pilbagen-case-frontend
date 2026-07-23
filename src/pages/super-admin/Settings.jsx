@@ -1,17 +1,77 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PageHeader, Card, Tabs, Field, Input, Select, useToast } from '../../components/UI.jsx';
-import { initialSettings } from '../../data/superAdminData';
 import { useLanguage } from '../../context/LanguageContext';
+import api from '../../services/api';
 
 export default function SuperAdminSettings() {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('General');
-  const [settings, setSettings] = useState(initialSettings);
+  const [settings, setSettings] = useState({
+    platformName: '',
+    supportEmail: '',
+    defaultLanguage: 'English (US)',
+    twoFactorRequired: false,
+    enableRegistration: false,
+    sessionTimeoutMinutes: 30,
+    smtpServer: '',
+    smtpPort: '',
+    smtpSender: '',
+    maintenanceMode: false
+  });
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleSave = (section) => {
-    toast(t(section) + " " + t('settingsUpdatedSuccessfully'), 'success');
+  const loadData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.superAdmin.getSettings();
+      if (res.data) {
+        setSettings({
+          platformName: res.data.platformName || '',
+          supportEmail: res.data.supportEmail || '',
+          defaultLanguage: res.data.defaultLanguage || 'English (US)',
+          twoFactorRequired: !!res.data.twoFactorRequired,
+          enableRegistration: !!res.data.enableRegistration,
+          sessionTimeoutMinutes: Number(res.data.sessionTimeoutMinutes || 30),
+          smtpServer: res.data.smtpServer || '',
+          smtpPort: res.data.smtpPort || '',
+          smtpSender: res.data.smtpSender || '',
+          maintenanceMode: !!res.data.maintenanceMode
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      toast(t('failedToLoadSettings'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [t, toast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleSave = async (section) => {
+    try {
+      setIsLoading(true);
+      await api.superAdmin.updateSettings(settings);
+      toast(t(section) + " " + t('settingsUpdatedSuccessfully'), 'success');
+      loadData();
+    } catch (e) {
+      toast(e.message || t('failedToSaveSettings'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (isLoading && !settings.platformName) {
+    return (
+      <div className="py-20 flex flex-col items-center justify-center gap-4">
+        <div className="w-10 h-10 border-4 border-[#0057c7] border-t-transparent rounded-full animate-spin" />
+        <p className="text-[12px] text-[#8a94a6] font-800 uppercase tracking-widest">{t('loading')}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fade-in">

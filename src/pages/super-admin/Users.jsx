@@ -1,40 +1,81 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PageHeader, Table, Tr, Td, Badge, Avatar, Modal, Field, Input, Select, EmptyState, useToast } from '../../components/UI.jsx';
-import { initialUsers, initialAgencies } from '../../data/superAdminData';
 import { useLanguage } from '../../context/LanguageContext';
+import api from '../../services/api';
 
 export default function SuperAdminUsers() {
   const { t } = useLanguage();
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
+  const [agenciesList, setAgenciesList] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(false);
 
   const [activeModal, setActiveModal] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [formData, setFormData] = useState({ name: '', email: '', role: 'Lawyer', agency: 'Apex Legal Group', status: 'active' });
+  const [formData, setFormData] = useState({ name: '', email: '', role: 'Lawyer', agencyId: '', status: 'active' });
 
   const { toast } = useToast();
 
-  const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
-      const matchesSearch = u.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            u.agency.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesRole = roleFilter === 'all' || u.role.toLowerCase() === roleFilter.toLowerCase();
-      const matchesStatus = statusFilter === 'all' || u.status === statusFilter;
-      return matchesSearch && matchesRole && matchesStatus;
-    });
-  }, [users, searchQuery, roleFilter, statusFilter]);
+  const loadData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const [usersRes, agenciesRes] = await Promise.all([
+        api.superAdmin.listUsers({
+          q: searchQuery,
+          role: roleFilter === 'all' ? undefined : roleFilter,
+          status: statusFilter === 'all' ? undefined : statusFilter
+        }),
+        api.superAdmin.listAgencies({ limit: 200 })
+      ]);
+      const usersList = usersRes.data?.items || usersRes.data || [];
+      const agencies = agenciesRes.data?.items || agenciesRes.data || [];
+      setAgenciesList(agencies);
+
+      setUsers(usersList.map(u => {
+        const initials = u.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        return {
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          agency: u.agency,
+          status: u.status,
+          lastLogin: 'Never',
+          initials: initials || 'US',
+          color: u.role.toLowerCase().includes('super') ? '#7c3aed' : '#0057c7',
+        };
+      }));
+    } catch (e) {
+      console.error(e);
+      toast(t('failedToLoadUsers'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchQuery, roleFilter, statusFilter, t, toast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const filteredUsers = users;
 
   const handleOpenAdd = () => {
-    setFormData({ name: '', email: '', role: 'Lawyer', agency: initialAgencies[0]?.name || 'Apex Legal Group', status: 'active' });
+    setFormData({ name: '', email: '', password: '', role: 'lawyer', agencyId: agenciesList[0]?.id || '', status: 'active' });
     setActiveModal('add');
   };
 
   const handleOpenEdit = (user) => {
     setSelectedUser(user);
-    setFormData({ ...user });
+    const agencyObj = agenciesList.find(a => a.name === user.agency);
+    setFormData({ 
+      name: user.name, 
+      email: user.email, 
+      role: (user.role || '').split(',')[0].trim().toLowerCase(), 
+      agencyId: agencyObj?.id || '', 
+      status: user.status 
+    });
     setActiveModal('edit');
   };
 
@@ -48,38 +89,67 @@ export default function SuperAdminUsers() {
     setActiveModal('delete');
   };
 
-  const handleSaveAdd = () => {
+  const handleSaveAdd = async () => {
+    if (!formData.name || !formData.email || !formData.password) {
+      toast(t('enterFullNameEmailPassword') || 'Please enter full name, email, and password', 'error');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      await api.superAdmin.createUser({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        agency_id: formData.agencyId,
+        status: formData.status
+      });
+      setActiveModal(null);
+      toast(t('userCreated') + ` "${formData.name}"!`, 'success');
+      loadData();
+    } catch (e) {
+      toast(e.message || t('failedToAddUser'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveEdit = async () => {
     if (!formData.name || !formData.email) {
       toast(t('enterFullNameEmail'), 'error');
       return;
     }
-    const initials = formData.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    const newUser = {
-      id: `USR-${users.length + 1}`,
-      name: formData.name,
-      email: formData.email,
-      role: formData.role,
-      agency: formData.agency,
-      status: formData.status,
-      lastLogin: 'Never',
-      initials: initials || 'US',
-      color: formData.role === 'Super Admin' ? '#7c3aed' : '#0057c7',
-    };
-    setUsers([newUser, ...users]);
-    setActiveModal(null);
-    toast(t('userCreated') + ` "${formData.name}"!`, 'success');
+    try {
+      setIsLoading(true);
+      await api.superAdmin.updateUser(selectedUser.id, {
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+        agency_id: formData.agencyId,
+        status: formData.status
+      });
+      setActiveModal(null);
+      toast(t('userUpdated') + ` "${formData.name}"!`, 'success');
+      loadData();
+    } catch (e) {
+      toast(e.message || t('failedToUpdateUser'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSaveEdit = () => {
-    setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...formData } : u));
-    setActiveModal(null);
-    toast(t('userUpdated') + ` "${formData.name}"!`, 'success');
-  };
-
-  const handleDelete = () => {
-    setUsers(users.filter(u => u.id !== selectedUser.id));
-    setActiveModal(null);
-    toast(t('userDeleted') + ` "${selectedUser.name}"!`, 'success');
+  const handleDelete = async () => {
+    try {
+      setIsLoading(true);
+      await api.superAdmin.deleteUser(selectedUser.id);
+      setActiveModal(null);
+      toast(t('userDeleted') + ` "${selectedUser.name}"!`, 'success');
+      loadData();
+    } catch (e) {
+      toast(e.message || t('failedToRemoveUser'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -196,18 +266,22 @@ export default function SuperAdminUsers() {
             <Field label={t('emailAddress') || 'Email Address'} required>
               <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="e.g. jreed@beaconlaw.com" />
             </Field>
+            <Field label={t('password') || 'Password'} required>
+              <Input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} placeholder="Enter secure password" />
+            </Field>
             <div className="grid grid-cols-2 gap-4">
               <Field label={t('assignRole') || 'Assign Role'}>
                 <Select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })}>
-                  <option value="Super Admin">{t('superAdmin')}</option>
-                  <option value="Agency Administrator">{t('agencyAdministrator')}</option>
-                  <option value="Lawyer">{t('lawyer')}</option>
-                  <option value="Client">{t('client')}</option>
+                  <option value="admin">{t('agencyAdministrator') || 'Agency Administrator'}</option>
+                  <option value="partner">{t('partner') || 'Partner'}</option>
+                  <option value="lawyer">{t('lawyer') || 'Lawyer'}</option>
+                  <option value="paralegal">{t('paralegal') || 'Paralegal'}</option>
+                  <option value="client">{t('client') || 'Client'}</option>
                 </Select>
               </Field>
               <Field label={t('assignedAgency') || 'Assigned Agency'}>
-                <Select value={formData.agency} onChange={(e) => setFormData({ ...formData, agency: e.target.value })}>
-                  {initialAgencies.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+                <Select value={formData.agencyId} onChange={(e) => setFormData({ ...formData, agencyId: e.target.value })}>
+                  {agenciesList.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </Select>
               </Field>
             </div>
@@ -232,10 +306,25 @@ export default function SuperAdminUsers() {
             <Field label={t('emailAddress') || 'Email Address'} required>
               <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
             </Field>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label={t('assignRole') || 'Assign Role'}>
+                <Select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })}>
+                  <option value="admin">{t('agencyAdministrator') || 'Agency Administrator'}</option>
+                  <option value="partner">{t('partner') || 'Partner'}</option>
+                  <option value="lawyer">{t('lawyer') || 'Lawyer'}</option>
+                  <option value="paralegal">{t('paralegal') || 'Paralegal'}</option>
+                  <option value="client">{t('client') || 'Client'}</option>
+                </Select>
+              </Field>
+              <Field label={t('assignedAgency') || 'Assigned Agency'}>
+                <Select value={formData.agencyId} onChange={(e) => setFormData({ ...formData, agencyId: e.target.value })}>
+                  {agenciesList.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </Select>
+              </Field>
+            </div>
             <Field label={t('status') || 'Status'}>
               <Select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
                 <option value="active">{t('active')}</option>
-                <option value="pending">{t('pending')}</option>
                 <option value="inactive">{t('inactive')}</option>
               </Select>
             </Field>

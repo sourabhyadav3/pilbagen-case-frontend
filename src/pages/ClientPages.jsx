@@ -265,14 +265,6 @@ export function ClientCasesPage({ navigate }) {
   );
 }
 
-const clientMockDocuments = [
-  { id: 201, original_name: 'Swedish_Power_Acquisition_Contract.pdf', mime_type: 'application/pdf', category: 'Contract', matter: { matter_number: 'MAT-2026-101' }, created_at: '2026-06-12T10:30:00Z' },
-  { id: 202, original_name: 'Stockholm_District_Court_Filing_Confirmation.pdf', mime_type: 'application/pdf', category: 'Court Pleading', matter: { matter_number: 'MAT-2026-102' }, created_at: '2026-06-18T14:15:00Z' },
-  { id: 203, original_name: 'Conflict_Check_Compliance_Certificate.pdf', mime_type: 'application/pdf', category: 'Compliance', matter: { matter_number: 'MAT-2026-103' }, created_at: '2026-07-01T09:00:00Z' },
-  { id: 204, original_name: 'Retainer_&_Legal_Representation_Terms_2026.docx', mime_type: 'application/msword', category: 'Agreement', matter: { matter_number: 'MAT-2026-101' }, created_at: '2026-07-10T16:45:00Z' },
-  { id: 205, original_name: 'Swedish_Tax_Authority_Registration_Proof.png', mime_type: 'image/png', category: 'Evidence', matter: { matter_number: 'MAT-2026-102' }, created_at: '2026-07-15T11:20:00Z' }
-];
-
 export function ClientDocumentsPage({ toast }) {
   const [docs, setDocs] = useState([]);
   
@@ -289,10 +281,10 @@ export function ClientDocumentsPage({ toast }) {
     try {
       const res = await api.documents.list({ limit: 500 });
       const list = Array.isArray(res?.data) ? res.data : [];
-      setDocs(list.length > 0 ? list : clientMockDocuments);
+      setDocs(list);
     } catch (e) {
-      setDocs(clientMockDocuments);
-      setError('');
+      setDocs([]);
+      setError(e.message || 'Failed to load documents');
     } finally {
       setLoading(false);
     }

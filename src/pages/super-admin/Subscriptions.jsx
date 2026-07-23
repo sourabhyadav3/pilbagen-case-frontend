@@ -1,16 +1,50 @@
-import { useState } from 'react';
-import { PageHeader, Table, Tr, Td, Badge, Modal, Card, Field, Select, useToast } from '../../components/UI.jsx';
-import { initialSubscriptions, pricingPlans, initialAgencies } from '../../data/superAdminData';
+import { useState, useEffect, useCallback } from 'react';
+import { PageHeader, Table, Tr, Td, Badge, Modal, Card, Field, Select, EmptyState, useToast } from '../../components/UI.jsx';
 import { useLanguage } from '../../context/LanguageContext';
+import api from '../../services/api';
+
+const pricingPlans = [
+  { name: 'Basic', price: '$299', period: '/month', features: ['Up to 5 Users', '1 Law Office Location', 'Standard Intake & Cases', 'Basic Reports & Storage (50GB)', 'Email Support'] },
+  { name: 'Professional', price: '$699', period: '/month', popular: true, features: ['Up to 20 Users', '3 Law Office Locations', 'Advanced Case & Billing Module', 'Custom Client Portal', 'Priority Email & Phone Support'] },
+  { name: 'Enterprise', price: '$1,499', period: '/month', features: ['Unlimited Users & Offices', 'Multi-Agency Management', 'Dedicated Account Manager', 'Custom Integrations & API Access', '24/7 SLA Support'] },
+];
 
 export default function SuperAdminSubscriptions() {
   const { t } = useLanguage();
-  const [subscriptions, setSubscriptions] = useState(initialSubscriptions);
+  const [subscriptions, setSubscriptions] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
   const [selectedSub, setSelectedSub] = useState(null);
   const [newPlan, setNewPlan] = useState('Enterprise');
+  const [isLoading, setIsLoading] = useState(false);
 
   const { toast } = useToast();
+
+  const loadData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.superAdmin.listAgencies({ limit: 200 });
+      const list = res.data?.items || res.data || [];
+      setSubscriptions(list.map(s => ({
+        id: s.id,
+        agency: s.name,
+        plan: s.plan,
+        mrr: `$${parseFloat(s.subscription_amount).toLocaleString()}`,
+        billingCycle: s.billing_cycle,
+        renewalDate: new Date(s.next_billing).toLocaleDateString(),
+        autoRenew: s.status === 'active',
+        status: s.status,
+      })));
+    } catch (e) {
+      console.error(e);
+      toast(t('failedToLoadSubscriptions'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [t, toast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleOpenChangePlan = (sub) => {
     setSelectedSub(sub);
@@ -23,16 +57,41 @@ export default function SuperAdminSubscriptions() {
     setActiveModal('cancel');
   };
 
-  const handleSavePlanChange = () => {
-    setSubscriptions(subscriptions.map(s => s.id === selectedSub.id ? { ...s, plan: newPlan } : s));
-    setActiveModal(null);
-    toast(t('subscriptionUpdatedFor') + ` ${selectedSub.agency} ${t('to')} ${newPlan}!`, 'success');
+  const handleSavePlanChange = async () => {
+    let price = 699.00;
+    if (newPlan === 'Basic') price = 299.00;
+    if (newPlan === 'Enterprise') price = 1499.00;
+
+    try {
+      setIsLoading(true);
+      await api.superAdmin.updateAgency(selectedSub.id, {
+        plan: newPlan,
+        subscription_amount: price
+      });
+      setActiveModal(null);
+      toast(t('subscriptionUpdatedFor') + ` ${selectedSub.agency} ${t('to')} ${newPlan}!`, 'success');
+      loadData();
+    } catch (e) {
+      toast(e.message || t('failedToUpdateSubscription'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleConfirmCancel = () => {
-    setSubscriptions(subscriptions.map(s => s.id === selectedSub.id ? { ...s, status: 'inactive', autoRenew: false } : s));
-    setActiveModal(null);
-    toast(t('subscriptionCancelledFor') + ` ${selectedSub.agency}.`, 'warning');
+  const handleConfirmCancel = async () => {
+    try {
+      setIsLoading(true);
+      await api.superAdmin.updateAgency(selectedSub.id, {
+        status: 'inactive'
+      });
+      setActiveModal(null);
+      toast(t('subscriptionCancelledFor') + ` ${selectedSub.agency}.`, 'warning');
+      loadData();
+    } catch (e) {
+      toast(e.message || t('failedToCancelSubscription'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -78,50 +137,59 @@ export default function SuperAdminSubscriptions() {
       <div className="space-y-4">
         <h2 className="text-xl font-800 text-white font-display">{t('activeSubscriptionsOverview')}</h2>
         
-        <Table headers={[t('agency'), t('currentPlan') || 'Current Plan', t('Monthly Recurring (MRR)') || 'Monthly Recurring (MRR)', t('Billing Cycle') || 'Billing Cycle', t('Next Renewal') || 'Next Renewal', t('Auto Renew') || 'Auto Renew', t('status'), t('actions') || 'Actions']}>
-          {subscriptions.map((sub) => (
-            <Tr key={sub.id}>
-              <Td className="font-700 text-white">
-                <div>{sub.agency}</div>
-                <div className="text-[11px] text-[#8a94a6]">{sub.id}</div>
-              </Td>
-              <Td>
-                <span className="px-2.5 py-1 rounded-lg text-[11px] font-800 uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                  {t(sub.plan)}
-                </span>
-              </Td>
-              <Td className="font-800 text-emerald-400">
-                {sub.mrr}
-              </Td>
-              <Td className="text-[13px] text-[#b8c2d1]">
-                {t(sub.billingCycle)}
-              </Td>
-              <Td className="text-[13px] text-[#8a94a6]">
-                {sub.renewalDate}
-              </Td>
-              <Td>
-                <span className={`text-[12px] font-700 ${sub.autoRenew ? 'text-emerald-400' : 'text-slate-400'}`}>
-                  {sub.autoRenew ? t('enabled') : t('disabled')}
-                </span>
-              </Td>
-              <Td>
-                <Badge status={sub.status} />
-              </Td>
-              <Td>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => handleOpenChangePlan(sub)} className="px-3 py-1.5 rounded-lg bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 hover:bg-[#D4AF37]/25 text-[12px] font-bold transition-all">
-                    {t('changePlan')}
-                  </button>
-                  {sub.status === 'active' && (
-                    <button onClick={() => handleOpenCancel(sub)} className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-[12px] font-bold transition-all">
-                      {t('cancel')}
+        {isLoading ? (
+          <div className="py-20 flex flex-col items-center justify-center gap-4">
+            <div className="w-10 h-10 border-4 border-[#0057c7] border-t-transparent rounded-full animate-spin" />
+            <p className="text-[12px] text-[#8a94a6] font-800 uppercase tracking-widest">{t('loading')}</p>
+          </div>
+        ) : subscriptions.length === 0 ? (
+          <EmptyState title="No Subscriptions Found" desc="There are no registered subscriptions." />
+        ) : (
+          <Table headers={[t('agency'), t('currentPlan') || 'Current Plan', t('Monthly Recurring (MRR)') || 'Monthly Recurring (MRR)', t('Billing Cycle') || 'Billing Cycle', t('Next Renewal') || 'Next Renewal', t('Auto Renew') || 'Auto Renew', t('status'), t('actions') || 'Actions']}>
+            {subscriptions.map((sub) => (
+              <Tr key={sub.id}>
+                <Td className="font-700 text-white">
+                  <div>{sub.agency}</div>
+                  <div className="text-[11px] text-[#8a94a6]">AGC-{sub.id}</div>
+                </Td>
+                <Td>
+                  <span className="px-2.5 py-1 rounded-lg text-[11px] font-800 uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                    {t(sub.plan)}
+                  </span>
+                </Td>
+                <Td className="font-800 text-emerald-400">
+                  {sub.mrr}
+                </Td>
+                <Td className="text-[13px] text-[#b8c2d1]">
+                  {t(sub.billingCycle)}
+                </Td>
+                <Td className="text-[13px] text-[#8a94a6]">
+                  {sub.renewalDate}
+                </Td>
+                <Td>
+                  <span className={`text-[12px] font-700 ${sub.autoRenew ? 'text-emerald-400' : 'text-slate-400'}`}>
+                    {sub.autoRenew ? t('enabled') : t('disabled')}
+                  </span>
+                </Td>
+                <Td>
+                  <Badge status={sub.status} />
+                </Td>
+                <Td>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => handleOpenChangePlan(sub)} className="px-3 py-1.5 rounded-lg bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 hover:bg-[#D4AF37]/25 text-[12px] font-bold transition-all">
+                      {t('changePlan')}
                     </button>
-                  )}
-                </div>
-              </Td>
-            </Tr>
-          ))}
-        </Table>
+                    {sub.status === 'active' && (
+                      <button onClick={() => handleOpenCancel(sub)} className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-[12px] font-bold transition-all">
+                        {t('cancel')}
+                      </button>
+                    )}
+                  </div>
+                </Td>
+              </Tr>
+            ))}
+          </Table>
+        )}
       </div>
 
       {/* Change Plan Modal */}

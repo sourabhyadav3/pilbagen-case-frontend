@@ -1,11 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PageHeader, Table, Tr, Td, Badge, Modal, Field, Input, Select, EmptyState, useToast } from '../../components/UI.jsx';
-import { initialAgencies } from '../../data/superAdminData';
 import { useLanguage } from '../../context/LanguageContext';
+import api from '../../services/api';
 
 export default function SuperAdminAgencies() {
   const { t } = useLanguage();
-  const [agencies, setAgencies] = useState(initialAgencies);
+  const [agencies, setAgencies] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [planFilter, setPlanFilter] = useState('all');
@@ -18,16 +18,38 @@ export default function SuperAdminAgencies() {
 
   const { toast } = useToast();
 
-  const filteredAgencies = useMemo(() => {
-    return agencies.filter((item) => {
-      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            item.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            item.email.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
-      const matchesPlan = planFilter === 'all' || item.plan.toLowerCase() === planFilter.toLowerCase();
-      return matchesSearch && matchesStatus && matchesPlan;
-    });
-  }, [agencies, searchQuery, statusFilter, planFilter]);
+  const loadAgencies = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.superAdmin.listAgencies({
+        q: searchQuery,
+        status: statusFilter === 'all' ? undefined : statusFilter,
+        plan: planFilter === 'all' ? undefined : planFilter
+      });
+      const list = res.data?.items || res.data || [];
+      setAgencies(list.map(a => ({
+        id: a.id,
+        name: a.name,
+        owner: a.owner,
+        email: a.email,
+        phone: a.phone || '',
+        plan: a.plan,
+        officesCount: a._count?.offices ?? 0,
+        usersCount: a._count?.users ?? 0,
+        status: a.status,
+        createdAt: new Date(a.created_at).toLocaleDateString()
+      })));
+    } catch (e) {
+      console.error(e);
+      toast(t('failedToLoadAgencies'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchQuery, statusFilter, planFilter, t, toast]);
+
+  useEffect(() => {
+    loadAgencies();
+  }, [loadAgencies]);
 
   const handleOpenAdd = () => {
     setFormData({ name: '', owner: '', email: '', phone: '', plan: 'Professional', status: 'active' });
@@ -50,43 +72,54 @@ export default function SuperAdminAgencies() {
     setActiveModal('delete');
   };
 
-  const handleSaveAdd = () => {
+  const handleSaveAdd = async () => {
     if (!formData.name || !formData.owner || !formData.email) {
       toast(t('completeAllRequiredFields'), 'error');
       return;
     }
-    const newAgency = {
-      id: `AG-${Math.floor(100 + Math.random() * 900)}`,
-      name: formData.name,
-      owner: formData.owner,
-      email: formData.email,
-      phone: formData.phone || '+1 (555) 000-0000',
-      plan: formData.plan,
-      officesCount: 1,
-      usersCount: 2,
-      status: formData.status,
-      createdAt: new Date().toISOString().split('T')[0],
-      revenue: '$0',
-    };
-    setAgencies([newAgency, ...agencies]);
-    setActiveModal(null);
-    toast(t('agencyAdded') + ` "${formData.name}"!`, 'success');
+    try {
+      setIsLoading(true);
+      await api.superAdmin.createAgency(formData);
+      setActiveModal(null);
+      toast(t('agencyAdded') + ` "${formData.name}"!`, 'success');
+      loadAgencies();
+    } catch (e) {
+      toast(e.message || t('failedToAddAgency'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!formData.name || !formData.owner) {
       toast(t('enterValidAgencyDetails'), 'error');
       return;
     }
-    setAgencies(agencies.map(a => a.id === selectedAgency.id ? { ...a, ...formData } : a));
-    setActiveModal(null);
-    toast(t('agencyUpdated') + ` "${formData.name}"!`, 'success');
+    try {
+      setIsLoading(true);
+      await api.superAdmin.updateAgency(selectedAgency.id, formData);
+      setActiveModal(null);
+      toast(t('agencyUpdated') + ` "${formData.name}"!`, 'success');
+      loadAgencies();
+    } catch (e) {
+      toast(e.message || t('failedToUpdateAgency'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDelete = () => {
-    setAgencies(agencies.filter(a => a.id !== selectedAgency.id));
-    setActiveModal(null);
-    toast(t('agencyRemoved') + ` "${selectedAgency.name}"!`, 'success');
+  const handleDelete = async () => {
+    try {
+      setIsLoading(true);
+      await api.superAdmin.deleteAgency(selectedAgency.id);
+      setActiveModal(null);
+      toast(t('agencyRemoved') + ` "${selectedAgency.name}"!`, 'success');
+      loadAgencies();
+    } catch (e) {
+      toast(e.message || t('failedToRemoveAgency'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -139,7 +172,7 @@ export default function SuperAdminAgencies() {
           <div className="w-10 h-10 border-4 border-[#0057c7] border-t-transparent rounded-full animate-spin" />
           <p className="text-[12px] text-[#8a94a6] font-800 uppercase tracking-widest">{t('loadingAgenciesData')}</p>
         </div>
-      ) : filteredAgencies.length === 0 ? (
+      ) : agencies.length === 0 ? (
         <EmptyState 
           icon={<svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
           title={t('noAgenciesFound')} 
@@ -147,11 +180,11 @@ export default function SuperAdminAgencies() {
         />
       ) : (
         <Table headers={[t('Agency Name'), t('Owner Contact'), t('Subscription Plan'), t('Offices / Users'), t('Created Date'), t('status'), t('actions') || 'Actions']}>
-          {filteredAgencies.map((agency) => (
+          {agencies.map((agency) => (
             <Tr key={agency.id}>
               <Td className="font-700 text-white">
                 <div>{agency.name}</div>
-                <div className="text-[11px] text-[#8a94a6] font-500">{agency.id}</div>
+                <div className="text-[11px] text-[#8a94a6] font-500">AGC-{agency.id}</div>
               </Td>
               <Td>
                 <div className="text-white font-600">{agency.owner}</div>

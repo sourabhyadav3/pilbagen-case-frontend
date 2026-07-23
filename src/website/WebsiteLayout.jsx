@@ -40,7 +40,7 @@ function PublicNavbar() {
     <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled ? 'bg-[#0A192F]/95 backdrop-blur-md py-2 sm:py-2.5 shadow-xl border-b border-[#D4AF37]/15' : 'bg-transparent py-2.5 sm:py-4'}`}>
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-12 flex items-center justify-between gap-3">
         {/* Branding */}
-        <Link to="/" className="flex items-center gap-3 group">
+        <Link to="/" className="flex items-center gap-3 group notranslate" translate="no">
           <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center shadow-lg p-1">
             <img src={logoImg} alt="Pilbågen Logo" className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
           </div>
@@ -129,7 +129,7 @@ function PublicFooter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-16 mb-10 sm:mb-12">
           {/* Brand Block */}
           <div className="space-y-10">
-            <Link to="/" className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-3 notranslate" translate="no">
               <div className="w-12 h-12 rounded-xl bg-[#0A192F] border border-[#D4AF37]/30 flex items-center justify-center p-2">
                 <img src={logoImg} alt="Pilbågen Logo" className="w-full h-full object-contain" />
               </div>

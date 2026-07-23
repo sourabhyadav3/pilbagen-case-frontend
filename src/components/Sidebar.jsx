@@ -56,6 +56,7 @@ const NAV_BY_ROLE = {
     { id: 'calendar', label: 'Calendar', icon: 'calendar', path: '/admin/calendar' },
     { id: 'messages', label: 'Encrypted Chat', icon: 'messages', path: '/admin/messages' },
     { section: 'Administration' },
+    { id: 'team-users', label: 'Users & Staff', icon: 'users', path: '/admin/users' },
     { id: 'back-office', label: 'Back Office', icon: 'offices', path: '/admin/back-office' },
   ],
   lawyer: [
@@ -147,7 +148,7 @@ export default function Sidebar({ open, role, user, onToggle, onLogout, onItemCl
         </button>
       )}
 
-      <div className={`flex items-center h-[72px] ${open ? 'px-4' : 'px-0 justify-center'} gap-2.5 flex-shrink-0 border-b border-white/5 relative overflow-hidden`}>
+      <div className={`flex items-center h-[72px] ${open ? 'px-4' : 'px-0 justify-center'} gap-2.5 flex-shrink-0 border-b border-white/5 relative overflow-hidden notranslate`} translate="no">
         <div className="transition-all duration-300 w-10 h-10 flex items-center justify-center overflow-hidden bg-[#002868] border border-amber-400/30 rounded-xl flex-shrink-0 shadow-lg">
           <img src={logoImg} alt="Pilbågen Logo" className="w-8 h-8 object-contain rounded-lg" />
         </div>
@@ -197,9 +198,12 @@ export default function Sidebar({ open, role, user, onToggle, onLogout, onItemCl
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
               <Avatar initials={displayInitials} size="sm" color={info.color} className="ring-2 ring-white/10" />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-[13px] font-700 text-white truncate">{displayName}</p>
                 <p className="text-[11px] text-[#8a94a6] font-500">{t(info.role)}</p>
+                {(user?.agency?.name || user?.agency_name) && (
+                  <p className="text-[10px] font-700 text-[#14b8a6] truncate mt-0.5">🏢 {user?.agency?.name || user?.agency_name}</p>
+                )}
               </div>
             </div>
             <button onClick={onLogout}

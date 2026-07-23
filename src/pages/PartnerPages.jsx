@@ -1,18 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { PageHeader, StatCard, Card, Table, Tr, Td, Badge, ProgressBar, Avatar } from '../components/UI.jsx';
+import { PageHeader, StatCard, Card, Table, Tr, Td, Badge, ProgressBar, Avatar, EmptyState } from '../components/UI.jsx';
 import { LawyerDashboard, LawyerCasesPage } from './LawyerPages.jsx';
 import { CasesPage, DocumentsPage, BillingPage, EmailPage, UsersPage, CalendarPage, SettingsPage } from './AdminPages.jsx';
 import { ReportsDashboard } from './MarketingPages.jsx';
 import { ConflictCheckPage } from './LeadPages.jsx';
-import {
-  partnerMockKpis,
-  partnerMockFirmPerformance,
-  partnerMockTeamPerformance,
-  partnerMockActivities,
-  partnerMockSchedule,
-  partnerMockMatters,
-} from '../data/partnerData.js';
+import { dashboardAPI } from '../services/api.js';
 
 // ─────────────────────────────────────────────────────────
 //  PARTNER DASHBOARD (ENHANCED SENIOR MANAGEMENT VIEW)
@@ -20,6 +13,58 @@ import {
 export function PartnerDashboard(props) {
   const ctx = useOutletContext() || {};
   const navigate = props.navigate || ctx.navigate;
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    dashboardAPI.partner()
+      .then(res => {
+        if (!cancelled) {
+          setData(res.data || res);
+          setError('');
+        }
+      })
+      .catch(err => {
+        if (!cancelled) setError(err.message || 'Failed to load partner dashboard');
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="animate-fade-in flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-[#0057c7]/30 border-t-[#0057c7] rounded-full animate-spin" />
+          <p className="text-[#8a94a6] text-sm font-600">Loading Partner Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="animate-fade-in flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-3">
+          <p className="text-red-400 text-sm font-600">{error}</p>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-xl bg-[#0057c7] text-white text-sm font-700">Retry</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const kpis = data.kpis || [];
+  const firmPerformance = data.firmPerformance || { practiceAreas: [], avgDuration: 'N/A', successRate: 'N/A', realizationRate: 'N/A' };
+  const teamPerformance = data.teamPerformance || [];
+  const activities = data.activities || [];
+  const upcomingSchedule = data.upcomingSchedule || [];
+  const activeFirmMatters = data.activeFirmMatters || [];
+
   return (
     <div className="animate-fade-in space-y-8 relative">
       {/* Background Atmosphere */}
@@ -33,7 +78,7 @@ export function PartnerDashboard(props) {
 
       {/* KPI Cards Grid (8 Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {partnerMockKpis.map((kpi) => (
+        {kpis.map((kpi) => (
           <StatCard key={kpi.id} label={kpi.label} value={kpi.value} change={kpi.change} />
         ))}
       </div>
@@ -48,37 +93,41 @@ export function PartnerDashboard(props) {
               <p className="text-[12px] text-[#8a94a6]">Real-time financial realization across legal practice groups</p>
             </div>
             <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-900 uppercase tracking-widest">
-              Realization: {partnerMockFirmPerformance.realizationRate}
+              Realization: {firmPerformance.realizationRate}
             </span>
           </div>
 
           <div className="space-y-5">
-            {partnerMockFirmPerformance.practiceAreas.map((pa) => (
-              <div key={pa.area} className="space-y-2">
-                <div className="flex items-center justify-between text-[13px]">
-                  <span className="font-700 text-white flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#38bdf8]" />
-                    {pa.area} ({pa.matters} matters)
-                  </span>
-                  <span className="font-800 text-emerald-400">{pa.revenue} <span className="text-[#8a94a6] text-[11px] font-600">({pa.percentage}%)</span></span>
+            {firmPerformance.practiceAreas.length === 0 ? (
+              <p className="text-[#8a94a6] text-sm text-center py-4">No practice area data available yet.</p>
+            ) : (
+              firmPerformance.practiceAreas.map((pa) => (
+                <div key={pa.area} className="space-y-2">
+                  <div className="flex items-center justify-between text-[13px]">
+                    <span className="font-700 text-white flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-[#38bdf8]" />
+                      {pa.area} ({pa.matters} matters)
+                    </span>
+                    <span className="font-800 text-emerald-400">{pa.revenue} <span className="text-[#8a94a6] text-[11px] font-600">({pa.percentage}%)</span></span>
+                  </div>
+                  <ProgressBar progress={pa.percentage} />
                 </div>
-                <ProgressBar progress={pa.percentage} />
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/5 text-center">
             <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
               <p className="text-[10px] text-[#8a94a6] font-800 uppercase tracking-widest">Avg Matter Duration</p>
-              <p className="text-lg font-900 text-white mt-1">{partnerMockFirmPerformance.avgDuration}</p>
+              <p className="text-lg font-900 text-white mt-1">{firmPerformance.avgDuration}</p>
             </div>
             <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
               <p className="text-[10px] text-[#8a94a6] font-800 uppercase tracking-widest">Case Success Rate</p>
-              <p className="text-lg font-900 text-emerald-400 mt-1">{partnerMockFirmPerformance.successRate}</p>
+              <p className="text-lg font-900 text-emerald-400 mt-1">{firmPerformance.successRate}</p>
             </div>
             <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
               <p className="text-[10px] text-[#8a94a6] font-800 uppercase tracking-widest">Realization Rate</p>
-              <p className="text-lg font-900 text-[#38bdf8] mt-1">{partnerMockFirmPerformance.realizationRate}</p>
+              <p className="text-lg font-900 text-[#38bdf8] mt-1">{firmPerformance.realizationRate}</p>
             </div>
           </div>
         </Card>
@@ -87,18 +136,22 @@ export function PartnerDashboard(props) {
         <Card className="space-y-4">
           <h3 className="text-lg font-800 text-white font-display border-b border-white/5 pb-3">Upcoming Partner Schedule</h3>
           <div className="space-y-3">
-            {partnerMockSchedule.map((item) => (
-              <div key={item.id} className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 space-y-1 hover:bg-white/[0.04] transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-900 text-[#38bdf8] uppercase tracking-wider">{item.time} • {item.date}</span>
-                  <span className="px-2 py-0.5 rounded text-[9px] font-800 uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                    {item.type}
-                  </span>
+            {upcomingSchedule.length === 0 ? (
+              <p className="text-[#8a94a6] text-sm text-center py-4">No upcoming events.</p>
+            ) : (
+              upcomingSchedule.map((item) => (
+                <div key={item.id} className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 space-y-1 hover:bg-white/[0.04] transition-all">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-900 text-[#38bdf8] uppercase tracking-wider">{item.time} • {item.date}</span>
+                    <span className="px-2 py-0.5 rounded text-[9px] font-800 uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                      {item.type}
+                    </span>
+                  </div>
+                  <p className="text-[13px] font-700 text-white line-clamp-1">{item.title}</p>
+                  <p className="text-[11px] text-[#8a94a6]">{item.location} ({item.matter})</p>
                 </div>
-                <p className="text-[13px] font-700 text-white line-clamp-1">{item.title}</p>
-                <p className="text-[11px] text-[#8a94a6]">{item.location} ({item.matter})</p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </Card>
       </div>
@@ -115,51 +168,59 @@ export function PartnerDashboard(props) {
           </button>
         </div>
 
-        <Table headers={['Team Member', 'Role & Department', 'Monthly Billed', 'Logged Hours', 'Utilization %', 'Active Matters', 'Status']}>
-          {partnerMockTeamPerformance.map((tm) => (
-            <Tr key={tm.id}>
-              <Td className="font-700 text-white">
-                <div className="flex items-center gap-3">
-                  <Avatar initials={tm.name.split(' ').map(n => n[0]).join('').slice(0,2)} size="sm" color="#0057c7" />
-                  <div>
-                    <div className="text-white font-700">{tm.name}</div>
-                    <div className="text-[11px] text-[#8a94a6]">{tm.position}</div>
+        {teamPerformance.length === 0 ? (
+          <p className="text-[#8a94a6] text-sm text-center py-6">No team members found in this agency.</p>
+        ) : (
+          <Table headers={['Team Member', 'Role & Department', 'Monthly Billed', 'Logged Hours', 'Utilization %', 'Active Matters', 'Status']}>
+            {teamPerformance.map((tm) => (
+              <Tr key={tm.id}>
+                <Td className="font-700 text-white">
+                  <div className="flex items-center gap-3">
+                    <Avatar initials={tm.name.split(' ').map(n => n[0]).join('').slice(0,2)} size="sm" color="#0057c7" />
+                    <div>
+                      <div className="text-white font-700">{tm.name}</div>
+                      <div className="text-[11px] text-[#8a94a6]">{tm.position}</div>
+                    </div>
                   </div>
-                </div>
-              </Td>
-              <Td className="text-[13px] text-purple-300 font-600">{tm.department}</Td>
-              <Td className="font-800 text-emerald-400">{tm.billed}</Td>
-              <Td className="text-[13px] text-white font-600">{tm.hours}</Td>
-              <Td className="min-w-[140px]">
-                <div className="flex items-center gap-3">
-                  <ProgressBar progress={tm.utilization} />
-                  <span className="text-[11px] font-800 text-white">{tm.utilization}%</span>
-                </div>
-              </Td>
-              <Td className="text-[13px] text-white font-700 text-center">{tm.active_matters}</Td>
-              <Td><Badge status={tm.status} /></Td>
-            </Tr>
-          ))}
-        </Table>
+                </Td>
+                <Td className="text-[13px] text-purple-300 font-600">{tm.department}</Td>
+                <Td className="font-800 text-emerald-400">{tm.billed}</Td>
+                <Td className="text-[13px] text-white font-600">{tm.hours}</Td>
+                <Td className="min-w-[140px]">
+                  <div className="flex items-center gap-3">
+                    <ProgressBar progress={tm.utilization} />
+                    <span className="text-[11px] font-800 text-white">{tm.utilization}%</span>
+                  </div>
+                </Td>
+                <Td className="text-[13px] text-white font-700 text-center">{tm.active_matters}</Td>
+                <Td><Badge status={tm.status} /></Td>
+              </Tr>
+            ))}
+          </Table>
+        )}
       </Card>
 
       {/* Recent Activity Feed */}
       <Card className="space-y-4">
         <h3 className="text-lg font-800 text-white font-display border-b border-white/5 pb-3">Firm Activity Feed</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {partnerMockActivities.map((act) => (
-            <div key={act.id} className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-4">
-              <div className="w-2 h-2 rounded-full bg-[#38bdf8] mt-2 flex-shrink-0" />
-              <div className="flex-1 min-w-0 space-y-1">
-                <div className="flex items-center justify-between">
-                  <p className="text-[13px] font-700 text-white truncate">{act.title}</p>
-                  <span className="text-[10px] font-800 text-[#8a94a6] uppercase tracking-wider">{act.time}</span>
+        {activities.length === 0 ? (
+          <p className="text-[#8a94a6] text-sm text-center py-4">No recent activity recorded.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {activities.map((act) => (
+              <div key={act.id} className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-4">
+                <div className="w-2 h-2 rounded-full bg-[#38bdf8] mt-2 flex-shrink-0" />
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[13px] font-700 text-white truncate">{act.title}</p>
+                    <span className="text-[10px] font-800 text-[#8a94a6] uppercase tracking-wider">{act.time}</span>
+                  </div>
+                  <p className="text-[12px] text-[#8a94a6] line-clamp-1">{act.detail}</p>
                 </div>
-                <p className="text-[12px] text-[#8a94a6] line-clamp-1">{act.detail}</p>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* Active Firm Matters & Lead Supervision Section */}
@@ -174,23 +235,27 @@ export function PartnerDashboard(props) {
           </button>
         </div>
 
-        <Table headers={['Matter Number', 'Title & Client', 'Practice Area', 'Lead Attorney', 'Associate', 'Est. Value', 'Next Hearing', 'Status']}>
-          {partnerMockMatters.map((m) => (
-            <Tr key={m.id}>
-              <Td className="whitespace-nowrap"><span className="font-mono text-[12px] text-[#38bdf8] font-700">{m.matter_number}</span></Td>
-              <Td className="font-700 text-white">
-                <div>{m.title}</div>
-                <div className="text-[11px] text-[#8a94a6]">{m.client_name}</div>
-              </Td>
-              <Td className="text-[12px] text-purple-300 font-600">{m.practice_area}</Td>
-              <Td className="text-[12px] text-white font-600">{m.lead_attorney}</Td>
-              <Td className="text-[12px] text-[#8a94a6]">{m.associate}</Td>
-              <Td className="font-800 text-emerald-400">{m.est_value}</Td>
-              <Td className="text-[12px] text-[#8a94a6]">{m.next_court_date}</Td>
-              <Td><Badge status={m.status} /></Td>
-            </Tr>
-          ))}
-        </Table>
+        {activeFirmMatters.length === 0 ? (
+          <p className="text-[#8a94a6] text-sm text-center py-6">No active matters found.</p>
+        ) : (
+          <Table headers={['Matter Number', 'Title & Client', 'Practice Area', 'Lead Attorney', 'Associate', 'Est. Value', 'Next Hearing', 'Status']}>
+            {activeFirmMatters.map((m) => (
+              <Tr key={m.id}>
+                <Td className="whitespace-nowrap"><span className="font-mono text-[12px] text-[#38bdf8] font-700">{m.matter_number}</span></Td>
+                <Td className="font-700 text-white">
+                  <div>{m.title}</div>
+                  <div className="text-[11px] text-[#8a94a6]">{m.client_name}</div>
+                </Td>
+                <Td className="text-[12px] text-purple-300 font-600">{m.practice_area}</Td>
+                <Td className="text-[12px] text-white font-600">{m.lead_attorney}</Td>
+                <Td className="text-[12px] text-[#8a94a6]">{m.associate}</Td>
+                <Td className="font-800 text-emerald-400">{m.est_value}</Td>
+                <Td className="text-[12px] text-[#8a94a6]">{m.next_court_date}</Td>
+                <Td><Badge status={m.status} /></Td>
+              </Tr>
+            ))}
+          </Table>
+        )}
       </Card>
     </div>
   );

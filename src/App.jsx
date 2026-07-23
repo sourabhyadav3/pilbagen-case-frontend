@@ -69,35 +69,34 @@ function LoginScreen({ onLogin }) {
       targetEmail === 'super_admin@pilbagen.se' ||
       targetEmail === 'superadmin@vktori.com'
     ) {
-      const superAdminUser = {
-        id: 999,
-        email: 'superadmin@pilbagen.se',
-        full_name: 'Pilbågen Admin',
-        roles: ['super_admin'],
-        role: 'super_admin',
-      };
-      onLogin(superAdminUser, 'demo_super_admin_token');
-      setIsLoading(false);
+      try {
+        const response = await api.auth.login({ email: 'superadmin@vktori.com', password: targetPass || '1234' });
+        const payload = response?.data;
+        const realToken = payload?.token ?? response?.token;
+        const realUser = payload?.user ?? response?.user;
+        onLogin(realUser, realToken);
+      } catch (err) {
+        setErrorMsg(err.message || 'Superadmin login failed. Please check credentials.');
+      } finally {
+        setIsLoading(false);
+      }
       return;
     }
 
     if (targetEmail === 'partner@vktori.com') {
       try {
-        const response = await api.auth.login({ email: 'lawyer@vktori.com', password: targetPass || '1234' });
+        const response = await api.auth.login({ email: 'admin@vktori.com', password: targetPass || '1234' });
         const payload = response?.data;
         const realToken = payload?.token ?? response?.token;
         const realUser = payload?.user ?? response?.user;
         const partnerUser = {
           ...realUser,
-          email: 'partner@vktori.com',
-          full_name: 'David Sterling, Esq.',
-          roles: ['partner'],
+          roles: Array.from(new Set([...(realUser?.roles || []), 'partner'])),
           role: 'partner',
         };
         onLogin(partnerUser, realToken);
       } catch (err) {
-        const fallbackUser = { id: 2, email: 'partner@vktori.com', full_name: 'David Sterling, Esq.', roles: ['partner'], role: 'partner' };
-        onLogin(fallbackUser, 'demo_partner_token');
+        setErrorMsg(err.message || 'Partner login failed. Please check credentials.');
       } finally {
         setIsLoading(false);
       }
@@ -112,15 +111,12 @@ function LoginScreen({ onLogin }) {
         const realUser = payload?.user ?? response?.user;
         const paralegalUser = {
           ...realUser,
-          email: 'paralegal@vktori.com',
-          full_name: 'Emily Carter',
-          roles: ['paralegal'],
+          roles: Array.from(new Set([...(realUser?.roles || []), 'paralegal'])),
           role: 'paralegal',
         };
         onLogin(paralegalUser, realToken);
       } catch (err) {
-        const fallbackUser = { id: 5, email: 'paralegal@vktori.com', full_name: 'Emily Carter', roles: ['paralegal'], role: 'paralegal' };
-        onLogin(fallbackUser, 'demo_paralegal_token');
+        setErrorMsg(err.message || 'Paralegal login failed. Please check credentials.');
       } finally {
         setIsLoading(false);
       }
@@ -191,7 +187,7 @@ function LoginScreen({ onLogin }) {
           </div>
 
           <div className="space-y-3">
-            <h1 className="text-white font-serif text-5xl font-bold leading-tight tracking-tight">Pilbågen</h1>
+            <h1 className="text-white font-serif text-5xl font-bold leading-tight tracking-tight notranslate" translate="no">Pilbågen</h1>
             <p className="text-white/70 text-sm max-w-sm mx-auto leading-relaxed">
               Fast, secure and intuitive case management designed for law firms.
             </p>
@@ -226,12 +222,12 @@ function LoginScreen({ onLogin }) {
             <div className="w-16 h-16 p-3 rounded-2xl bg-[#00163C] border border-amber-400/40 backdrop-blur-xl">
               <img src={logoImg} alt="Pilbågen Logo" className="w-full h-full object-contain" />
             </div>
-            <h1 className="text-white font-display text-4xl font-bold tracking-tight">Pilbågen</h1>
+            <h1 className="text-white font-display text-4xl font-bold tracking-tight notranslate" translate="no">Pilbågen</h1>
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center gap-3 mb-4">
-              <div className="px-4 py-1.5 rounded-full bg-[#002868] border border-amber-400/30 text-amber-400 text-[11px] font-bold uppercase tracking-[0.2em] shadow-lg">
+              <div className="px-4 py-1.5 rounded-full bg-[#002868] border border-amber-400/30 text-amber-400 text-[11px] font-bold uppercase tracking-[0.2em] shadow-lg notranslate" translate="no">
                 Pilbågen Portal
               </div>
               <div className="h-px w-12 bg-white/10" />
@@ -482,7 +478,6 @@ async function defaultModalSubmit(type, modalData, values, { role, user, toast, 
       const clientIds = values.clientIds || [];
       if (!Array.isArray(clientIds) || clientIds.length === 0) throw new Error('Select at least one party.');
       let assigned_lawyer_id = values.lawyerId ? parseInt(values.lawyerId, 10) : null;
-      if (role === 'lawyer' && !Number.isFinite(assigned_lawyer_id)) assigned_lawyer_id = uid;
       if (!Number.isFinite(assigned_lawyer_id)) assigned_lawyer_id = null;
       let practice = values.matterType || values.type || 'General';
       if (practice === 'other') {
@@ -2696,7 +2691,7 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
                 <div className="w-2 h-2 rounded-full bg-[#10b981] shadow-[0_0_10px_#10b981] animate-pulse" />
                 <span className="text-[10px] font-900 uppercase tracking-[0.3em] text-white/70">Authenticated Statement</span>
               </div>
-              <h2 className="text-[32px] font-900 tracking-tighter leading-tight mb-1 text-white">Pilbågen Advokatbyrå</h2>
+              <h2 className="text-[32px] font-900 tracking-tighter leading-tight mb-1 text-white notranslate" translate="no">Pilbågen Advokatbyrå</h2>
               <p className="text-[12px] font-800 text-white/50 uppercase tracking-[0.2em]">Institutional Legal Counsel</p>
             </div>
             <div className="text-right">

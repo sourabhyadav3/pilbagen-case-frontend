@@ -74,6 +74,42 @@ export default function Topbar({ sidebarOpen, onToggleSidebar, role, onLogout, o
   const displayName = user?.full_name || user?.name || info.name;
   const displayInitials = displayName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
+  const [agencyName, setAgencyName] = useState('');
+
+  useEffect(() => {
+    if (user?.agency?.name) {
+      setAgencyName(user.agency.name);
+      return;
+    }
+    if (user?.agency_name) {
+      setAgencyName(user.agency_name);
+      return;
+    }
+    if (role === 'super_admin' || role === 'superadmin') {
+      setAgencyName('Pilbågen HQ');
+      return;
+    }
+    
+    // Fetch agencies list to map agency_id to exact agency name
+    api.superAdmin.listAgencies({ limit: 200 })
+      .then(res => {
+        const list = res.data?.items || res.data || [];
+        const match = list.find(a => Number(a.id) === Number(user?.agency_id));
+        if (match?.name) {
+          setAgencyName(match.name);
+        } else if (list.length > 0 && list[0].name) {
+          setAgencyName(list[0].name);
+        } else {
+          setAgencyName('Pilbågen Legal Agency');
+        }
+      })
+      .catch(() => {
+        setAgencyName('Pilbågen Legal Agency');
+      });
+  }, [user, role]);
+
+  const agencyNameDisplay = agencyName || user?.agency?.name || user?.agency_name || (role === 'super_admin' || role === 'superadmin' ? 'Pilbågen HQ' : 'Pilbågen Legal Agency');
+
   const fetchNotifications = useCallback(async () => {
     try {
       const res = await api.notifications.list();
@@ -240,6 +276,19 @@ export default function Topbar({ sidebarOpen, onToggleSidebar, role, onLogout, o
       </div>
 
       <div className="flex items-center gap-4 ml-auto">
+        {/* Agency Name Display */}
+        {agencyNameDisplay && (
+          <div className="hidden sm:flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-[#14b8a6]/10 border border-[#14b8a6]/25 text-[#14b8a6] shadow-sm">
+            <svg className="w-4 h-4 flex-shrink-0 text-[#14b8a6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0h4" />
+            </svg>
+            <div className="flex flex-col leading-tight">
+              <span className="text-[9px] font-800 uppercase tracking-widest text-[#8a94a6]">Agency</span>
+              <span className="text-[12px] font-800 text-white truncate max-w-[180px]">{agencyNameDisplay}</span>
+            </div>
+          </div>
+        )}
+
         {/* Language Switcher */}
         <div className="relative">
           <button onClick={() => { setShowLang(!showLang); setShowNotifs(false); setShowProfile(false); }}

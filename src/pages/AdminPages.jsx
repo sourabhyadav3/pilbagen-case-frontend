@@ -6925,3 +6925,420 @@ export function SocialLinksSettings({ toast }) {
 // Modular Page Exports for Agency Administrator Phase 2
 export { AdminPartiesPage } from './admin/AdminPartiesPage.jsx';
 export { AdminBackOfficePage } from './admin/AdminBackOfficePage.jsx';
+
+// ─────────────────────────────────────────────────────────
+//  AGENCY ADMIN USER & STAFF MANAGEMENT PAGE (/admin/users)
+// ─────────────────────────────────────────────────────────
+export function AdminUsersPage({ toast }) {
+  const { t } = useLanguage();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+
+  const [activeModal, setActiveModal] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'lawyer',
+    status: 'active'
+  });
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await api.users.list({
+        q: searchQuery || undefined,
+        role: roleFilter === 'all' ? undefined : roleFilter
+      });
+      const rawList = Array.isArray(res?.data) ? res.data : (res?.data?.items || []);
+      setUsers(rawList);
+    } catch (err) {
+      console.error('Fetch Agency Staff Error:', err);
+      setError(err.message || 'Failed to load staff & user directory');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchQuery, roleFilter]);
+
+  useEffect(() => {
+    fetchUsers();
+    window.addEventListener('vktori:entities-changed', fetchUsers);
+    return () => window.removeEventListener('vktori:entities-changed', fetchUsers);
+  }, [fetchUsers]);
+
+  const handleOpenAdd = () => {
+    setFormData({ name: '', email: '', password: '', role: 'lawyer', status: 'active' });
+    setActiveModal('add');
+  };
+
+  const handleOpenEdit = (u) => {
+    setSelectedUser(u);
+    const mainRole = Array.isArray(u.roles) ? u.roles[0] : (u.role || 'lawyer');
+    setFormData({
+      name: u.full_name || u.name || '',
+      email: u.email || '',
+      password: '',
+      role: mainRole.toLowerCase(),
+      status: u.is_active !== false && u.status !== 'inactive' ? 'active' : 'inactive'
+    });
+    setActiveModal('edit');
+  };
+
+  const handleOpenView = (u) => {
+    setSelectedUser(u);
+    setActiveModal('view');
+  };
+
+  const handleOpenDelete = (u) => {
+    setSelectedUser(u);
+    setActiveModal('delete');
+  };
+
+  const handleSaveAdd = async () => {
+    if (!formData.name || !formData.email || !formData.password) {
+      toast(t('enterFullNameEmailPassword') || 'Please fill in full name, email, and password', 'error');
+      return;
+    }
+    try {
+      setLoading(true);
+      await api.users.create({
+        full_name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        roles: [formData.role],
+        is_active: formData.status === 'active'
+      });
+      setActiveModal(null);
+      toast(`Created staff user "${formData.name}"!`, 'success');
+      window.dispatchEvent(new Event('vktori:entities-changed'));
+      fetchUsers();
+    } catch (err) {
+      toast(err.message || 'Failed to create user', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!formData.name || !formData.email) {
+      toast('Please enter full name and email', 'error');
+      return;
+    }
+    try {
+      setLoading(true);
+      const payload = {
+        full_name: formData.name,
+        email: formData.email,
+        role: formData.role,
+        roles: [formData.role],
+        is_active: formData.status === 'active'
+      };
+      if (formData.password) payload.password = formData.password;
+
+      await api.users.update(selectedUser.id, payload);
+      setActiveModal(null);
+      toast(`Updated user "${formData.name}"!`, 'success');
+      window.dispatchEvent(new Event('vktori:entities-changed'));
+      fetchUsers();
+    } catch (err) {
+      toast(err.message || 'Failed to update user', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedUser) return;
+    try {
+      setLoading(true);
+      await api.users.remove(selectedUser.id);
+      setActiveModal(null);
+      toast(`Deactivated user account`, 'success');
+      window.dispatchEvent(new Event('vktori:entities-changed'));
+      fetchUsers();
+    } catch (err) {
+      toast(err.message || 'Failed to delete user', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="animate-fade-in space-y-6 relative">
+      <div className="absolute top-0 right-0 w-96 h-96 bg-[#0057c7]/5 rounded-full blur-[120px] pointer-events-none" />
+
+      <PageHeader 
+        title="Users & Staff Management" 
+        subtitle="Manage agency team members, lawyers, paralegals, partners, and client access"
+      >
+        <button
+          onClick={handleOpenAdd}
+          className="btn btn-primary h-11 px-5 rounded-xl font-800 uppercase tracking-widest text-[11px] shadow-lg shadow-primary-500/20"
+        >
+          + Add Staff / User
+        </button>
+      </PageHeader>
+
+      {/* Filter Bar */}
+      <Card className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="w-full md:w-96 relative">
+          <Input 
+            placeholder="Search by name or email..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Select 
+            value={roleFilter} 
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="w-44"
+          >
+            <option value="all">All Roles</option>
+            <option value="partner">Partner</option>
+            <option value="lawyer">Lawyer</option>
+            <option value="paralegal">Paralegal</option>
+            <option value="client">Client</option>
+          </Select>
+        </div>
+      </Card>
+
+      {/* Main Table */}
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[300px]">
+          <div className="w-8 h-8 border-4 border-[#0057c7] border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : error ? (
+        <Card className="p-6 text-center space-y-3 bg-red-500/10 border border-red-500/20">
+          <p className="text-xs text-red-300">{error}</p>
+          <button onClick={fetchUsers} className="px-3 py-1 bg-red-500/20 text-red-300 rounded text-xs font-700">
+            Retry
+          </button>
+        </Card>
+      ) : (
+        <Card className="space-y-4">
+          {users.length === 0 ? (
+            <div className="py-12 text-center text-xs text-[#8a94a6]">No agency users found.</div>
+          ) : (
+            <Table headers={['User', 'System Role', 'Status', 'Joined Date', 'Actions']}>
+              {users.map((u) => {
+                const userRole = Array.isArray(u.roles) ? u.roles.join(', ') : (u.role || 'lawyer');
+                const displayName = u.full_name || u.name || 'User';
+                const initials = displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                const isActive = u.is_active !== false && u.status !== 'inactive';
+
+                return (
+                  <Tr key={u.id}>
+                    <Td>
+                      <div className="flex items-center gap-3">
+                        <Avatar initials={initials} size="sm" color="#0057c7" />
+                        <div>
+                          <p className="font-700 text-white text-[13.5px]">{displayName}</p>
+                          <p className="text-[11px] text-[#8a94a6]">{u.email}</p>
+                        </div>
+                      </div>
+                    </Td>
+                    <Td>
+                      <span className="px-2.5 py-1 rounded-lg text-[10px] font-800 uppercase tracking-wider bg-white/5 text-[#38bdf8] border border-white/10">
+                        {userRole}
+                      </span>
+                    </Td>
+                    <Td>
+                      <Badge status={isActive ? 'active' : 'inactive'} />
+                    </Td>
+                    <Td className="text-[12px] text-[#8a94a6]">
+                      {u.created_at ? new Date(u.created_at).toLocaleDateString() : 'N/A'}
+                    </Td>
+                    <Td>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleOpenView(u)}
+                          className="px-2.5 py-1 rounded text-[11px] font-700 bg-white/5 hover:bg-white/10 text-white transition-all"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() => handleOpenEdit(u)}
+                          className="px-2.5 py-1 rounded text-[11px] font-700 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 transition-all"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleOpenDelete(u)}
+                          className="px-2.5 py-1 rounded text-[11px] font-700 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 transition-all"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </Td>
+                  </Tr>
+                );
+              })}
+            </Table>
+          )}
+        </Card>
+      )}
+
+      {/* ADD USER MODAL */}
+      {activeModal === 'add' && (
+        <Modal title="Add Agency Staff / User" onClose={() => setActiveModal(null)}>
+          <div className="space-y-4">
+            <Field label="Full Name">
+              <Input 
+                placeholder="e.g. Eleanor Vance" 
+                value={formData.name} 
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} 
+              />
+            </Field>
+            <Field label="Email Address">
+              <Input 
+                type="email"
+                placeholder="e.g. eleanor@lawfirm.com" 
+                value={formData.email} 
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))} 
+              />
+            </Field>
+            <Field label="Temporary Password">
+              <Input 
+                type="password"
+                placeholder="••••••••" 
+                value={formData.password} 
+                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))} 
+              />
+            </Field>
+            <Field label="Role">
+              <Select 
+                value={formData.role} 
+                onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+              >
+                <option value="partner">Partner (Senior Attorney)</option>
+                <option value="lawyer">Lawyer (Associate Attorney)</option>
+                <option value="paralegal">Paralegal (Support Specialist)</option>
+                <option value="client">Client (Portal User)</option>
+              </Select>
+            </Field>
+            <Field label="Account Status">
+              <Select 
+                value={formData.status} 
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive / Deactivated</option>
+              </Select>
+            </Field>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+              <button onClick={() => setActiveModal(null)} className="btn btn-secondary">Cancel</button>
+              <button onClick={handleSaveAdd} className="btn btn-primary">Create User</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* EDIT USER MODAL */}
+      {activeModal === 'edit' && selectedUser && (
+        <Modal title={`Edit User · ${selectedUser.full_name || selectedUser.name}`} onClose={() => setActiveModal(null)}>
+          <div className="space-y-4">
+            <Field label="Full Name">
+              <Input 
+                value={formData.name} 
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} 
+              />
+            </Field>
+            <Field label="Email Address">
+              <Input 
+                type="email"
+                value={formData.email} 
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))} 
+              />
+            </Field>
+            <Field label="Reset Password (Optional)">
+              <Input 
+                type="password"
+                placeholder="Leave blank to keep existing password" 
+                value={formData.password} 
+                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))} 
+              />
+            </Field>
+            <Field label="Role">
+              <Select 
+                value={formData.role} 
+                onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+              >
+                <option value="partner">Partner (Senior Attorney)</option>
+                <option value="lawyer">Lawyer (Associate Attorney)</option>
+                <option value="paralegal">Paralegal (Support Specialist)</option>
+                <option value="client">Client (Portal User)</option>
+              </Select>
+            </Field>
+            <Field label="Account Status">
+              <Select 
+                value={formData.status} 
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive / Deactivated</option>
+              </Select>
+            </Field>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+              <button onClick={() => setActiveModal(null)} className="btn btn-secondary">Cancel</button>
+              <button onClick={handleSaveEdit} className="btn btn-primary">Update User</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* VIEW USER MODAL */}
+      {activeModal === 'view' && selectedUser && (
+        <Modal title={`User Profile · ${selectedUser.full_name || selectedUser.name}`} onClose={() => setActiveModal(null)}>
+          <div className="space-y-4 text-xs text-[#b8c2d1]">
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-4">
+              <Avatar initials={(selectedUser.full_name || selectedUser.name || 'U').substring(0, 2).toUpperCase()} size="lg" color="#0057c7" />
+              <div>
+                <p className="text-base font-800 text-white">{selectedUser.full_name || selectedUser.name}</p>
+                <p className="text-xs text-[#38bdf8]">{selectedUser.email}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
+              <div>
+                <p className="text-[10px] font-800 text-[#8a94a6] uppercase tracking-wider">System Role</p>
+                <p className="text-sm font-700 text-white capitalize">{Array.isArray(selectedUser.roles) ? selectedUser.roles.join(', ') : (selectedUser.role || 'Lawyer')}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-800 text-[#8a94a6] uppercase tracking-wider">Account Status</p>
+                <p className="text-sm font-700 text-emerald-400 capitalize">{selectedUser.is_active !== false && selectedUser.status !== 'inactive' ? 'Active' : 'Inactive'}</p>
+              </div>
+            </div>
+            <div className="flex justify-end pt-4">
+              <button onClick={() => setActiveModal(null)} className="btn btn-secondary">Close</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {activeModal === 'delete' && selectedUser && (
+        <Modal title="Deactivate User Account" onClose={() => setActiveModal(null)}>
+          <div className="space-y-4">
+            <p className="text-xs text-[#8a94a6]">
+              Are you sure you want to deactivate account <strong className="text-white">{selectedUser.full_name || selectedUser.name}</strong> ({selectedUser.email})?
+            </p>
+            <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+              <button onClick={() => setActiveModal(null)} className="btn btn-secondary">Cancel</button>
+              <button onClick={handleConfirmDelete} className="px-4 py-2 rounded-xl bg-red-500 text-white font-800 text-xs hover:bg-red-600 transition-all">Deactivate</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
