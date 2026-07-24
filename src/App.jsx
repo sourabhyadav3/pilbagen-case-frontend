@@ -2377,29 +2377,15 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
         </div>
         <div className="mb-3"><Field label="Email Address" required><Input name="email" type="email" placeholder="jane@pilbagen.se" required /></Field></div>
         <div className="mb-3">
-          <label className="block text-[11px] font-900 text-white/80 uppercase tracking-[0.2em] mb-2 ml-1">Assigned Roles</label>
-          <div className="flex flex-wrap gap-4">
-            <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
-              <input type="checkbox" name="role_admin" value="admin" className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
-              Admin
-            </label>
-            <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
-              <input type="checkbox" name="role_partner" value="partner" className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
-              Partner
-            </label>
-            <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
-              <input type="checkbox" name="role_lawyer" value="lawyer" className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
-              Lawyer
-            </label>
-            <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
-              <input type="checkbox" name="role_paralegal" value="paralegal" className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
-              Paralegal
-            </label>
-            <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
-              <input type="checkbox" name="role_client" value="client" className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
-              Client
-            </label>
-          </div>
+          <Field label="Assigned Role" required>
+            <Select name="assigned_role" defaultValue="lawyer">
+              <option value="admin">Admin</option>
+              <option value="partner">Partner</option>
+              <option value="lawyer">Lawyer</option>
+              <option value="paralegal">Paralegal</option>
+              <option value="client">Client</option>
+            </Select>
+          </Field>
         </div>
         <div className="mb-3">
           <Field label="Specialty (if Lawyer)">
@@ -2431,6 +2417,7 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
         const isCustomSpecialty = data?.practice_focus && !predefinedSpecialties.includes(data.practice_focus);
         const defaultSelectValue = isCustomSpecialty ? 'other' : (data?.practice_focus || '');
         const showCustomField = (formState.specialty || defaultSelectValue) === 'other';
+        const currentRole = (data?.roles && data.roles.length > 0) ? data.roles[0] : (data?.role || 'lawyer');
 
         return (
           <>
@@ -2440,29 +2427,15 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
             </div>
             <div className="mb-3"><Field label="Email Address" required><Input name="email" type="email" defaultValue={data ? data.email : ''} required /></Field></div>
             <div className="mb-3">
-              <label className="block text-[11px] font-900 text-white/80 uppercase tracking-[0.2em] mb-2 ml-1">Assigned Roles</label>
-              <div className="flex flex-wrap gap-4">
-                <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
-                  <input type="checkbox" name="role_admin" value="admin" defaultChecked={data?.roles?.includes('admin')} className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
-                  Admin
-                </label>
-                <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
-                  <input type="checkbox" name="role_partner" value="partner" defaultChecked={data?.roles?.includes('partner')} className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
-                  Partner
-                </label>
-                <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
-                  <input type="checkbox" name="role_lawyer" value="lawyer" defaultChecked={data?.roles?.includes('lawyer')} className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
-                  Lawyer
-                </label>
-                <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
-                  <input type="checkbox" name="role_paralegal" value="paralegal" defaultChecked={data?.roles?.includes('paralegal')} className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
-                  Paralegal
-                </label>
-                <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
-                  <input type="checkbox" name="role_client" value="client" defaultChecked={data?.roles?.includes('client')} className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
-                  Client
-                </label>
-              </div>
+              <Field label="Assigned Role" required>
+                <Select name="assigned_role" defaultValue={currentRole}>
+                  <option value="admin">Admin</option>
+                  <option value="partner">Partner</option>
+                  <option value="lawyer">Lawyer</option>
+                  <option value="paralegal">Paralegal</option>
+                  <option value="client">Client</option>
+                </Select>
+              </Field>
             </div>
             <div className="mb-3">
               <Field label="Specialty (if Lawyer)">
@@ -4232,7 +4205,9 @@ export default function App() {
         <Route path="/partner" element={isLoggedIn && (user?.roles?.includes('partner') || role === 'partner') ? appLayoutEl : <Navigate to="/login" replace />}>
           <Route index element={<Navigate to="/partner/dashboard" replace />} />
           <Route path="dashboard" element={<PartnerDashboard />} />
+          <Route path="clients" element={<LawyerClientsWrapper />} />
           <Route path="my-matters" element={<PartnerMyMatters />} />
+          <Route path="matters" element={<PartnerMyMatters />} />
           <Route path="matters/:id" element={<LawyerMatterDetailWrapper />} />
           <Route path="firm-matters" element={<PartnerFirmMatters />} />
           <Route path="calendar" element={<PartnerCalendar />} />
@@ -4249,7 +4224,9 @@ export default function App() {
         <Route path="/paralegal" element={isLoggedIn && (user?.roles?.includes('paralegal') || role === 'paralegal') ? appLayoutEl : <Navigate to="/login" replace />}>
           <Route index element={<Navigate to="/paralegal/dashboard" replace />} />
           <Route path="dashboard" element={<ParalegalDashboard />} />
+          <Route path="clients" element={<LawyerClientsWrapper />} />
           <Route path="my-matters" element={<ParalegalMyMatters />} />
+          <Route path="matters" element={<ParalegalMyMatters />} />
           <Route path="matters/:id" element={<LawyerMatterDetailWrapper />} />
           <Route path="calendar" element={<ParalegalCalendar />} />
           <Route path="documents" element={<ParalegalDocuments />} />

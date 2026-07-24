@@ -5671,17 +5671,8 @@ export function UsersPage({ toast, openModal, user }) {
     openModal('edit-user', u, async (values) => {
       try {
         const updatedName = `${values.firstName} ${values.lastName}`;
-        const selectedRoles = [];
-        if (values.role_admin) selectedRoles.push('admin');
-        if (values.role_partner) selectedRoles.push('partner');
-        if (values.role_lawyer) selectedRoles.push('lawyer');
-        if (values.role_paralegal) selectedRoles.push('paralegal');
-        if (values.role_client) selectedRoles.push('client');
-
-        if (selectedRoles.length === 0) {
-           toast('You must select at least one role.', 'error');
-           return;
-        }
+        const chosenRole = values.assigned_role || (values.role_admin ? 'admin' : (values.role_partner ? 'partner' : (values.role_lawyer ? 'lawyer' : (values.role_paralegal ? 'paralegal' : (values.role_client ? 'client' : 'lawyer')))));
+        const selectedRoles = [chosenRole];
 
         const specialtyVal = values.specialty === 'other'
           ? (values.custom_specialty || '').trim()
@@ -5724,7 +5715,10 @@ export function UsersPage({ toast, openModal, user }) {
   };
 
   const filteredUsers = users.filter(u => {
-    if (activeTab === 'Staff') return u.roles?.includes('admin') || u.roles?.includes('lawyer');
+    const isTargetSuper = (u.roles || []).some(r => String(r).toLowerCase().includes('super'));
+    const isMeSuper = (user?.roles || []).some(r => String(r).toLowerCase().includes('super')) || String(user?.role).toLowerCase().includes('super');
+    if (!isMeSuper && isTargetSuper) return false;
+    if (activeTab === 'Staff') return u.roles?.includes('admin') || u.roles?.includes('lawyer') || u.roles?.includes('partner') || u.roles?.includes('paralegal');
     if (activeTab === 'Clients') return u.roles?.includes('client');
     return true;
   });
@@ -5754,17 +5748,8 @@ export function UsersPage({ toast, openModal, user }) {
       <PageHeader title={activeTab === 'Staff' ? 'Staff Directory' : (activeTab === 'Clients' ? 'Client Accounts' : 'User Directory')} subtitle="Administrative control and practitioner access management">
         <button onClick={() => openModal('add-user', null, async (values) => {
           try {
-            const selectedRoles = [];
-            if (values.role_admin) selectedRoles.push('admin');
-            if (values.role_partner) selectedRoles.push('partner');
-            if (values.role_lawyer) selectedRoles.push('lawyer');
-            if (values.role_paralegal) selectedRoles.push('paralegal');
-            if (values.role_client) selectedRoles.push('client');
-
-            if (selectedRoles.length === 0) {
-               toast('You must select at least one role.', 'error');
-               return;
-            }
+            const chosenRole = values.assigned_role || (values.role_admin ? 'admin' : (values.role_partner ? 'partner' : (values.role_lawyer ? 'lawyer' : (values.role_paralegal ? 'paralegal' : (values.role_client ? 'client' : 'lawyer')))));
+            const selectedRoles = [chosenRole];
 
             await api.users.create({
               full_name: `${values.firstName} ${values.lastName}`,
