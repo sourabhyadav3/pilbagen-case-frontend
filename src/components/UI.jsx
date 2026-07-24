@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { useLanguage } from '../context/LanguageContext';
 
 export function downloadFile(filename, content = "Dummy legal document content.") {
@@ -220,26 +221,37 @@ export function Modal({ title, onClose, children, footer, wide }) {
   useEffect(() => {
     const handler = e => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
+    // Lock background scroll
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handler);
+      document.body.style.overflow = prev;
+    };
   }, [onClose]);
 
-  return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-xl" />
-      <div className={`relative bg-[#1a2233] border border-white/10 rounded-[2rem] shadow-[0_30px_100px_rgba(0,0,0,0.6)] w-full ${wide ? 'max-w-3xl' : 'max-w-lg'} animate-slide-up max-h-[90vh] flex flex-col overflow-hidden`}
+  return ReactDOM.createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 animate-fade-in" onClick={onClose}>
+      <div className="fixed inset-0 bg-black/75 backdrop-blur-sm" />
+      <div className={`relative bg-[#1a2233] border border-white/10 rounded-2xl sm:rounded-[2rem] shadow-[0_30px_100px_rgba(0,0,0,0.7)] w-full ${wide ? 'max-w-3xl' : 'max-w-lg'} animate-slide-up flex flex-col max-h-[88vh]`}
         onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-white/[0.02]">
-          <h3 className="text-xl font-800 text-white font-display tracking-tight">{title}</h3>
-          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-xl text-[#8a94a6] hover:bg-white/10 hover:text-white transition-all">
+        {/* Header - never scrolls */}
+        <div className="flex items-center justify-between px-6 sm:px-8 py-4 sm:py-5 border-b border-white/5 bg-white/[0.02] rounded-t-2xl sm:rounded-t-[2rem] flex-shrink-0">
+          <h3 className="text-lg sm:text-xl font-800 text-white font-display tracking-tight">{title}</h3>
+          <button onClick={onClose} className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl text-[#8a94a6] hover:bg-white/10 hover:text-white transition-all flex-shrink-0">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
         </div>
-        <div className="overflow-y-auto p-8 flex-1 custom-scrollbar">{children}</div>
-        {footer && <div className="flex justify-end gap-3 px-8 py-5 border-t border-white/5 bg-black/20 flex-wrap">{footer}</div>}
+        {/* Body - only this scrolls */}
+        <div className="overflow-y-auto flex-1 min-h-0 p-6 sm:p-8 custom-scrollbar">{children}</div>
+        {/* Footer - never scrolls */}
+        {footer && <div className="flex justify-end gap-3 px-6 sm:px-8 py-4 border-t border-white/5 bg-black/20 flex-wrap rounded-b-2xl sm:rounded-b-[2rem] flex-shrink-0">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
+
 
 // ── Form Fields ───────────────────────────────────────────
 export function Field({ label, required, children }) {

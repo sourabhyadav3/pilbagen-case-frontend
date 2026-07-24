@@ -70,7 +70,7 @@ function LoginScreen({ onLogin }) {
       targetEmail === 'superadmin@vktori.com'
     ) {
       try {
-        const response = await api.auth.login({ email: 'superadmin@vktori.com', password: targetPass || '1234' });
+        const response = await api.auth.login({ email: 'superadmin@pilbagen.se', password: targetPass || '1234' });
         const payload = response?.data;
         const realToken = payload?.token ?? response?.token;
         const realUser = payload?.user ?? response?.user;
@@ -83,9 +83,9 @@ function LoginScreen({ onLogin }) {
       return;
     }
 
-    if (targetEmail === 'partner@vktori.com') {
+    if (targetEmail === 'partner@pilbagen.se' || targetEmail === 'partner@vktori.com') {
       try {
-        const response = await api.auth.login({ email: 'admin@vktori.com', password: targetPass || '1234' });
+        const response = await api.auth.login({ email: 'admin@pilbagen.se', password: targetPass || '1234' });
         const payload = response?.data;
         const realToken = payload?.token ?? response?.token;
         const realUser = payload?.user ?? response?.user;
@@ -103,9 +103,9 @@ function LoginScreen({ onLogin }) {
       return;
     }
 
-    if (targetEmail === 'paralegal@vktori.com') {
+    if (targetEmail === 'paralegal@pilbagen.se' || targetEmail === 'paralegal@vktori.com') {
       try {
-        const response = await api.auth.login({ email: 'lawyer@vktori.com', password: targetPass || '1234' });
+        const response = await api.auth.login({ email: 'lawyer@pilbagen.se', password: targetPass || '1234' });
         const payload = response?.data;
         const realToken = payload?.token ?? response?.token;
         const realUser = payload?.user ?? response?.user;
@@ -126,9 +126,13 @@ function LoginScreen({ onLogin }) {
     try {
       // Map pilbagen.se alias emails to seeded backend user accounts if needed
       let backendEmail = targetEmail;
-      if (targetEmail === 'admin@pilbagen.se') backendEmail = 'admin@vktori.com';
-      if (targetEmail === 'lawyer@pilbagen.se') backendEmail = 'lawyer@vktori.com';
-      if (targetEmail === 'client@pilbagen.se') backendEmail = 'client@vktori.com';
+      if (targetEmail === 'admin@pilbagen.se' || targetEmail === 'admin@vktori.com' || targetEmail === 'admin@pilbagan.com') {
+        backendEmail = 'admin@pilbagen.se';
+      } else if (targetEmail === 'lawyer@pilbagen.se' || targetEmail === 'lawyer@vktori.com') {
+        backendEmail = 'lawyer@pilbagen.se';
+      } else if (targetEmail === 'client@pilbagen.se' || targetEmail === 'client@vktori.com') {
+        backendEmail = 'client@pilbagen.se';
+      }
 
       const response = await api.auth.login({ email: backendEmail, password: targetPass });
       const payload = response?.data;
@@ -148,12 +152,12 @@ function LoginScreen({ onLogin }) {
   const [activeDemoRole, setActiveDemoRole] = useState(null);
 
   const DEMO_INFO = {
-    super_admin: { label: 'Super Admin', email: 'superadmin@vktori.com', pass: '1234', icon: '👑', color: 'border-purple-500/40 bg-purple-500/10 text-purple-300' },
-    admin: { label: 'Agency Admin', email: 'admin@vktori.com', pass: '1234', icon: '🛡️', color: 'border-blue-500/40 bg-blue-500/10 text-blue-300' },
-    partner: { label: 'Partner', email: 'partner@vktori.com', pass: '1234', icon: '🤝', color: 'border-sky-500/40 bg-sky-500/10 text-sky-300' },
-    lawyer: { label: 'Lawyer', email: 'lawyer@vktori.com', pass: '1234', icon: '⚖️', color: 'border-[#0057c7]/40 bg-[#0057c7]/10 text-[#38bdf8]' },
-    paralegal: { label: 'Paralegal', email: 'paralegal@vktori.com', pass: '1234', icon: '📋', color: 'border-teal-500/40 bg-teal-500/10 text-teal-300' },
-    client: { label: 'Client', email: 'client@vktori.com', pass: '1234', icon: '👤', color: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' },
+    super_admin: { label: 'Super Admin', email: 'superadmin@pilbagen.se', pass: '1234', icon: '👑', color: 'border-purple-500/40 bg-purple-500/10 text-purple-300' },
+    admin: { label: 'Agency Admin', email: 'admin@pilbagen.se', pass: '1234', icon: '🛡️', color: 'border-blue-500/40 bg-blue-500/10 text-blue-300' },
+    partner: { label: 'Partner', email: 'partner@pilbagen.se', pass: '1234', icon: '🤝', color: 'border-sky-500/40 bg-sky-500/10 text-sky-300' },
+    lawyer: { label: 'Lawyer', email: 'lawyer@pilbagen.se', pass: '1234', icon: '⚖️', color: 'border-[#0057c7]/40 bg-[#0057c7]/10 text-[#38bdf8]' },
+    paralegal: { label: 'Paralegal', email: 'paralegal@pilbagen.se', pass: '1234', icon: '📋', color: 'border-teal-500/40 bg-teal-500/10 text-teal-300' },
+    client: { label: 'Client', email: 'client@pilbagen.se', pass: '1234', icon: '👤', color: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' },
   };
 
   const handleDemoLogin = (roleKey) => {
@@ -2374,18 +2378,26 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
         <div className="mb-3"><Field label="Email Address" required><Input name="email" type="email" placeholder="jane@pilbagen.se" required /></Field></div>
         <div className="mb-3">
           <label className="block text-[11px] font-900 text-white/80 uppercase tracking-[0.2em] mb-2 ml-1">Assigned Roles</label>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
               <input type="checkbox" name="role_admin" value="admin" className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
               Admin
+            </label>
+            <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
+              <input type="checkbox" name="role_partner" value="partner" className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
+              Partner
             </label>
             <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
               <input type="checkbox" name="role_lawyer" value="lawyer" className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
               Lawyer
             </label>
             <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
+              <input type="checkbox" name="role_paralegal" value="paralegal" className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
+              Paralegal
+            </label>
+            <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
               <input type="checkbox" name="role_client" value="client" className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
-              Party
+              Client
             </label>
           </div>
         </div>
@@ -2429,18 +2441,26 @@ function AppModal({ type, data, onClose, toast, onSave, navigate, role, user, lo
             <div className="mb-3"><Field label="Email Address" required><Input name="email" type="email" defaultValue={data ? data.email : ''} required /></Field></div>
             <div className="mb-3">
               <label className="block text-[11px] font-900 text-white/80 uppercase tracking-[0.2em] mb-2 ml-1">Assigned Roles</label>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
                   <input type="checkbox" name="role_admin" value="admin" defaultChecked={data?.roles?.includes('admin')} className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
                   Admin
+                </label>
+                <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
+                  <input type="checkbox" name="role_partner" value="partner" defaultChecked={data?.roles?.includes('partner')} className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
+                  Partner
                 </label>
                 <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
                   <input type="checkbox" name="role_lawyer" value="lawyer" defaultChecked={data?.roles?.includes('lawyer')} className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
                   Lawyer
                 </label>
                 <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
+                  <input type="checkbox" name="role_paralegal" value="paralegal" defaultChecked={data?.roles?.includes('paralegal')} className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
+                  Paralegal
+                </label>
+                <label className="flex items-center gap-2 text-[13px] text-white/90 font-600 cursor-pointer">
                   <input type="checkbox" name="role_client" value="client" defaultChecked={data?.roles?.includes('client')} className="w-4 h-4 rounded bg-black/20 text-[#0057c7] border-white/10 focus:ring-[#0057c7]/50" />
-                  Party
+                  Client
                 </label>
               </div>
             </div>

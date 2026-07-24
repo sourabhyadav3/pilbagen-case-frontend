@@ -262,28 +262,7 @@ export function AdminDashboard({ navigate, toast, openModal }) {
       const res = await api.dashboard.admin();
       setDash(res.data);
     } catch (e) {
-      const activeRole = localStorage.getItem('vktori_role');
-      if (activeRole === 'partner' || activeRole === 'lawyer') {
-        setDash({
-          counts: { totalClients: 24, openMatters: 18, upcomingDeadlineCount: 4 },
-          revenue: { monthLabel: 'July 2026', totalFormatted: '$88,400' },
-          mattersByStatus: [
-            { status: 'in_progress', count: 12 },
-            { status: 'review', count: 4 },
-            { status: 'closed', count: 2 },
-          ],
-          mattersByPracticeArea: [
-            { practice_area: 'Corporate Litigation', _count: 8 },
-            { practice_area: 'Mergers & Acquisitions', _count: 6 },
-            { practice_area: 'Intellectual Property', _count: 4 },
-          ],
-          recentLeads: [],
-          recentActivities: [],
-        });
-        setError('');
-      } else {
-        setError(e.message || 'Failed to load dashboard');
-      }
+      setError(e.message || 'Failed to load dashboard');
     } finally {
       setLoading(false);
     }
@@ -5694,7 +5673,9 @@ export function UsersPage({ toast, openModal, user }) {
         const updatedName = `${values.firstName} ${values.lastName}`;
         const selectedRoles = [];
         if (values.role_admin) selectedRoles.push('admin');
+        if (values.role_partner) selectedRoles.push('partner');
         if (values.role_lawyer) selectedRoles.push('lawyer');
+        if (values.role_paralegal) selectedRoles.push('paralegal');
         if (values.role_client) selectedRoles.push('client');
 
         if (selectedRoles.length === 0) {
@@ -5775,7 +5756,9 @@ export function UsersPage({ toast, openModal, user }) {
           try {
             const selectedRoles = [];
             if (values.role_admin) selectedRoles.push('admin');
+            if (values.role_partner) selectedRoles.push('partner');
             if (values.role_lawyer) selectedRoles.push('lawyer');
+            if (values.role_paralegal) selectedRoles.push('paralegal');
             if (values.role_client) selectedRoles.push('client');
 
             if (selectedRoles.length === 0) {

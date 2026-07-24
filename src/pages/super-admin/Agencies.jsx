@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PageHeader, Table, Tr, Td, Badge, Modal, Field, Input, Select, EmptyState, useToast } from '../../components/UI.jsx';
 import { useLanguage } from '../../context/LanguageContext';
 import api from '../../services/api';
@@ -123,14 +123,14 @@ export default function SuperAdminAgencies() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 sm:space-y-8 animate-fade-in pb-12">
       <PageHeader 
         title={t('agenciesManagement')} 
         subtitle={t('manageLawFirmAgenciesSubscriptionsOffices')}
       >
         <button 
           onClick={handleOpenAdd}
-          className="px-5 py-2.5 rounded-xl bg-[#0057c7] text-white font-700 text-[14px] hover:bg-[#0057c7]/80 shadow-lg shadow-[#0057c7]/20 flex items-center gap-2 transition-all"
+          className="w-full sm:w-auto justify-center px-5 py-2.5 rounded-xl bg-[#0057c7] text-white font-700 text-[14px] hover:bg-[#0057c7]/80 shadow-lg shadow-[#0057c7]/20 flex items-center gap-2 transition-all"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M12 4v16m8-8H4" /></svg>
           {t('addAgency')}
@@ -138,16 +138,16 @@ export default function SuperAdminAgencies() {
       </PageHeader>
 
       {/* Filter Toolbar */}
-      <div className="flex flex-col sm:flex-row items-center gap-3 bg-[#1a2233]/40 p-4 rounded-2xl border border-white/5 backdrop-blur-xl">
-        <div className="w-full sm:flex-1 min-w-[180px]">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 bg-[#1a2233]/40 p-3 sm:p-4 rounded-2xl border border-white/5 backdrop-blur-xl">
+        <div className="w-full md:flex-1">
           <Input 
             placeholder={t('searchAgenciesPlaceholder')} 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="flex-1 sm:w-44">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full md:w-auto">
+          <div className="w-full sm:w-44">
             <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
               <option value="all">{t('allStatuses')}</option>
               <option value="active">{t('active')}</option>
@@ -155,7 +155,7 @@ export default function SuperAdminAgencies() {
               <option value="inactive">{t('inactive')}</option>
             </Select>
           </div>
-          <div className="flex-1 sm:w-44">
+          <div className="w-full sm:w-44">
             <Select value={planFilter} onChange={(e) => setPlanFilter(e.target.value)}>
               <option value="all">{t('allPlans')}</option>
               <option value="basic">{t('basic')}</option>
@@ -166,7 +166,7 @@ export default function SuperAdminAgencies() {
         </div>
       </div>
 
-      {/* Table Section */}
+      {/* Content Section */}
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center gap-4">
           <div className="w-10 h-10 border-4 border-[#0057c7] border-t-transparent rounded-full animate-spin" />
@@ -179,48 +179,102 @@ export default function SuperAdminAgencies() {
           desc={t('noLawAgenciesMatchFilter')} 
         />
       ) : (
-        <Table headers={[t('Agency Name'), t('Owner Contact'), t('Subscription Plan'), t('Offices / Users'), t('Created Date'), t('status'), t('actions') || 'Actions']}>
-          {agencies.map((agency) => (
-            <Tr key={agency.id}>
-              <Td className="font-700 text-white">
-                <div>{agency.name}</div>
-                <div className="text-[11px] text-[#8a94a6] font-500">AGC-{agency.id}</div>
-              </Td>
-              <Td>
-                <div className="text-white font-600">{agency.owner}</div>
-                <div className="text-[12px] text-[#8a94a6]">{agency.email}</div>
-              </Td>
-              <Td>
-                <span className="px-2.5 py-1 rounded-lg text-[11px] font-800 uppercase tracking-wider bg-[#0057c7]/10 text-[#38bdf8] border border-[#0057c7]/20">
-                  {t(agency.plan)}
-                </span>
-              </Td>
-              <Td>
-                <div className="text-white font-600">{agency.officesCount} {t('officesSuf')}</div>
-                <div className="text-[12px] text-[#8a94a6]">{agency.usersCount} {t('usersSuf')}</div>
-              </Td>
-              <Td className="text-[13px] text-[#8a94a6]">
-                {agency.createdAt}
-              </Td>
-              <Td>
-                <Badge status={agency.status} />
-              </Td>
-              <Td>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => handleOpenView(agency)} className="px-3 py-1.5 rounded-lg bg-white/5 text-white hover:bg-white/10 text-[12px] font-700 transition-all">
+        <>
+          {/* Desktop & Tablet Table */}
+          <div className="hidden md:block w-full overflow-x-auto rounded-2xl border border-white/5">
+            <Table headers={[t('Agency Name'), t('Owner Contact'), t('Subscription Plan'), t('Offices / Users'), t('Created Date'), t('status'), t('actions') || 'Actions']}>
+              {agencies.map((agency) => (
+                <Tr key={agency.id}>
+                  <Td className="font-700 text-white">
+                    <div>{agency.name}</div>
+                    <div className="text-[11px] text-[#8a94a6] font-500">AGC-{agency.id}</div>
+                  </Td>
+                  <Td>
+                    <div className="text-white font-600">{agency.owner}</div>
+                    <div className="text-[12px] text-[#8a94a6]">{agency.email}</div>
+                  </Td>
+                  <Td>
+                    <span className="px-2.5 py-1 rounded-lg text-[11px] font-800 uppercase tracking-wider bg-[#0057c7]/10 text-[#38bdf8] border border-[#0057c7]/20 whitespace-nowrap">
+                      {t(agency.plan)}
+                    </span>
+                  </Td>
+                  <Td>
+                    <div className="text-white font-600">{agency.officesCount} {t('officesSuf')}</div>
+                    <div className="text-[12px] text-[#8a94a6]">{agency.usersCount} {t('usersSuf')}</div>
+                  </Td>
+                  <Td className="text-[13px] text-[#8a94a6] whitespace-nowrap">
+                    {agency.createdAt}
+                  </Td>
+                  <Td>
+                    <Badge status={agency.status} />
+                  </Td>
+                  <Td>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => handleOpenView(agency)} className="px-3 py-1.5 rounded-lg bg-white/5 text-white hover:bg-white/10 text-[12px] font-700 transition-all">
+                        {t('view')}
+                      </button>
+                      <button onClick={() => handleOpenEdit(agency)} className="px-3 py-1.5 rounded-lg bg-[#0057c7]/20 text-[#38bdf8] hover:bg-[#0057c7]/30 text-[12px] font-700 transition-all">
+                        {t('edit')}
+                      </button>
+                      <button onClick={() => handleOpenDelete(agency)} className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 text-[12px] font-700 transition-all">
+                        {t('delete')}
+                      </button>
+                    </div>
+                  </Td>
+                </Tr>
+              ))}
+            </Table>
+          </div>
+
+          {/* Mobile Responsive Cards View */}
+          <div className="grid grid-cols-1 gap-4 md:hidden">
+            {agencies.map((agency) => (
+              <div key={agency.id} className="p-4 rounded-2xl bg-[#1a2233]/60 border border-white/5 space-y-3 backdrop-blur-xl">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h4 className="font-800 text-white text-[15px]">{agency.name}</h4>
+                    <p className="text-[11px] text-[#8a94a6] font-600">AGC-{agency.id}</p>
+                  </div>
+                  <Badge status={agency.status} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 py-2 border-y border-white/5 text-[12px]">
+                  <div>
+                    <p className="text-[10px] text-[#8a94a6] uppercase font-700">{t('owner') || 'Owner'}</p>
+                    <p className="text-white font-600 truncate">{agency.owner}</p>
+                    <p className="text-[11px] text-[#8a94a6] truncate">{agency.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-[#8a94a6] uppercase font-700">{t('Subscription Plan') || 'Plan'}</p>
+                    <span className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-800 uppercase tracking-wider bg-[#0057c7]/10 text-[#38bdf8] border border-[#0057c7]/20">
+                      {t(agency.plan)}
+                    </span>
+                  </div>
+                  <div className="mt-1">
+                    <p className="text-[10px] text-[#8a94a6] uppercase font-700">{t('Offices / Users') || 'Offices / Users'}</p>
+                    <p className="text-white font-600">{agency.officesCount} {t('officesSuf')} • {agency.usersCount} {t('usersSuf')}</p>
+                  </div>
+                  <div className="mt-1">
+                    <p className="text-[10px] text-[#8a94a6] uppercase font-700">{t('Created Date') || 'Created'}</p>
+                    <p className="text-[#8a94a6] font-500">{agency.createdAt}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button onClick={() => handleOpenView(agency)} className="flex-1 py-2 rounded-xl bg-white/5 text-white hover:bg-white/10 text-[12px] font-700 text-center transition-all">
                     {t('view')}
                   </button>
-                  <button onClick={() => handleOpenEdit(agency)} className="px-3 py-1.5 rounded-lg bg-[#0057c7]/20 text-[#38bdf8] hover:bg-[#0057c7]/30 text-[12px] font-700 transition-all">
+                  <button onClick={() => handleOpenEdit(agency)} className="flex-1 py-2 rounded-xl bg-[#0057c7]/20 text-[#38bdf8] hover:bg-[#0057c7]/30 text-[12px] font-700 text-center transition-all">
                     {t('edit')}
                   </button>
-                  <button onClick={() => handleOpenDelete(agency)} className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 text-[12px] font-700 transition-all">
+                  <button onClick={() => handleOpenDelete(agency)} className="py-2 px-3 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 text-[12px] font-700 text-center transition-all">
                     {t('delete')}
                   </button>
                 </div>
-              </Td>
-            </Tr>
-          ))}
-        </Table>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* MODALS */}
@@ -249,7 +303,7 @@ export default function SuperAdminAgencies() {
             <Field label={t('phoneNumber') || 'Phone Number'}>
               <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+1 (555) 000-0000" />
             </Field>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label={t('Subscription Plan') || 'Subscription Plan'}>
                 <Select value={formData.plan} onChange={(e) => setFormData({ ...formData, plan: e.target.value })}>
                   <option value="Basic">{t('basic')}</option>
@@ -291,7 +345,7 @@ export default function SuperAdminAgencies() {
             <Field label={t('ownerEmail') || 'Owner Email'} required>
               <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
             </Field>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label={t('Subscription Plan') || 'Subscription Plan'}>
                 <Select value={formData.plan} onChange={(e) => setFormData({ ...formData, plan: e.target.value })}>
                   <option value="Basic">{t('basic')}</option>
@@ -319,7 +373,7 @@ export default function SuperAdminAgencies() {
           footer={<button onClick={() => setActiveModal(null)} className="px-5 py-2 rounded-xl bg-[#0057c7] text-white text-[13px] font-700">{t('close')}</button>}
         >
           <div className="space-y-4 text-[14px]">
-            <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-white/5 border border-white/5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-5 rounded-xl bg-white/5 border border-white/5">
               <div>
                 <p className="text-[11px] text-[#8a94a6] uppercase font-700">{t('agencyId')}</p>
                 <p className="text-white font-800">{selectedAgency.id}</p>
@@ -334,7 +388,7 @@ export default function SuperAdminAgencies() {
               </div>
               <div>
                 <p className="text-[11px] text-[#8a94a6] uppercase font-700">{t('email')}</p>
-                <p className="text-white font-600">{selectedAgency.email}</p>
+                <p className="text-white font-600 truncate">{selectedAgency.email}</p>
               </div>
               <div>
                 <p className="text-[11px] text-[#8a94a6] uppercase font-700">{t('officesCount')}</p>

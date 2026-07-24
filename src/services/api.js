@@ -558,5 +558,9 @@ export default {
     getSettings: () => request('/super-admin/settings'),
     updateSettings: (data) => request('/super-admin/settings', { method: 'PUT', body: data }),
   },
+  backOffice: {
+    get: () => request('/dashboards/back-office'),
+    addVendor: (data) => request('/dashboards/back-office/vendors', { method: 'POST', body: data }),
+  },
 };
 

@@ -1,44 +1,80 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PageHeader, StatCard, Card, Table, Tr, Td, Badge, Modal, Field, Input, Select, EmptyState, useToast } from '../../components/UI.jsx';
 import { useLanguage } from '../../context/LanguageContext';
-
-const initialVendors = [
-  { id: 'VND-101', name: 'LexisNexis Research', category: 'Legal Database', monthlyCost: '$1,850', status: 'active', contact: 'support@lexisnexis.com' },
-  { id: 'VND-102', name: 'DocuSign Enterprise', category: 'E-Signature', monthlyCost: '$650', status: 'active', contact: 'billing@docusign.com' },
-  { id: 'VND-103', name: 'Titan Encrypted Email', category: 'Communications', monthlyCost: '$420', status: 'active', contact: 'sales@titan.email' },
-  { id: 'VND-104', name: 'CourtReporter Express', category: 'Stenography Services', monthlyCost: '$2,100', status: 'active', contact: 'dispatch@courtreporter.express' },
-];
+import api from '../../services/api.js';
 
 export function AdminBackOfficePage() {
   const { t } = useLanguage();
-  const [vendors, setVendors] = useState(initialVendors);
+  const [vendors, setVendors] = useState([]);
+  const [offices, setOffices] = useState([]);
+  const [metrics, setMetrics] = useState({
+    monthlyExpenses: '$0',
+    locationsCount: '0 Locations',
+    staffCount: '0 Staff',
+    overhead: '0%'
+  });
+  const [loading, setLoading] = useState(true);
   const [activeModal, setActiveModal] = useState(null);
   const [formData, setFormData] = useState({ name: '', category: 'Legal Database', monthlyCost: '', contact: '' });
+  const [submitting, setSubmitting] = useState(false);
 
   const { toast } = useToast();
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const res = await api.backOffice.get();
+      if (res && res.data) {
+        setVendors(res.data.vendors || []);
+        setOffices(res.data.offices || []);
+        if (res.data.metrics) {
+          setMetrics(res.data.metrics);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load back office data:', e);
+      toast(e.message || 'Failed to load Back Office data', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const handleOpenAdd = () => {
     setFormData({ name: '', category: 'Legal Database', monthlyCost: '', contact: '' });
     setActiveModal('add');
   };
 
-  const handleSaveAdd = () => {
+  const handleSaveAdd = async () => {
     if (!formData.name || !formData.monthlyCost) {
-      toast(t('enterVendorNameCost'), 'error');
+      toast(t('enterVendorNameCost') || 'Please enter vendor name and monthly cost', 'error');
       return;
     }
-    const newVendor = {
-      id: `VND-${vendors.length + 101}`,
-      name: formData.name,
-      category: formData.category,
-      monthlyCost: formData.monthlyCost.startsWith('$') ? formData.monthlyCost : `$${formData.monthlyCost}`,
-      status: 'active',
-      contact: formData.contact || 'contact@vendor.com',
-    };
-    setVendors([newVendor, ...vendors]);
-    setActiveModal(null);
-    toast(t('vendor') + ` "${formData.name}" ` + t('addedToBackOffice'), 'success');
+    try {
+      setSubmitting(true);
+      const res = await api.backOffice.addVendor(formData);
+      if (res && res.data) {
+        toast((t('vendor') || 'Vendor') + ` "${formData.name}" ` + (t('addedToBackOffice') || 'added to Back Office'), 'success');
+        setActiveModal(null);
+        await loadData();
+      }
+    } catch (err) {
+      toast(err.message || 'Failed to add vendor contract', 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-[#0057c7] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -57,10 +93,10 @@ export function AdminBackOfficePage() {
 
       {/* Operational Summary Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard label="monthlyVendorExpenses" value="$5,020" change="-3.2%" icon={<svg className="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
-        <StatCard label="activeBranchOffices" value="2 Locations" change="Optimal" icon={<svg className="w-6 h-6 text-[#38bdf8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M3 21h18M3 7v14M21 7v14M6 10h4M6 14h4M6 18h4M14 10h4M14 14h4M14 18h4M9 3h6v4H9z" /></svg>} />
-        <StatCard label="activeStaffMembers" value="28 Staff" change="+2" icon={<svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>} />
-        <StatCard label="operationalOverhead" value="12.4%" change="-1.1%" icon={<svg className="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 012 2h2a2 2 0 012-2" /></svg>} />
+        <StatCard label="monthlyVendorExpenses" value={metrics.monthlyExpenses} change="Monthly" icon={<svg className="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
+        <StatCard label="activeBranchOffices" value={metrics.locationsCount} change="Active" icon={<svg className="w-6 h-6 text-[#38bdf8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M3 21h18M3 7v14M21 7v14M6 10h4M6 14h4M6 18h4M14 10h4M14 14h4M14 18h4M9 3h6v4H9z" /></svg>} />
+        <StatCard label="activeStaffMembers" value={metrics.staffCount} change="Agency Staff" icon={<svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>} />
+        <StatCard label="operationalOverhead" value={metrics.overhead} change="Est. Overhead" icon={<svg className="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 012 2h2a2 2 0 012-2" /></svg>} />
       </div>
 
       {/* Office Locations & Vendor Agreements */}
@@ -69,51 +105,60 @@ export function AdminBackOfficePage() {
         <Card className="space-y-4">
           <h3 className="text-lg font-800 text-white font-display border-b border-white/5 pb-3">{t('officeLocations')}</h3>
           <div className="space-y-3">
-            <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-white font-700">{t('newYorkHeadquarters')}</span>
-                <Badge status="active" />
-              </div>
-              <p className="text-[12px] text-[#8a94a6]">140 Broadway, Floor 32, New York, NY</p>
-              <p className="text-[11px] text-[#38bdf8] font-700">18 {t('staffMembers')} • 142 {t('activeMatters')}</p>
-            </div>
-
-            <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-white font-700">{t('chicagoBranch')}</span>
-                <Badge status="active" />
-              </div>
-              <p className="text-[12px] text-[#8a94a6]">300 N LaSalle Dr, Chicago, IL</p>
-              <p className="text-[11px] text-[#38bdf8] font-700">10 {t('staffMembers')} • 88 {t('activeMatters')}</p>
-            </div>
+            {offices.length > 0 ? (
+              offices.map((office) => (
+                <div key={office.id} className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-white font-700">{office.name}</span>
+                    <Badge status={office.status || 'active'} />
+                  </div>
+                  <p className="text-[12px] text-[#8a94a6]">{office.address}</p>
+                  <p className="text-[11px] text-[#38bdf8] font-700">{office.staffCount} {t('staffMembers') || 'staff members'} • {office.mattersCount} {t('activeMatters') || 'active matters'}</p>
+                </div>
+              ))
+            ) : (
+              <EmptyState title="No office locations" description="No office locations created for this agency." />
+            )}
           </div>
         </Card>
 
         {/* Vendor Agreements Table (2 cols) */}
         <div className="lg:col-span-2 space-y-4">
           <h3 className="text-lg font-800 text-white font-display">{t('activeVendorContracts')}</h3>
-          <Table headers={[t('Vendor Name'), t('Category'), t('Monthly Fee'), t('Contact'), t('status')]}>
-            {vendors.map((vendor) => (
-              <Tr key={vendor.id}>
-                <Td className="font-700 text-white">
-                  <div>{vendor.name}</div>
-                  <div className="text-[11px] text-[#8a94a6]">{vendor.id}</div>
-                </Td>
-                <Td className="text-[13px] text-purple-300 font-600">
-                  {t(vendor.category)}
-                </Td>
-                <Td className="font-800 text-emerald-400">
-                  {vendor.monthlyCost}
-                </Td>
-                <Td className="text-[12px] text-[#8a94a6]">
-                  {vendor.contact}
-                </Td>
-                <Td>
-                  <Badge status={vendor.status} />
-                </Td>
-              </Tr>
-            ))}
-          </Table>
+          {vendors.length > 0 ? (
+            <Table headers={[t('Vendor Name') || 'Vendor Name', t('Category') || 'Category', t('Monthly Fee') || 'Monthly Fee', t('Contact') || 'Contact', t('status') || 'Status']}>
+              {vendors.map((vendor) => (
+                <Tr key={vendor.id}>
+                  <Td className="font-700 text-white">
+                    <div>{vendor.name}</div>
+                    <div className="text-[11px] text-[#8a94a6]">{vendor.id}</div>
+                  </Td>
+                  <Td className="text-[13px] text-purple-300 font-600">
+                    {t(vendor.category) || vendor.category}
+                  </Td>
+                  <Td className="font-800 text-emerald-400">
+                    {vendor.monthlyCost}
+                  </Td>
+                  <Td className="text-[12px] text-[#8a94a6]">
+                    {vendor.contact}
+                  </Td>
+                  <Td>
+                    <Badge status={vendor.status || 'active'} />
+                  </Td>
+                </Tr>
+              ))}
+            </Table>
+          ) : (
+            <EmptyState 
+              title="No Vendor Contracts Added" 
+              description="No active vendor agreements for this agency. Click 'Add Vendor Agreement' above to add your first contract." 
+              action={
+                <button onClick={handleOpenAdd} className="px-4 py-2 rounded-xl bg-[#0057c7] text-white text-[13px] font-700">
+                  {t('addVendorAgreement') || 'Add Vendor Agreement'}
+                </button>
+              }
+            />
+          )}
         </div>
       </div>
 
@@ -122,8 +167,10 @@ export function AdminBackOfficePage() {
         <Modal title={t('addVendorContract')} onClose={() => setActiveModal(null)}
           footer={
             <>
-              <button onClick={() => setActiveModal(null)} className="px-4 py-2 rounded-xl bg-white/5 text-white text-[13px] font-700">{t('cancel')}</button>
-              <button onClick={handleSaveAdd} className="px-5 py-2 rounded-xl bg-[#0057c7] text-white text-[13px] font-700">{t('saveContract')}</button>
+              <button onClick={() => setActiveModal(null)} disabled={submitting} className="px-4 py-2 rounded-xl bg-white/5 text-white text-[13px] font-700">{t('cancel')}</button>
+              <button onClick={handleSaveAdd} disabled={submitting} className="px-5 py-2 rounded-xl bg-[#0057c7] text-white text-[13px] font-700">
+                {submitting ? 'Saving...' : t('saveContract')}
+              </button>
             </>
           }
         >

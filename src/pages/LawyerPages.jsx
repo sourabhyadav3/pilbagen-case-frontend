@@ -47,35 +47,7 @@ export function LawyerDashboard({ navigate, toast, openModal }) {
         if (timerRes.data) setActiveTimer(timerRes.data);
       } catch (e) {
         if (!cancelled) {
-          const activeRole = localStorage.getItem('vktori_role');
-          if (activeRole === 'partner') {
-            setDashboard({
-              counters: {
-                active_matters: 18,
-                total_clients: 24,
-                hours_logged_this_month: 142.5,
-                pending_tasks: 5,
-                billable_revenue: '$88,400',
-              },
-              assignedMatters: [
-                { id: 101, matter_number: 'MAT-2026-101', title: 'Vanguard Corp vs. Sterling Tech', status: 'in_progress' },
-                { id: 102, matter_number: 'MAT-2026-102', title: 'Apex Global Acquisition Agreement', status: 'in_progress' },
-                { id: 103, matter_number: 'MAT-2026-103', title: 'Beacon Civil Indemnity Claim', status: 'review' },
-              ]
-            });
-            setMatters([
-              { id: 101, matter_number: 'MAT-2026-101', title: 'Vanguard Corp vs. Sterling Tech', client: { full_name: 'David Sterling' }, status: 'in_progress', practice_area: 'Corporate Litigation', billing_type: 'hourly' },
-              { id: 102, matter_number: 'MAT-2026-102', title: 'Apex Global Acquisition Agreement', client: { full_name: 'Sarah Mitchell' }, status: 'in_progress', practice_area: 'Mergers & Acquisitions', billing_type: 'fixed' },
-              { id: 103, matter_number: 'MAT-2026-103', title: 'Beacon Civil Indemnity Claim', client: { full_name: 'Global Logistics Corp' }, status: 'review', practice_area: 'Civil Dispute', billing_type: 'hourly' },
-            ]);
-            setClients([
-              { id: 201, full_name: 'David Sterling', email: 'dsterling@vanguard.com', _count: { matters: 3 }, is_portal_enabled: true },
-              { id: 202, full_name: 'Sarah Mitchell', email: 'smitchell@gmail.com', _count: { matters: 2 }, is_portal_enabled: true },
-            ]);
-            setError('');
-          } else {
-            setError(e.message || 'Failed to load dashboard');
-          }
+          setError(e.message || 'Failed to load dashboard');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -330,17 +302,7 @@ export function LawyerCasesPage({ navigate, toast, openModal }) {
         if (!cancelled) setMyCases(Array.isArray(res.data) ? res.data : []);
       } catch (e) {
         if (!cancelled) {
-          const activeRole = localStorage.getItem('vktori_role');
-          if (activeRole === 'partner') {
-            setMyCases([
-              { id: 101, matter_number: 'MAT-2026-101', title: 'Vanguard Corp vs. Sterling Tech', client: { full_name: 'David Sterling' }, status: 'in_progress', practice_area: 'Corporate Litigation', billing_type: 'hourly' },
-              { id: 102, matter_number: 'MAT-2026-102', title: 'Apex Global Acquisition Agreement', client: { full_name: 'Sarah Mitchell' }, status: 'in_progress', practice_area: 'Mergers & Acquisitions', billing_type: 'fixed' },
-              { id: 103, matter_number: 'MAT-2026-103', title: 'Beacon Civil Indemnity Claim', client: { full_name: 'Global Logistics Corp' }, status: 'review', practice_area: 'Civil Dispute', billing_type: 'hourly' },
-            ]);
-            setError('');
-          } else {
-            setError(e.message || 'Failed to load matters');
-          }
+          setError(e.message || 'Failed to load matters');
         }
       } finally {
         if (!cancelled) setLoading(false);

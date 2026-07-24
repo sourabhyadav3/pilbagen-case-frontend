@@ -54,7 +54,7 @@ const NAV_BY_ROLE = {
     { id: 'reports', label: 'Reports', icon: 'reports', path: '/admin/reports' },
     { id: 'documents', label: 'Documents', icon: 'documents', path: '/admin/documents' },
     { id: 'calendar', label: 'Calendar', icon: 'calendar', path: '/admin/calendar' },
-    { id: 'messages', label: 'Encrypted Chat', icon: 'messages', path: '/admin/messages' },
+    { id: 'messages', label: 'Communication', icon: 'messages', path: '/admin/messages' },
     { section: 'Administration' },
     { id: 'team-users', label: 'Users & Staff', icon: 'users', path: '/admin/users' },
     { id: 'back-office', label: 'Back Office', icon: 'offices', path: '/admin/back-office' },
@@ -201,7 +201,7 @@ export default function Sidebar({ open, role, user, onToggle, onLogout, onItemCl
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] font-700 text-white truncate">{displayName}</p>
                 <p className="text-[11px] text-[#8a94a6] font-500">{t(info.role)}</p>
-                {(user?.agency?.name || user?.agency_name) && (
+                {role?.toLowerCase() !== 'super_admin' && role?.toLowerCase() !== 'superadmin' && (user?.agency?.name || user?.agency_name) && (
                   <p className="text-[10px] font-700 text-[#14b8a6] truncate mt-0.5">🏢 {user?.agency?.name || user?.agency_name}</p>
                 )}
               </div>

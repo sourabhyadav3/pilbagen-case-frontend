@@ -277,7 +277,7 @@ export default function Topbar({ sidebarOpen, onToggleSidebar, role, onLogout, o
 
       <div className="flex items-center gap-4 ml-auto">
         {/* Agency Name Display */}
-        {agencyNameDisplay && (
+        {role?.toLowerCase() !== 'super_admin' && role?.toLowerCase() !== 'superadmin' && agencyNameDisplay && (
           <div className="hidden sm:flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-[#14b8a6]/10 border border-[#14b8a6]/25 text-[#14b8a6] shadow-sm">
             <svg className="w-4 h-4 flex-shrink-0 text-[#14b8a6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0h4" />
