@@ -28,6 +28,7 @@ const NAV_ICONS = {
   offices: <svg className="w-[20px] h-[20px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M3 21h18M3 7v14M21 7v14M6 10h4M6 14h4M6 18h4M14 10h4M14 14h4M14 18h4M9 3h6v4H9z" /></svg>,
   subscriptions: <svg className="w-[20px] h-[20px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
   activity: <svg className="w-[20px] h-[20px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  chat: <svg className="w-[20px] h-[20px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
 };
 
 const SA_NAV = [
@@ -55,6 +56,7 @@ const NAV_BY_ROLE = {
     { id: 'documents', label: 'Documents', icon: 'documents', path: '/admin/documents' },
     { id: 'calendar', label: 'Calendar', icon: 'calendar', path: '/admin/calendar' },
     { id: 'messages', label: 'Communication', icon: 'messages', path: '/admin/messages' },
+    { id: 'chat', label: 'Encrypted Chat', icon: 'chat', path: '/admin/chat' },
     { section: 'Administration' },
     { id: 'team-users', label: 'Users & Staff', icon: 'users', path: '/admin/users' },
     { id: 'back-office', label: 'Back Office', icon: 'offices', path: '/admin/back-office' },
@@ -70,6 +72,7 @@ const NAV_BY_ROLE = {
     { id: 'p-documents', label: 'Documents', icon: 'documents', path: '/partner/documents' },
     { id: 'p-calendar', label: 'Calendar', icon: 'calendar', path: '/partner/calendar' },
     { id: 'p-communications', label: 'Communication', icon: 'messages', path: '/partner/communications' },
+    { id: 'p-chat', label: 'Encrypted Chat', icon: 'chat', path: '/partner/chat' },
   ],
   lawyer: [
     { section: 'Workspace' },
@@ -81,6 +84,7 @@ const NAV_BY_ROLE = {
     { id: 'documents', label: 'Documents', icon: 'documents', path: '/lawyer/documents' },
     { id: 'calendar', label: 'Calendar', icon: 'calendar', path: '/lawyer/calendar' },
     { id: 'email', label: 'Communication', icon: 'messages', path: '/lawyer/email' },
+    { id: 'l-chat', label: 'Encrypted Chat', icon: 'chat', path: '/lawyer/chat' },
   ],
   paralegal: [
     { section: 'Workspace' },
@@ -91,6 +95,7 @@ const NAV_BY_ROLE = {
     { id: 'pg-documents', label: 'Documents', icon: 'documents', path: '/paralegal/documents' },
     { id: 'pg-calendar', label: 'Calendar', icon: 'calendar', path: '/paralegal/calendar' },
     { id: 'pg-communications', label: 'Communication', icon: 'messages', path: '/paralegal/communications' },
+    { id: 'pg-chat', label: 'Encrypted Chat', icon: 'chat', path: '/paralegal/chat' },
   ],
   client: [
     { section: 'My Portal' },
@@ -99,6 +104,7 @@ const NAV_BY_ROLE = {
     { id: 'c-documents', label: 'Documents', icon: 'documents', path: '/client/documents' },
     { id: 'c-billing', label: 'Billing', icon: 'billing', path: '/client/billing' },
     { id: 'c-messages', label: 'Messages', icon: 'messages', path: '/client/messages' },
+    { id: 'c-chat', label: 'Encrypted Chat', icon: 'chat', path: '/client/chat' },
     { section: 'Account' },
     { id: 'c-profile', label: 'My Profile', icon: 'profile', path: '/client/profile' },
   ],

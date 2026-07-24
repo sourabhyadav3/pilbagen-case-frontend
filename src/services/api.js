@@ -562,5 +562,23 @@ export default {
     get: () => request('/dashboards/back-office'),
     addVendor: (data) => request('/dashboards/back-office/vendors', { method: 'POST', body: data }),
   },
+  chat: {
+    getContacts: () => request('/chat/contacts'),
+    listConversations: () => request('/chat/conversations'),
+    startPrivate: (targetUserId) => request('/chat/conversations/private', { method: 'POST', body: { targetUserId } }),
+    getMessages: (conversationId, params) => request(`/chat/conversations/${conversationId}/messages${buildQuery(params)}`),
+    sendMessage: (conversationId, text, attachments = []) => request(`/chat/conversations/${conversationId}/messages`, { method: 'POST', body: { text, attachments } }),
+    markAsRead: (conversationId) => request(`/chat/conversations/${conversationId}/read`, { method: 'POST' }),
+    uploadAttachment: (file) => {
+      const formData = new FormData();
+      formData.append('attachment', file);
+      const token = localStorage.getItem('vktori_token');
+      return fetch(`${API_BASE_URL}/chat/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      }).then(r => r.json());
+    }
+  },
 };
 

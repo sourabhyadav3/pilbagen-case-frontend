@@ -45,6 +45,7 @@ import SuperAdminSettings from './pages/super-admin/Settings.jsx';
 
 import { SignDocument } from './components/SignDocument.jsx';
 import TitanEmailModule from './pages/EmailModule/TitanEmailModule.jsx';
+import { ChatLayout } from './components/chat/ChatLayout.jsx';
 
 // ─────────────────────────────────────────────────────────
 //  LOGIN SCREEN
@@ -4010,7 +4011,7 @@ export default function App() {
             const response = await api.auth.getMe();
             const me = response?.data;
             if (me?.id && me?.roles && me.roles.length > 0) {
-              const activeRole = cachedRole || (me.roles.includes('admin') ? 'admin' : me.roles[0]);
+              const activeRole = (cachedRole && HOME_ROUTE[cachedRole]) ? cachedRole : (me.roles.includes('admin') ? 'admin' : me.roles[0]);
               const mergedUser = {
                 ...me,
                 roles: Array.from(new Set([...(me.roles || []), ...(cachedUser?.roles || []), activeRole])),
@@ -4055,26 +4056,32 @@ export default function App() {
   }, [isLoggedIn, role]);
 
   const handleLogin = (userData, token) => {
-    if (!userData?.roles || userData.roles.length === 0) {
+    const userRoles = userData?.roles?.length ? userData.roles : (userData?.role ? [userData.role] : []);
+    if (userRoles.length === 0) {
       toast(`User has no assigned roles. Contact support.`, 'error');
       return;
     }
 
-    let activeRole = localStorage.getItem('vktori_role');
-    if (!activeRole || !userData.roles.includes(activeRole)) {
-      activeRole = userData.roles.includes('admin') ? 'admin' : userData.roles[0];
-    }
+    let activeRole = (userData?.role && userRoles.includes(userData.role))
+      ? userData.role
+      : userRoles[0];
 
     const home = HOME_ROUTE[activeRole];
     if (!home) {
       toast(`Unknown account role: ${activeRole}. Contact support.`, 'error');
       return;
     }
-    
+
+    const updatedUser = {
+      ...userData,
+      roles: Array.from(new Set([activeRole, ...userRoles])),
+      role: activeRole,
+    };
+
     localStorage.setItem('vktori_token', token);
-    localStorage.setItem('vktori_user', JSON.stringify(userData));
+    localStorage.setItem('vktori_user', JSON.stringify(updatedUser));
     localStorage.setItem('vktori_role', activeRole);
-    setUser(userData);
+    setUser(updatedUser);
     setRole(activeRole);
     setIsLoggedIn(true);
     routerNavigate(home, { replace: true });
@@ -4176,6 +4183,7 @@ export default function App() {
           <Route path="back-office" element={<AdminBackOfficePage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="integrations" element={<AdminIntegrationsPage />} />
+          <Route path="chat" element={<ChatLayout role="admin" />} />
           <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
 
@@ -4195,6 +4203,7 @@ export default function App() {
           <Route path="email" element={<LawyerEmailPage />} />
           <Route path="titan-email" element={<TitanEmailModule />} />
           <Route path="vynius" element={<LawyerAIPage />} />
+          <Route path="chat" element={<ChatLayout role="lawyer" />} />
           <Route path="profile" element={<LawyerProfileWrapper />} />
           <Route path="settings" element={<LawyerSettingsPage />} />
           <Route path="conflict-check" element={<ConflictPage />} />
@@ -4214,6 +4223,7 @@ export default function App() {
           <Route path="documents" element={<PartnerDocuments />} />
           <Route path="billing" element={<PartnerBilling />} />
           <Route path="communications" element={<PartnerCommunications />} />
+          <Route path="chat" element={<ChatLayout role="partner" />} />
           <Route path="reports" element={<PartnerReports />} />
           <Route path="team" element={<PartnerTeam />} />
           <Route path="conflict-check" element={<PartnerConflictCheck />} />
@@ -4233,6 +4243,7 @@ export default function App() {
           <Route path="billing" element={<ParalegalTimeEntries />} />
           <Route path="tasks" element={<ParalegalTasks />} />
           <Route path="communications" element={<ParalegalCommunications />} />
+          <Route path="chat" element={<ChatLayout role="paralegal" />} />
           <Route path="conflict-check" element={<ParalegalConflictCheck />} />
           <Route path="settings" element={<ParalegalSettings />} />
         </Route>
@@ -4246,6 +4257,7 @@ export default function App() {
           <Route path="documents" element={<ClientDocsPage />} />
           <Route path="billing" element={<ClientBillingWrapper />} />
           <Route path="messages" element={<ClientMessagesWrapper />} />
+          <Route path="chat" element={<ChatLayout role="client" />} />
           <Route path="profile" element={<ClientProfileWrapper />} />
         </Route>
 
